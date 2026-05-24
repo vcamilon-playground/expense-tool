@@ -14,6 +14,8 @@ import { listBudgets, listCategories, listExpenses } from '@/lib/db';
 import SummaryCards from '@/components/SummaryCards';
 import BudgetAlerts from '@/components/BudgetAlerts';
 import InsightCard from '@/components/InsightCard';
+import TrendChart from '@/components/TrendChart';
+import CategoryChart from '@/components/CategoryChart';
 
 export default function DashboardPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -50,44 +52,37 @@ export default function DashboardPage() {
   const year: PeriodSummary = summarize(expenses, categories, 'year');
   const statuses: BudgetStatus[] = budgetStatus(expenses, categories, budgets);
 
+  const catChartData = month.by_category.map((c) => ({
+    name: c.category_name,
+    total: c.total,
+  }));
+
   return (
     <div>
       <h1>Dashboard</h1>
+
+      {/* KPIs */}
       <SummaryCards day={day} week={week} month={month} year={year} />
 
-      <div className="card">
-        <h2 style={{ marginTop: 0 }}>This Month by Category</h2>
-        {month.by_category.length === 0 ? (
-          <p className="muted">No expenses yet this month.</p>
-        ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th style={{ textAlign: 'right' }}>Count</th>
-                  <th style={{ textAlign: 'right' }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {month.by_category.map((c) => (
-                  <tr key={c.category_id ?? 'none'}>
-                    <td>{c.category_name}</td>
-                    <td style={{ textAlign: 'right' }}>{c.count}</td>
-                    <td style={{ textAlign: 'right' }}>{c.total.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
+      {/* Budget Status */}
       <div className="card">
         <h2 style={{ marginTop: 0 }}>Budget Status</h2>
         <BudgetAlerts statuses={statuses} />
       </div>
 
+      {/* This Month by Category — vertical bar chart */}
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>This Month by Category</h2>
+        <CategoryChart data={catChartData} />
+      </div>
+
+      {/* 6-Month Spending Trend */}
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>6-Month Trend</h2>
+        <TrendChart expenses={expenses} budgets={budgets} />
+      </div>
+
+      {/* AI Insight */}
       <InsightCard expenses={expenses} />
     </div>
   );

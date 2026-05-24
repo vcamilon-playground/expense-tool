@@ -47,7 +47,8 @@ export default function ReportsPage() {
       <h1>Reports</h1>
 
       <div className="card">
-        <div className="row">
+        {/* Grid keeps Period and Reference Date side-by-side on desktop, stacked on mobile */}
+        <div className="grid cols-2">
           <label>
             <div className="muted">Period</div>
             <select value={period} onChange={(e) => setPeriod(e.target.value as ReportPeriod)}>
@@ -58,10 +59,15 @@ export default function ReportsPage() {
           </label>
           <label>
             <div className="muted">Reference Date</div>
-            <input type="date" value={refDate} onChange={(e) => setRefDate(e.target.value)} />
+            <input
+              type="date"
+              value={refDate}
+              onChange={(e) => setRefDate(e.target.value)}
+              style={{ maxWidth: '100%' }}
+            />
           </label>
         </div>
-        <p className="muted" style={{ marginTop: 12 }}>
+        <p className="muted" style={{ marginTop: 12, marginBottom: 0 }}>
           Showing {summary.from} → {summary.to}
         </p>
       </div>

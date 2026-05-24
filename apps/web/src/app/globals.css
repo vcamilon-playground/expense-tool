@@ -242,6 +242,16 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   .expense-table td[data-label=""]::before { display: none; }
 }
 
+/* ── Footer ── */
+.site-footer {
+  text-align: center;
+  padding: 20px 24px;
+  color: var(--muted);
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: 16px;
+}
+
 /* ── Responsive: small mobile (≤400px) ── */
 @media (max-width: 400px) {
   main.container { padding: 8px; }

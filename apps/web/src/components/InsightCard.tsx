@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Expense, MonthlyInsight } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
 
@@ -8,6 +8,14 @@ export default function InsightCard({ expenses }: { expenses: Expense[] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [insight, setInsight] = useState<MonthlyInsight | null>(null);
+  const [providerLabel, setProviderLabel] = useState('AI');
+
+  useEffect(() => {
+    fetch('/api/config')
+      .then((r) => r.json())
+      .then((d) => setProviderLabel(d.providerLabel ?? 'AI'))
+      .catch(() => {});
+  }, []);
 
   async function generate() {
     setLoading(true);
@@ -32,7 +40,7 @@ export default function InsightCard({ expenses }: { expenses: Expense[] }) {
     <div className="card">
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <h2 style={{ margin: 0 }}>🤖 Monthly AI Insight</h2>
-        <button className="primary" onClick={generate} disabled={loading}>
+        <button className="primary" style={{ width: 'auto' }} onClick={generate} disabled={loading}>
           {loading ? 'Thinking…' : insight ? 'Refresh' : 'Generate'}
         </button>
       </div>
@@ -67,7 +75,7 @@ export default function InsightCard({ expenses }: { expenses: Expense[] }) {
       )}
       {!insight && !loading && (
         <p className="muted" style={{ marginTop: 8 }}>
-          Click Generate to have Claude analyze your recent spending and suggest next steps.
+          Click Generate to have {providerLabel} analyze your recent spending and suggest next steps.
         </p>
       )}
     </div>

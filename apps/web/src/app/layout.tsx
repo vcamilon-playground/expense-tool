@@ -17,6 +17,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <NavBar />
         <main className="container">{children}</main>
+        <footer className="site-footer">
+          Created by Vegil Camilon &amp; Claude Code
+        </footer>
       </body>
     </html>
   );
