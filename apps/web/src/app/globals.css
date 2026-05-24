@@ -50,7 +50,6 @@ nav.topnav {
   z-index: 100;
 }
 
-/* Brand link — looks like a label, not a nav item */
 nav.topnav a.brand {
   color: var(--text);
   font-weight: 700;
@@ -61,7 +60,6 @@ nav.topnav a.brand {
 }
 nav.topnav a.brand:hover { background: transparent; text-decoration: none; }
 
-/* Regular nav links */
 nav.topnav a { color: var(--muted); padding: 6px 10px; border-radius: 6px; }
 nav.topnav a:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
 nav.topnav a.active { background: var(--panel-2); color: var(--text); }
@@ -115,6 +113,8 @@ h3 { font-size: 15px; margin: 16px 0 8px; color: var(--muted); }
 
 /* ── Grid ── */
 .grid { display: grid; gap: 12px; }
+/* Prevent grid children from overflowing their column */
+.grid > * { min-width: 0; }
 .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
 .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
@@ -130,8 +130,23 @@ th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--bor
 th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
 
 /* ── Forms ── */
-label { display: block; }
-input, select, textarea, button {
+label { display: block; min-width: 0; }
+
+/* Uniform field height and sizing */
+input:not([type="checkbox"]),
+select {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+  height: 38px;
+  min-width: 0;
+}
+textarea {
   background: var(--panel-2);
   color: var(--text);
   border: 1px solid var(--border);
@@ -140,10 +155,41 @@ input, select, textarea, button {
   font-size: 14px;
   font-family: inherit;
   width: 100%;
+  min-height: 72px;
+  min-width: 0;
+  resize: vertical;
 }
-input[type="checkbox"] { width: auto; }
+input[type="checkbox"] {
+  width: auto;
+  height: auto;
+  accent-color: var(--accent);
+}
+
+/* Remove spinner arrows from number inputs */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; }
+
+/* Date input: prevent overflow on mobile */
+input[type="date"] { max-width: 100%; }
+
 input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-button { cursor: pointer; width: auto; }
+
+button {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-family: inherit;
+  height: 38px;
+  cursor: pointer;
+  width: auto;
+}
 button.primary { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
 button.danger { background: transparent; border-color: var(--bad); color: var(--bad); }
 button.ghost { background: transparent; border-color: transparent; }
@@ -160,6 +206,53 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .pill.ok { background: rgba(76, 195, 138, 0.15); color: var(--ok); }
 .pill.warn { background: rgba(246, 193, 119, 0.15); color: var(--warn); }
 .pill.over { background: rgba(239, 111, 108, 0.15); color: var(--bad); }
+
+/* ── Banners ── */
+.banner {
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.banner-warn {
+  background: rgba(246, 193, 119, 0.1);
+  border: 1px solid var(--warn);
+  color: var(--warn);
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+}
+.modal h3 { color: var(--text); font-size: 17px; }
+.modal p { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 0 0 8px; }
+.modal-warning { color: var(--warn) !important; }
+
+/* ── Footer ── */
+.site-footer {
+  text-align: center;
+  padding: 20px 24px;
+  color: var(--muted);
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: 16px;
+}
 
 /* ── Responsive: tablet (≤800px) ── */
 @media (max-width: 800px) {
@@ -200,10 +293,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   /* Stat values slightly smaller */
   .stat .value { font-size: 18px; }
 
-  /* Touch-friendly targets */
-  button, input, select { min-height: 40px; }
-  textarea { min-height: 60px; }
-
   /* Labels in flex rows stack full-width */
   .row > label { flex: 1 1 100%; }
 
@@ -240,16 +329,41 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     margin-top: 6px;
   }
   .expense-table td[data-label=""]::before { display: none; }
-}
 
-/* ── Footer ── */
-.site-footer {
-  text-align: center;
-  padding: 20px 24px;
-  color: var(--muted);
-  font-size: 12px;
-  border-top: 1px solid var(--border);
-  margin-top: 16px;
+  /* Recurring table: card view on mobile */
+  .recurring-table thead { display: none; }
+  .recurring-table tbody tr {
+    display: block;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .recurring-table tbody tr:last-child { border-bottom: none; }
+  .recurring-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: none;
+    padding: 3px 0;
+    font-size: 13px;
+    word-break: break-word;
+  }
+  .recurring-table tbody td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-right: 10px;
+    line-height: 1.7;
+    min-width: 90px;
+  }
+  .recurring-table td[data-label=""] {
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .recurring-table td[data-label=""]::before { display: none; }
 }
 
 /* ── Responsive: small mobile (≤400px) ── */

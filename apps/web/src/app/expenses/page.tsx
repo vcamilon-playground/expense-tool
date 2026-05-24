@@ -11,6 +11,7 @@ import {
 } from '@/lib/db';
 import ExpenseForm from '@/components/ExpenseForm';
 import ExpenseList from '@/components/ExpenseList';
+import MonthEndBanner from '@/components/MonthEndBanner';
 
 export default function ExpensesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -61,6 +62,7 @@ export default function ExpensesPage() {
 
   return (
     <div>
+      <MonthEndBanner />
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <h1>Expenses</h1>
         {!showAdd && !editing && (

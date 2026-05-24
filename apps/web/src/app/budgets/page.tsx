@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { Budget, Category } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
 import { deleteBudget, listBudgets, listCategories, upsertBudget } from '@/lib/db';
+import DeleteModal from '@/components/DeleteModal';
 
 export default function BudgetsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -12,6 +13,7 @@ export default function BudgetsPage() {
   const [limit, setLimit] = useState('');
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Budget | null>(null);
 
   async function reload() {
     const [c, b] = await Promise.all([listCategories(), listBudgets()]);
@@ -55,6 +57,16 @@ export default function BudgetsPage() {
 
   return (
     <div>
+      <DeleteModal
+        open={pendingDelete !== null}
+        itemLabel="Budget"
+        onConfirm={() => {
+          if (pendingDelete) handleDelete(pendingDelete.id);
+          setPendingDelete(null);
+        }}
+        onCancel={() => setPendingDelete(null)}
+      />
+
       <h1>Budgets</h1>
       <p className="muted">Set a monthly limit overall or per category. Dashboard will warn at 80% and flag overspend.</p>
 
@@ -82,8 +94,8 @@ export default function BudgetsPage() {
               required
             />
           </label>
-          <div style={{ display: 'flex', alignItems: 'end' }}>
-            <button type="submit" className="primary">Save budget</button>
+          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <button type="submit" className="primary" style={{ width: '100%' }}>Save Budget</button>
           </div>
         </div>
         {err && <p style={{ color: 'var(--bad)' }}>{err}</p>}
@@ -99,7 +111,7 @@ export default function BudgetsPage() {
               <thead>
                 <tr>
                   <th>Category</th>
-                  <th style={{ textAlign: 'right' }}>Monthly limit</th>
+                  <th style={{ textAlign: 'right' }}>Monthly Limit</th>
                   <th></th>
                 </tr>
               </thead>
@@ -114,9 +126,7 @@ export default function BudgetsPage() {
                         <button
                           className="danger"
                           style={{ width: 'auto' }}
-                          onClick={() => {
-                            if (confirm('Delete budget?')) handleDelete(b.id);
-                          }}
+                          onClick={() => setPendingDelete(b)}
                         >
                           Delete
                         </button>

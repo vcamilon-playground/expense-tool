@@ -10,8 +10,14 @@ import {
   listRecurring,
   updateRecurring,
 } from '@/lib/db';
+import DeleteModal from '@/components/DeleteModal';
 
 const cadences: RecurringCadence[] = ['weekly', 'monthly', 'yearly'];
+const cadenceLabel: Record<RecurringCadence, string> = {
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+  yearly: 'Yearly',
+};
 
 const empty: RecurringInput = {
   name: '',
@@ -29,6 +35,7 @@ export default function RecurringPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<RecurringExpense | null>(null);
 
   async function reload() {
     const [c, r] = await Promise.all([listCategories(), listRecurring()]);
@@ -86,7 +93,17 @@ export default function RecurringPage() {
 
   return (
     <div>
-      <h1>Recurring expenses</h1>
+      <DeleteModal
+        open={pendingDelete !== null}
+        itemLabel="Recurring Expense"
+        onConfirm={() => {
+          if (pendingDelete) deleteRecurring(pendingDelete.id).then(reload);
+          setPendingDelete(null);
+        }}
+        onCancel={() => setPendingDelete(null)}
+      />
+
+      <h1>Recurring Expenses</h1>
       <p className="muted">Track subscriptions (Netflix, rent, gym). They show on the dashboard so you can plan ahead.</p>
 
       <form onSubmit={handleSubmit} className="card">
@@ -105,8 +122,9 @@ export default function RecurringPage() {
               type="number"
               step="0.01"
               min="0"
-              value={draft.amount}
+              value={draft.amount || ''}
               onChange={(e) => setDraft({ ...draft, amount: parseFloat(e.target.value) || 0 })}
+              placeholder="0.00"
               required
             />
           </label>
@@ -117,7 +135,7 @@ export default function RecurringPage() {
               onChange={(e) => setDraft({ ...draft, cadence: e.target.value as RecurringCadence })}
             >
               {cadences.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>{cadenceLabel[c]}</option>
               ))}
             </select>
           </label>
@@ -127,7 +145,7 @@ export default function RecurringPage() {
               value={draft.category_id ?? ''}
               onChange={(e) => setDraft({ ...draft, category_id: e.target.value || null })}
             >
-              <option value="">— uncategorized —</option>
+              <option value="">— Uncategorized —</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.icon} {c.name}
@@ -144,23 +162,22 @@ export default function RecurringPage() {
               required
             />
           </label>
-          <label className="row" style={{ alignItems: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
               type="checkbox"
               checked={draft.active}
               onChange={(e) => setDraft({ ...draft, active: e.target.checked })}
-              style={{ width: 'auto' }}
             />
             <span>Active</span>
           </label>
         </div>
         {err && <p style={{ color: 'var(--bad)' }}>{err}</p>}
         <div className="row" style={{ marginTop: 12 }}>
-          <button type="submit" className="primary">
-            {editingId ? 'Update' : 'Add recurring'}
+          <button type="submit" className="primary" style={{ width: 'auto' }}>
+            {editingId ? 'Update' : 'Add Recurring'}
           </button>
           {editingId && (
-            <button type="button" className="ghost" onClick={reset}>
+            <button type="button" className="ghost" style={{ width: 'auto' }} onClick={reset}>
               Cancel
             </button>
           )}
@@ -173,13 +190,13 @@ export default function RecurringPage() {
           <p className="muted">None yet.</p>
         ) : (
           <div className="table-wrap">
-            <table>
+            <table className="recurring-table">
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Category</th>
                   <th>Cadence</th>
-                  <th>Next charge</th>
+                  <th>Next Charge</th>
                   <th style={{ textAlign: 'right' }}>Amount</th>
                   <th>Active</th>
                   <th></th>
@@ -190,20 +207,24 @@ export default function RecurringPage() {
                   const cat = r.category_id ? catMap.get(r.category_id) : null;
                   return (
                     <tr key={r.id}>
-                      <td>{r.name}</td>
-                      <td>{cat ? `${cat.icon ?? ''} ${cat.name}` : '—'}</td>
-                      <td>{r.cadence}</td>
-                      <td>{r.next_charge_date}</td>
-                      <td style={{ textAlign: 'right' }}>{formatMoney(r.amount)}</td>
-                      <td>{r.active ? 'Yes' : 'No'}</td>
-                      <td style={{ textAlign: 'right' }}>
-                        <button className="ghost" style={{ width: 'auto' }} onClick={() => startEdit(r)}>Edit</button>{' '}
+                      <td data-label="Name">{r.name}</td>
+                      <td data-label="Category">{cat ? `${cat.icon ?? ''} ${cat.name}` : '—'}</td>
+                      <td data-label="Cadence">{cadenceLabel[r.cadence]}</td>
+                      <td data-label="Next Charge">{r.next_charge_date}</td>
+                      <td data-label="Amount" style={{ textAlign: 'right' }}>{formatMoney(r.amount)}</td>
+                      <td data-label="Active">{r.active ? 'Yes' : 'No'}</td>
+                      <td data-label="">
+                        <button
+                          className="ghost"
+                          style={{ width: 'auto' }}
+                          onClick={() => startEdit(r)}
+                        >
+                          Edit
+                        </button>
                         <button
                           className="danger"
                           style={{ width: 'auto' }}
-                          onClick={() => {
-                            if (confirm('Delete?')) deleteRecurring(r.id).then(reload);
-                          }}
+                          onClick={() => setPendingDelete(r)}
                         >
                           Delete
                         </button>

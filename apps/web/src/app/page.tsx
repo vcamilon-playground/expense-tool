@@ -16,6 +16,7 @@ import BudgetAlerts from '@/components/BudgetAlerts';
 import InsightCard from '@/components/InsightCard';
 import TrendChart from '@/components/TrendChart';
 import CategoryChart from '@/components/CategoryChart';
+import MonthEndBanner from '@/components/MonthEndBanner';
 
 export default function DashboardPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -59,6 +60,7 @@ export default function DashboardPage() {
 
   return (
     <div>
+      <MonthEndBanner />
       <h1>Dashboard</h1>
 
       {/* KPIs */}

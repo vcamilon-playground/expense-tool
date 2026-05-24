@@ -11,6 +11,12 @@ import {
 import { listCategories, listExpenses } from '@/lib/db';
 
 const periods: ReportPeriod[] = ['day', 'week', 'month', 'year'];
+const periodLabel: Record<ReportPeriod, string> = {
+  day: 'Day',
+  week: 'Week',
+  month: 'Month',
+  year: 'Year',
+};
 
 export default function ReportsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -53,7 +59,7 @@ export default function ReportsPage() {
             <div className="muted">Period</div>
             <select value={period} onChange={(e) => setPeriod(e.target.value as ReportPeriod)}>
               {periods.map((p) => (
-                <option key={p} value={p}>{p}</option>
+                <option key={p} value={p}>{periodLabel[p]}</option>
               ))}
             </select>
           </label>
