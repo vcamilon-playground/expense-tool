@@ -94,6 +94,18 @@ alter table expenses disable row level security;
 alter table budgets disable row level security;
 alter table recurring_expenses disable row level security;
 
+-- ---------- Privileges for anon role ----------
+-- Disabling RLS is not enough on Supabase — the anon role still needs explicit
+-- table grants. Without these, the REST API returns 401 "permission denied".
+grant usage on schema public to anon;
+grant select, insert, update, delete on all tables in schema public to anon;
+grant usage, select on all sequences in schema public to anon;
+
+alter default privileges in schema public
+  grant select, insert, update, delete on tables to anon;
+alter default privileges in schema public
+  grant usage, select on sequences to anon;
+
 -- ---------- Storage bucket for receipts ----------
 -- Run in Supabase Dashboard > Storage:
 --   1. Create a bucket named "receipts"
