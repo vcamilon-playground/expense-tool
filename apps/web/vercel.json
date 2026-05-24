@@ -1,4 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ../.. && npm install"
+  "installCommand": "cd ../.. && npm install",
+  "crons": [
+    {
+      "path": "/api/cron/monthly-reminder",
+      "schedule": "0 9 28-31 * *"
+    }
+  ]
 }
+
