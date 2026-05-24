@@ -172,45 +172,48 @@ export default function RecurringPage() {
         {items.length === 0 ? (
           <p className="muted">None yet.</p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Cadence</th>
-                <th>Next charge</th>
-                <th style={{ textAlign: 'right' }}>Amount</th>
-                <th>Active</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((r) => {
-                const cat = r.category_id ? catMap.get(r.category_id) : null;
-                return (
-                  <tr key={r.id}>
-                    <td>{r.name}</td>
-                    <td>{cat ? `${cat.icon ?? ''} ${cat.name}` : '—'}</td>
-                    <td>{r.cadence}</td>
-                    <td>{r.next_charge_date}</td>
-                    <td style={{ textAlign: 'right' }}>{formatMoney(r.amount)}</td>
-                    <td>{r.active ? 'Yes' : 'No'}</td>
-                    <td style={{ textAlign: 'right' }}>
-                      <button className="ghost" onClick={() => startEdit(r)}>Edit</button>{' '}
-                      <button
-                        className="danger"
-                        onClick={() => {
-                          if (confirm('Delete?')) deleteRecurring(r.id).then(reload);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>Cadence</th>
+                  <th>Next charge</th>
+                  <th style={{ textAlign: 'right' }}>Amount</th>
+                  <th>Active</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((r) => {
+                  const cat = r.category_id ? catMap.get(r.category_id) : null;
+                  return (
+                    <tr key={r.id}>
+                      <td>{r.name}</td>
+                      <td>{cat ? `${cat.icon ?? ''} ${cat.name}` : '—'}</td>
+                      <td>{r.cadence}</td>
+                      <td>{r.next_charge_date}</td>
+                      <td style={{ textAlign: 'right' }}>{formatMoney(r.amount)}</td>
+                      <td>{r.active ? 'Yes' : 'No'}</td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button className="ghost" style={{ width: 'auto' }} onClick={() => startEdit(r)}>Edit</button>{' '}
+                        <button
+                          className="danger"
+                          style={{ width: 'auto' }}
+                          onClick={() => {
+                            if (confirm('Delete?')) deleteRecurring(r.id).then(reload);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

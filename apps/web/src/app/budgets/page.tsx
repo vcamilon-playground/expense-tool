@@ -94,36 +94,39 @@ export default function BudgetsPage() {
         {budgets.length === 0 ? (
           <p className="muted">No budgets set.</p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th style={{ textAlign: 'right' }}>Monthly limit</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {budgets.map((b) => {
-                const cat = b.category_id ? catMap.get(b.category_id) : null;
-                return (
-                  <tr key={b.id}>
-                    <td>{cat ? `${cat.icon ?? ''} ${cat.name}` : 'Overall'}</td>
-                    <td style={{ textAlign: 'right' }}>{formatMoney(b.monthly_limit)}</td>
-                    <td style={{ textAlign: 'right' }}>
-                      <button
-                        className="danger"
-                        onClick={() => {
-                          if (confirm('Delete budget?')) handleDelete(b.id);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th style={{ textAlign: 'right' }}>Monthly limit</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {budgets.map((b) => {
+                  const cat = b.category_id ? catMap.get(b.category_id) : null;
+                  return (
+                    <tr key={b.id}>
+                      <td>{cat ? `${cat.icon ?? ''} ${cat.name}` : 'Overall'}</td>
+                      <td style={{ textAlign: 'right' }}>{formatMoney(b.monthly_limit)}</td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button
+                          className="danger"
+                          style={{ width: 'auto' }}
+                          onClick={() => {
+                            if (confirm('Delete budget?')) handleDelete(b.id);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

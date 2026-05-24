@@ -38,29 +38,60 @@ html, body {
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
+/* ── Navigation ── */
 nav.topnav {
   display: flex;
-  gap: 16px;
-  padding: 14px 24px;
+  gap: 4px;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--border);
   background: var(--panel);
   align-items: center;
+  position: relative;
+  z-index: 100;
 }
-nav.topnav .brand { font-weight: 700; margin-right: 12px; }
+nav.topnav .brand { font-weight: 700; margin-right: 8px; white-space: nowrap; }
+
+.nav-toggle {
+  display: none;
+  margin-left: auto;
+  font-size: 18px;
+  min-width: 40px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.nav-toggle:hover { background: var(--panel-2); }
+
+.nav-links {
+  display: flex;
+  flex: 1;
+  gap: 2px;
+  align-items: center;
+}
 nav.topnav a { color: var(--muted); padding: 6px 10px; border-radius: 6px; }
 nav.topnav a:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
 
+/* ── Layout ── */
 main.container {
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px;
 }
 
+/* ── Typography ── */
 h1, h2, h3 { color: var(--text); }
 h1 { font-size: 22px; margin: 0 0 16px; }
 h2 { font-size: 18px; margin: 24px 0 12px; }
 h3 { font-size: 15px; margin: 16px 0 8px; color: var(--muted); }
 
+/* ── Cards ── */
 .card {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -69,23 +100,24 @@ h3 { font-size: 15px; margin: 16px 0 8px; color: var(--muted); }
   margin-bottom: 16px;
 }
 
-.grid {
-  display: grid;
-  gap: 12px;
-}
+/* ── Grid ── */
+.grid { display: grid; gap: 12px; }
+.grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
 .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
-@media (max-width: 800px) {
-  .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr; }
-}
 
+/* ── Stat cards ── */
 .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
 .stat .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
 
+/* ── Tables ── */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
 th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
 
+/* ── Forms ── */
+label { display: block; }
 input, select, textarea, button {
   background: var(--panel-2);
   color: var(--text);
@@ -94,22 +126,110 @@ input, select, textarea, button {
   padding: 8px 10px;
   font-size: 14px;
   font-family: inherit;
+  width: 100%;
 }
+input[type="checkbox"] { width: auto; }
 input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-button { cursor: pointer; }
+button { cursor: pointer; width: auto; }
 button.primary { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
 button.danger { background: transparent; border-color: var(--bad); color: var(--bad); }
-button.ghost { background: transparent; }
+button.ghost { background: transparent; border-color: transparent; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── Utilities ── */
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .muted { color: var(--muted); }
 .bar { background: var(--panel-2); height: 8px; border-radius: 4px; overflow: hidden; }
 .bar > div { height: 100%; background: var(--accent); }
 .bar.warn > div { background: var(--warn); }
 .bar.over > div { background: var(--bad); }
-
 .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; }
 .pill.ok { background: rgba(76, 195, 138, 0.15); color: var(--ok); }
 .pill.warn { background: rgba(246, 193, 119, 0.15); color: var(--warn); }
 .pill.over { background: rgba(239, 111, 108, 0.15); color: var(--bad); }
+
+/* ── Responsive: tablet (≤800px) ── */
+@media (max-width: 800px) {
+  .grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Responsive: mobile (≤640px) ── */
+@media (max-width: 640px) {
+  /* Nav hamburger */
+  .nav-toggle { display: flex; }
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 0;
+    gap: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  }
+  .nav-links.open { display: flex; }
+  nav.topnav a { padding: 12px 20px; border-radius: 0; width: 100%; }
+
+  /* Layout */
+  main.container { padding: 12px; }
+  h1 { font-size: 19px; }
+  h2 { font-size: 16px; }
+
+  /* Grids collapse to single column */
+  .grid.cols-2,
+  .grid.cols-3,
+  .grid.cols-4 { grid-template-columns: 1fr; }
+
+  /* Stat values slightly smaller */
+  .stat .value { font-size: 18px; }
+
+  /* Buttons: touch-friendly height */
+  button, input, select { min-height: 40px; }
+  textarea { min-height: 60px; }
+
+  /* Expense table: card view on mobile */
+  .expense-table thead { display: none; }
+  .expense-table tbody tr {
+    display: block;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .expense-table tbody tr:last-child { border-bottom: none; }
+  .expense-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: none;
+    padding: 3px 0;
+    font-size: 13px;
+  }
+  .expense-table tbody td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-right: 10px;
+    line-height: 1.7;
+    min-width: 80px;
+  }
+  .expense-table td[data-label=""] {
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .expense-table td[data-label=""]::before { display: none; }
+}
+
+/* ── Responsive: small mobile (≤400px) ── */
+@media (max-width: 400px) {
+  main.container { padding: 8px; }
+  .card { padding: 12px; }
+  nav.topnav { padding: 10px 12px; }
+  .stat .value { font-size: 16px; }
+}

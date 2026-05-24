@@ -60,24 +60,26 @@ export default function DashboardPage() {
         {month.by_category.length === 0 ? (
           <p className="muted">No expenses yet this month.</p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th style={{ textAlign: 'right' }}>Count</th>
-                <th style={{ textAlign: 'right' }}>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {month.by_category.map((c) => (
-                <tr key={c.category_id ?? 'none'}>
-                  <td>{c.category_name}</td>
-                  <td style={{ textAlign: 'right' }}>{c.count}</td>
-                  <td style={{ textAlign: 'right' }}>{c.total.toFixed(2)}</td>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th style={{ textAlign: 'right' }}>Count</th>
+                  <th style={{ textAlign: 'right' }}>Total</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {month.by_category.map((c) => (
+                  <tr key={c.category_id ?? 'none'}>
+                    <td>{c.category_name}</td>
+                    <td style={{ textAlign: 'right' }}>{c.count}</td>
+                    <td style={{ textAlign: 'right' }}>{c.total.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
