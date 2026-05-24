@@ -1,0 +1,18 @@
+{
+  "name": "expense-tool-claude",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build:shared": "npm run build -w @expense/shared",
+    "dev:web": "npm run dev -w @expense/web",
+    "dev:mobile": "npm run start -w @expense/mobile",
+    "typecheck": "npm run typecheck -w @expense/shared && npm run typecheck -w @expense/web && npm run typecheck -w @expense/mobile"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
