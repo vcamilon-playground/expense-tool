@@ -56,7 +56,7 @@ export default function DashboardPage() {
       <SummaryCards day={day} week={week} month={month} year={year} />
 
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>This month by category</h2>
+        <h2 style={{ marginTop: 0 }}>This Month by Category</h2>
         {month.by_category.length === 0 ? (
           <p className="muted">No expenses yet this month.</p>
         ) : (
@@ -84,7 +84,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>Budget status</h2>
+        <h2 style={{ marginTop: 0 }}>Budget Status</h2>
         <BudgetAlerts statuses={statuses} />
       </div>
 

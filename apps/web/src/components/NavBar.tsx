@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 
 const links = [
@@ -14,12 +15,18 @@ const links = [
 
 export default function NavBar() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isActive = (href: string) =>
+    href === '/' ? pathname === '/' : pathname.startsWith(href);
 
   return (
     <nav className="topnav">
-      <span className="brand">💸 Expenses</span>
+      <Link href="/" className="brand" onClick={() => setOpen(false)}>
+        💸 Expenses
+      </Link>
       <button
-        className="nav-toggle ghost"
+        className="nav-toggle"
         onClick={() => setOpen(!open)}
         aria-label="Toggle navigation"
         aria-expanded={open}
@@ -28,7 +35,12 @@ export default function NavBar() {
       </button>
       <div className={`nav-links${open ? ' open' : ''}`}>
         {links.map((l) => (
-          <Link key={l.href} href={l.href} onClick={() => setOpen(false)}>
+          <Link
+            key={l.href}
+            href={l.href}
+            className={isActive(l.href) ? 'active' : ''}
+            onClick={() => setOpen(false)}
+          >
             {l.label}
           </Link>
         ))}

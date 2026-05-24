@@ -57,7 +57,7 @@ export default function ReportsPage() {
             </select>
           </label>
           <label>
-            <div className="muted">Reference date</div>
+            <div className="muted">Reference Date</div>
             <input type="date" value={refDate} onChange={(e) => setRefDate(e.target.value)} />
           </label>
         </div>
@@ -84,32 +84,34 @@ export default function ReportsPage() {
       </div>
 
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>By category</h2>
+        <h2 style={{ marginTop: 0 }}>By Category</h2>
         {summary.by_category.length === 0 ? (
           <p className="muted">No expenses in this period.</p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th style={{ textAlign: 'right' }}>Count</th>
-                <th style={{ textAlign: 'right' }}>Total</th>
-                <th style={{ textAlign: 'right' }}>%</th>
-              </tr>
-            </thead>
-            <tbody>
-              {summary.by_category.map((c) => (
-                <tr key={c.category_id ?? 'none'}>
-                  <td>{c.category_name}</td>
-                  <td style={{ textAlign: 'right' }}>{c.count}</td>
-                  <td style={{ textAlign: 'right' }}>{formatMoney(c.total)}</td>
-                  <td style={{ textAlign: 'right' }}>
-                    {summary.total > 0 ? `${Math.round((c.total / summary.total) * 100)}%` : '—'}
-                  </td>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th style={{ textAlign: 'right' }}>Count</th>
+                  <th style={{ textAlign: 'right' }}>Total</th>
+                  <th style={{ textAlign: 'right' }}>%</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {summary.by_category.map((c) => (
+                  <tr key={c.category_id ?? 'none'}>
+                    <td>{c.category_name}</td>
+                    <td style={{ textAlign: 'right' }}>{c.count}</td>
+                    <td style={{ textAlign: 'right' }}>{formatMoney(c.total)}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      {summary.total > 0 ? `${Math.round((c.total / summary.total) * 100)}%` : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

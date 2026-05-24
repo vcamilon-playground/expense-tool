@@ -49,7 +49,22 @@ nav.topnav {
   position: relative;
   z-index: 100;
 }
-nav.topnav .brand { font-weight: 700; margin-right: 8px; white-space: nowrap; }
+
+/* Brand link — looks like a label, not a nav item */
+nav.topnav a.brand {
+  color: var(--text);
+  font-weight: 700;
+  margin-right: 8px;
+  padding: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+nav.topnav a.brand:hover { background: transparent; text-decoration: none; }
+
+/* Regular nav links */
+nav.topnav a { color: var(--muted); padding: 6px 10px; border-radius: 6px; }
+nav.topnav a:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
+nav.topnav a.active { background: var(--panel-2); color: var(--text); }
 
 .nav-toggle {
   display: none;
@@ -59,7 +74,7 @@ nav.topnav .brand { font-weight: 700; margin-right: 8px; white-space: nowrap; }
   min-height: 40px;
   align-items: center;
   justify-content: center;
-  border: none;
+  border: 1px solid var(--border);
   background: transparent;
   color: var(--text);
   cursor: pointer;
@@ -75,8 +90,6 @@ nav.topnav .brand { font-weight: 700; margin-right: 8px; white-space: nowrap; }
   gap: 2px;
   align-items: center;
 }
-nav.topnav a { color: var(--muted); padding: 6px 10px; border-radius: 6px; }
-nav.topnav a:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
 
 /* ── Layout ── */
 main.container {
@@ -172,7 +185,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     box-shadow: 0 4px 12px rgba(0,0,0,.25);
   }
   .nav-links.open { display: flex; }
-  nav.topnav a { padding: 12px 20px; border-radius: 0; width: 100%; }
+  nav.topnav a:not(.brand) { padding: 12px 20px; border-radius: 0; width: 100%; }
 
   /* Layout */
   main.container { padding: 12px; }
@@ -187,9 +200,12 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   /* Stat values slightly smaller */
   .stat .value { font-size: 18px; }
 
-  /* Buttons: touch-friendly height */
+  /* Touch-friendly targets */
   button, input, select { min-height: 40px; }
   textarea { min-height: 60px; }
+
+  /* Labels in flex rows stack full-width */
+  .row > label { flex: 1 1 100%; }
 
   /* Expense table: card view on mobile */
   .expense-table thead { display: none; }

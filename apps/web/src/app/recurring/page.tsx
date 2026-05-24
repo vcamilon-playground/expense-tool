@@ -136,7 +136,7 @@ export default function RecurringPage() {
             </select>
           </label>
           <label>
-            <div className="muted">Next charge date</div>
+            <div className="muted">Next Charge Date</div>
             <input
               type="date"
               value={draft.next_charge_date}
@@ -168,7 +168,7 @@ export default function RecurringPage() {
       </form>
 
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>Current recurring</h2>
+        <h2 style={{ marginTop: 0 }}>Current Recurring</h2>
         {items.length === 0 ? (
           <p className="muted">None yet.</p>
         ) : (

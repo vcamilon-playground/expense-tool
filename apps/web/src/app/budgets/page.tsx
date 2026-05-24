@@ -72,7 +72,7 @@ export default function BudgetsPage() {
             </select>
           </label>
           <label>
-            <div className="muted">Monthly limit</div>
+            <div className="muted">Monthly Limit</div>
             <input
               type="number"
               step="0.01"
@@ -90,7 +90,7 @@ export default function BudgetsPage() {
       </form>
 
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>Current budgets</h2>
+        <h2 style={{ marginTop: 0 }}>Current Budgets</h2>
         {budgets.length === 0 ? (
           <p className="muted">No budgets set.</p>
         ) : (
