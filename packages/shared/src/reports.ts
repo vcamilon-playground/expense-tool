@@ -68,26 +68,28 @@ export function summarize(
   const scoped = expenses.filter((e) => inRange(e, from, to));
   const catMap = new Map(categories.map((c) => [c.id, c.name]));
 
+  const phpAmount = (e: Expense) => e.conversion_rate ? e.amount * e.conversion_rate : e.amount;
+
   const buckets = new Map<string, CategoryTotal>();
   for (const e of scoped) {
     const key = e.category_id ?? '__none__';
     const name = e.category_id ? catMap.get(e.category_id) ?? 'Unknown' : 'Uncategorized';
     const existing = buckets.get(key);
     if (existing) {
-      existing.total += e.amount;
+      existing.total += phpAmount(e);
       existing.count += 1;
     } else {
       buckets.set(key, {
         category_id: e.category_id,
         category_name: name,
-        total: e.amount,
+        total: phpAmount(e),
         count: 1,
       });
     }
   }
 
   const by_category = Array.from(buckets.values()).sort((a, b) => b.total - a.total);
-  const total = scoped.reduce((sum, e) => sum + e.amount, 0);
+  const total = scoped.reduce((sum, e) => sum + phpAmount(e), 0);
   return { period, from, to, total, count: scoped.length, by_category };
 }
 
@@ -118,7 +120,7 @@ export function budgetStatus(
   });
 }
 
-export function formatMoney(n: number, currency = 'USD'): string {
+export function formatMoney(n: number, currency = 'PHP'): string {
   try {
     return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(n);
   } catch {

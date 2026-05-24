@@ -11,6 +11,19 @@
   --bad: #ef6f6c;
 }
 
+[data-theme="light"] {
+  --bg: #f0f4f8;
+  --panel: #ffffff;
+  --panel-2: #e8edf3;
+  --border: #cdd5e0;
+  --text: #1a2233;
+  --muted: #6b7a99;
+  --accent: #3b6fd4;
+  --ok: #2a9d5c;
+  --warn: #c87a15;
+  --bad: #c0392b;
+}
+
 * { box-sizing: border-box; }
 
 html, body {

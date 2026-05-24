@@ -14,13 +14,23 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 export default function ExpenseForm({ categories, initial, onSubmit, onCancel }: Props) {
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
-  const [currency, setCurrency] = useState(initial?.currency ?? 'USD');
+  const [currency, setCurrency] = useState(initial?.currency ?? 'PHP');
+  const [conversionRate, setConversionRate] = useState(
+    initial?.conversion_rate ? String(initial.conversion_rate) : '',
+  );
   const [categoryId, setCategoryId] = useState<string>(initial?.category_id ?? '');
   const [merchant, setMerchant] = useState(initial?.merchant ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [occurredAt, setOccurredAt] = useState(initial?.occurred_at ?? today());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isOverseas = currency.toUpperCase() !== 'PHP';
+  const parsedAmount = parseFloat(amount) || 0;
+  const parsedRate = parseFloat(conversionRate) || 0;
+  const phpPreview = isOverseas && parsedAmount > 0 && parsedRate > 0
+    ? parsedAmount * parsedRate
+    : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,9 +42,11 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel }:
     }
     setSubmitting(true);
     try {
+      const rate = parseFloat(conversionRate);
       await onSubmit({
         amount: parsed,
         currency: currency.toUpperCase(),
+        conversion_rate: isOverseas && Number.isFinite(rate) && rate > 0 ? rate : null,
         category_id: categoryId || null,
         merchant: merchant || null,
         description: description || null,
@@ -67,6 +79,24 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel }:
           <div className="muted">Currency</div>
           <input value={currency} onChange={(e) => setCurrency(e.target.value)} maxLength={4} />
         </label>
+        {isOverseas && (
+          <label>
+            <div className="muted">Rate to PHP</div>
+            <input
+              type="number"
+              step="0.000001"
+              min="0"
+              placeholder="e.g. 56.50"
+              value={conversionRate}
+              onChange={(e) => setConversionRate(e.target.value)}
+            />
+            {phpPreview !== null && (
+              <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+                ≈ ₱{phpPreview.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            )}
+          </label>
+        )}
         <label>
           <div className="muted">Date</div>
           <input

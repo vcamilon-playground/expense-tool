@@ -15,7 +15,8 @@ create table if not exists categories (
 create table if not exists expenses (
   id uuid primary key default gen_random_uuid(),
   amount numeric(12,2) not null check (amount >= 0),
-  currency text not null default 'USD',
+  currency text not null default 'PHP',
+  conversion_rate numeric(12,6),
   category_id uuid references categories(id) on delete set null,
   merchant text,
   description text,
@@ -105,6 +106,10 @@ alter default privileges in schema public
   grant select, insert, update, delete on tables to anon;
 alter default privileges in schema public
   grant usage, select on sequences to anon;
+
+-- ---------- Migration: add conversion_rate (run once on existing DB) ----------
+-- alter table expenses add column if not exists conversion_rate numeric(12,6);
+-- alter table expenses alter column currency set default 'PHP';
 
 -- ---------- Storage bucket for receipts ----------
 -- Run in Supabase Dashboard > Storage:

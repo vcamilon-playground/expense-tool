@@ -43,7 +43,14 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete }: 
                 {e.description ?? <span className="muted">—</span>}
                 {e.source === 'receipt' && <span className="pill ok" style={{ marginLeft: 6 }}>receipt</span>}
               </td>
-              <td style={{ textAlign: 'right' }}>{formatMoney(e.amount, e.currency)}</td>
+              <td style={{ textAlign: 'right' }}>
+                {formatMoney(e.amount, e.currency)}
+                {e.conversion_rate && (
+                  <div className="muted" style={{ fontSize: 11 }}>
+                    ≈ {formatMoney(e.amount * e.conversion_rate, 'PHP')}
+                  </div>
+                )}
+              </td>
               <td style={{ textAlign: 'right' }}>
                 <button className="ghost" onClick={() => onEdit(e)}>Edit</button>{' '}
                 <button

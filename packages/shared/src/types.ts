@@ -11,6 +11,7 @@ export type Expense = {
   id: string;
   amount: number;
   currency: string;
+  conversion_rate: number | null; // rate to PHP; null when currency is already PHP
   category_id: string | null;
   merchant: string | null;
   description: string | null;

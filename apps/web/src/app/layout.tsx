@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export const metadata: Metadata = {
   title: 'Expense Tool',
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}` }} />
+      </head>
       <body>
         <nav className="topnav">
           <span className="brand">💸 Expenses</span>
@@ -18,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Link href="/reports">Reports</Link>
           <Link href="/budgets">Budgets</Link>
           <Link href="/recurring">Recurring</Link>
+          <ThemeToggle />
         </nav>
         <main className="container">{children}</main>
       </body>

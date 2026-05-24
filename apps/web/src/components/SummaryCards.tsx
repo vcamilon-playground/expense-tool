@@ -7,7 +7,7 @@ export default function SummaryCards({
   week,
   month,
   year,
-  currency = 'USD',
+  currency = 'PHP',
 }: {
   day: PeriodSummary;
   week: PeriodSummary;
