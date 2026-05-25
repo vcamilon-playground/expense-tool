@@ -20,7 +20,7 @@ export class RecurringPage extends BasePage {
   }
 
   addButton(): Locator {
-    return this.page.getByRole('button', { name: '+ Add Recurring' });
+    return this.page.getByRole('button', { name: '+ Add Recurrings' });
   }
 
   dialog(): Locator {
