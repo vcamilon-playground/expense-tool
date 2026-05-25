@@ -1,25 +1,27 @@
 import { test, expect } from '@playwright/test';
+import { BudgetsPage } from './pages/BudgetsPage';
 
 test.describe('Budgets page', () => {
+  let budgets!: BudgetsPage;
+
   test.beforeEach(async ({ page }) => {
-    await page.goto('/budgets');
-    await expect(page.getByText('Loading…')).toBeHidden({ timeout: 15000 });
+    budgets = new BudgetsPage(page);
+    await budgets.goto();
   });
 
-  test('page heading is visible', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 1, name: 'Budgets' })).toBeVisible();
+  test('page heading is visible', async () => {
+    await expect(budgets.heading()).toBeVisible();
   });
 
-  // Budgets uses an inline form (no modal) — the submit is "Save Budget"
-  test('budget form is visible with Save Budget button', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'Save Budget' })).toBeVisible();
+  test('budget form is visible with Save Budget button', async () => {
+    await expect(budgets.saveBudgetButton()).toBeVisible();
   });
 
-  test('Monthly Limit input is visible', async ({ page }) => {
-    await expect(page.locator('input[type="number"]')).toBeVisible();
+  test('Monthly Limit input is visible', async () => {
+    await expect(budgets.monthlyLimitInput()).toBeVisible();
   });
 
-  test('Current Budgets section is visible', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 2, name: 'Current Budgets' })).toBeVisible();
+  test('Current Budgets section is visible', async () => {
+    await expect(budgets.currentBudgetsHeading()).toBeVisible();
   });
 });

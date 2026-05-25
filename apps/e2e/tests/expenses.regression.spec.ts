@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { E2E_MERCHANT, cleanup } from './helpers/supabase';
+import { ExpensesPage } from './pages/ExpensesPage';
 
 test.describe('Expenses — CRUD regression', () => {
   test.beforeAll(async () => {
@@ -11,49 +12,30 @@ test.describe('Expenses — CRUD regression', () => {
   });
 
   test('create, edit, and delete an expense', async ({ page }) => {
-    await page.goto('/expenses');
-    await expect(page.getByText('Loading…')).toBeHidden({ timeout: 15_000 });
+    const expenses = new ExpensesPage(page);
+    await expenses.goto();
 
     // CREATE
-    await page.getByRole('button', { name: '+ Add Expense' }).click();
-    const dialog = page.getByRole('dialog');
-    await dialog.locator('input[type="number"]').fill('100');
-    await dialog.locator('label').filter({ hasText: 'Merchant' }).locator('input').fill(E2E_MERCHANT);
-    await dialog.locator('label').filter({ hasText: 'Description' }).locator('textarea').fill('E2E regression expense');
-    await dialog.getByRole('button', { name: 'Add Expense' }).click();
-    await expect(dialog).toBeHidden();
+    await expenses.openAddModal();
+    await expenses.fillForm({ amount: '100', merchant: E2E_MERCHANT, description: 'E2E regression expense' });
+    await expenses.submitAdd();
 
     // Verify created
-    const row = page.locator('.expense-table tbody tr').filter({ hasText: E2E_MERCHANT });
-    await expect(row).toBeVisible();
-    await expect(row).toContainText('E2E regression expense');
+    await expect(expenses.row(E2E_MERCHANT)).toBeVisible();
+    await expect(expenses.row(E2E_MERCHANT)).toContainText('E2E regression expense');
 
     // EDIT
-    await row.getByRole('button', { name: 'Edit' }).click();
-    const editDialog = page.getByRole('dialog');
-    await expect(editDialog.getByRole('heading', { name: 'Edit Expense' })).toBeVisible();
-    await editDialog.locator('label').filter({ hasText: 'Description' }).locator('textarea').fill('E2E regression expense (edited)');
-    await editDialog.getByRole('button', { name: 'Update' }).click();
-    await expect(editDialog).toBeHidden();
+    await expenses.editRow(E2E_MERCHANT);
+    await expenses.fillDescription('E2E regression expense (edited)');
+    await expenses.submitEdit();
 
     // Verify edited
-    await expect(
-      page.locator('.expense-table tbody tr').filter({ hasText: E2E_MERCHANT }),
-    ).toContainText('E2E regression expense (edited)');
+    await expect(expenses.row(E2E_MERCHANT)).toContainText('E2E regression expense (edited)');
 
     // DELETE
-    await page
-      .locator('.expense-table tbody tr')
-      .filter({ hasText: E2E_MERCHANT })
-      .getByRole('button', { name: 'Delete' })
-      .click();
-    const deleteDialog = page.getByRole('dialog');
-    await expect(deleteDialog).toBeVisible();
-    await deleteDialog.getByRole('button', { name: 'Remove' }).click();
+    await expenses.deleteRow(E2E_MERCHANT);
 
     // Verify deleted
-    await expect(
-      page.locator('.expense-table tbody tr').filter({ hasText: E2E_MERCHANT }),
-    ).toHaveCount(0);
+    await expect(expenses.row(E2E_MERCHANT)).toHaveCount(0);
   });
 });

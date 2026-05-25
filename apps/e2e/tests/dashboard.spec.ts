@@ -1,35 +1,37 @@
 import { test, expect } from '@playwright/test';
+import { DashboardPage } from './pages/DashboardPage';
 
 test.describe('Dashboard', () => {
+  let dashboard!: DashboardPage;
+
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByText('Loading…')).toBeHidden({ timeout: 15000 });
+    dashboard = new DashboardPage(page);
+    await dashboard.goto();
   });
 
   test('page title is correct', async ({ page }) => {
     await expect(page).toHaveTitle(/Expense Tool/i);
   });
 
-  test('h1 heading is visible', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible();
+  test('h1 heading is visible', async () => {
+    await expect(dashboard.heading()).toBeVisible();
   });
 
-  test('four KPI stat cards are visible', async ({ page }) => {
-    // Today, This Week, This Month, This Year
-    await expect(page.locator('.stat')).toHaveCount(4);
-    await expect(page.locator('.stat .label').filter({ hasText: 'Today' })).toBeVisible();
-    await expect(page.locator('.stat .label').filter({ hasText: 'This Month' })).toBeVisible();
+  test('four KPI stat cards are visible', async () => {
+    await expect(dashboard.stats()).toHaveCount(4);
+    await expect(dashboard.statLabel('Today')).toBeVisible();
+    await expect(dashboard.statLabel('This Month')).toBeVisible();
   });
 
-  test('budget status section is present', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 2, name: 'Budget Status' })).toBeVisible();
+  test('budget status section is present', async () => {
+    await expect(dashboard.budgetStatusSection()).toBeVisible();
   });
 
-  test('category chart section is present', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 2, name: 'This Month by Category' })).toBeVisible();
+  test('category chart section is present', async () => {
+    await expect(dashboard.categoryChartSection()).toBeVisible();
   });
 
-  test('6-month trend chart section is present', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 2, name: '6-Month Trend' })).toBeVisible();
+  test('6-month trend chart section is present', async () => {
+    await expect(dashboard.trendSection()).toBeVisible();
   });
 });
