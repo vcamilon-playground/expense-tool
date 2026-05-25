@@ -7,8 +7,7 @@ jobs:
   e2e:
     name: Playwright smoke tests
     # Single-line condition avoids YAML block-scalar / || parser edge cases.
-    # Runs on every successful Vercel deployment (preview + production).
-    if: github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production'
+    if: github.event.deployment_status.state == 'success'
 
     runs-on: ubuntu-latest
     timeout-minutes: 15
