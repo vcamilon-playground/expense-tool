@@ -6,13 +6,20 @@ export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: 0,
   workers: 3,
+  timeout: 60_000,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'html',
+
+  expect: {
+    timeout: 20_000,
+  },
 
   use: {
     baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
-    trace: 'on-first-retry',
+    navigationTimeout: 30_000,
+    actionTimeout: 15_000,
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
 
@@ -35,7 +42,6 @@ export default defineConfig({
         ]),
   ],
 
-  // Only spin up a local dev server when testing locally (not against a remote deployment)
   ...(!isRemote && {
     webServer: {
       command: 'npm run dev -w @expense/web',

@@ -3,11 +3,13 @@ import { test, expect } from '@playwright/test';
 test.describe('Navigation', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    // Wait for the nav to be rendered — avoids networkidle which hangs on Next.js
+    await expect(page.locator('nav.topnav')).toBeVisible();
   });
 
   test('brand link navigates to dashboard', async ({ page }) => {
     await page.goto('/expenses');
+    await expect(page.locator('nav.topnav')).toBeVisible();
     await page.getByRole('link', { name: /💸 Expenses/i }).click();
     await expect(page).toHaveURL('/');
   });
@@ -28,20 +30,21 @@ test.describe('Navigation', () => {
 
   test('active nav link is highlighted on expenses page', async ({ page }) => {
     await page.goto('/expenses');
+    await expect(page.locator('nav.topnav')).toBeVisible();
     const expensesLink = page.getByRole('navigation').getByRole('link', { name: 'Expenses' });
     await expect(expensesLink).toHaveClass(/active/);
   });
 
   test('active nav link is highlighted on reports page', async ({ page }) => {
     await page.goto('/reports');
+    await expect(page.locator('nav.topnav')).toBeVisible();
     const reportsLink = page.getByRole('navigation').getByRole('link', { name: 'Reports' });
     await expect(reportsLink).toHaveClass(/active/);
   });
 
   test('footer is visible on all pages', async ({ page }) => {
-    const footer = page.locator('footer.site-footer');
-    await expect(footer).toBeVisible();
-    await expect(footer).toContainText('Vegil Camilon');
+    await expect(page.locator('footer.site-footer')).toBeVisible();
+    await expect(page.locator('footer.site-footer')).toContainText('Vegil Camilon');
   });
 });
 
@@ -50,6 +53,8 @@ test.describe('Navigation — mobile hamburger', () => {
 
   test('hamburger toggle opens and closes the nav menu', async ({ page }) => {
     await page.goto('/');
+    await expect(page.locator('nav.topnav')).toBeVisible();
+
     const toggle = page.getByRole('button', { name: 'Toggle navigation' });
     const navLinks = page.locator('.nav-links');
 
@@ -62,6 +67,7 @@ test.describe('Navigation — mobile hamburger', () => {
 
   test('clicking a nav link in mobile menu closes it', async ({ page }) => {
     await page.goto('/');
+    await expect(page.locator('nav.topnav')).toBeVisible();
     await page.getByRole('button', { name: 'Toggle navigation' }).click();
     await page.locator('.nav-links').getByRole('link', { name: 'Expenses' }).click();
     await expect(page).toHaveURL('/expenses');
