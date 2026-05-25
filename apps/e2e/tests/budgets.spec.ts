@@ -10,7 +10,16 @@ test.describe('Budgets page', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Budgets' })).toBeVisible();
   });
 
-  test('Add Budget button is visible', async ({ page }) => {
-    await expect(page.getByRole('button', { name: /\+ Add Budget/i })).toBeVisible();
+  // Budgets uses an inline form (no modal) — the submit is "Save Budget"
+  test('budget form is visible with Save Budget button', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'Save Budget' })).toBeVisible();
+  });
+
+  test('Monthly Limit input is visible', async ({ page }) => {
+    await expect(page.locator('input[type="number"]')).toBeVisible();
+  });
+
+  test('Current Budgets section is visible', async ({ page }) => {
+    await expect(page.getByRole('heading', { level: 2, name: 'Current Budgets' })).toBeVisible();
   });
 });

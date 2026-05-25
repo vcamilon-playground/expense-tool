@@ -20,12 +20,9 @@ test.describe('Expenses page', () => {
     await expect(page.getByRole('dialog').getByRole('heading', { name: 'Add Expense' })).toBeVisible();
   });
 
-  test('required fields have red asterisk in modal', async ({ page }) => {
+  test('required fields have required attribute in modal', async ({ page }) => {
     await page.getByRole('button', { name: '+ Add Expense' }).click();
     const dialog = page.getByRole('dialog');
-
-    // Amount and Date are required — their .muted labels get ::after content via CSS
-    // Verify the inputs themselves carry the required attribute
     await expect(dialog.locator('input[type="number"][required]')).toBeAttached();
     await expect(dialog.locator('input[type="date"][required]')).toBeAttached();
   });
@@ -47,17 +44,16 @@ test.describe('Expenses page', () => {
   test('modal closes when clicking the backdrop', async ({ page }) => {
     await page.getByRole('button', { name: '+ Add Expense' }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
-    // Click the overlay (outside the dialog box)
     await page.locator('.modal-overlay').click({ position: { x: 5, y: 5 } });
     await expect(page.getByRole('dialog')).toBeHidden();
   });
 
-  test('submitting empty form shows validation error', async ({ page }) => {
+  test('submitting empty form keeps modal open', async ({ page }) => {
     await page.getByRole('button', { name: '+ Add Expense' }).click();
-    // Clear the amount (default might be empty) and submit
-    await page.getByRole('dialog').locator('input[type="number"]').fill('');
-    await page.getByRole('button', { name: 'Add Expense' }).click();
-    // Browser native validation or app-level error should appear
-    await expect(page.getByRole('dialog')).toBeVisible(); // modal stays open
+    const dialog = page.getByRole('dialog');
+    await dialog.locator('input[type="number"]').fill('');
+    // Scope submit button to dialog to avoid matching the page-level "+ Add Expense" button
+    await dialog.getByRole('button', { name: 'Add Expense' }).click();
+    await expect(dialog).toBeVisible();
   });
 });
