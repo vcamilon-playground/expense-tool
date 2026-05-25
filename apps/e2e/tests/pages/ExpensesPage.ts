@@ -71,4 +71,20 @@ export class ExpensesPage extends BasePage {
     await expect(this.dialog()).toBeVisible();
     await this.dialog().getByRole('button', { name: 'Remove' }).click();
   }
+
+  monthGroup(label: string): Locator {
+    return this.page.locator('.date-group').filter({ hasText: label });
+  }
+
+  monthGroupHeader(label: string): Locator {
+    return this.monthGroup(label).locator('.date-group-header');
+  }
+
+  monthGroupBody(label: string): Locator {
+    return this.monthGroup(label).locator('.date-group-body');
+  }
+
+  currentMonthLabel(): string {
+    return new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+  }
 }

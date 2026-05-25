@@ -43,7 +43,11 @@ function formatDateShort(iso: string): string {
 export default function ExpenseList({ expenses, categories, onEdit, onDelete }: Props) {
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const [pendingDelete, setPendingDelete] = useState<Expense | null>(null);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => {
+    const inactive = new Set(expenses.map((e) => monthKey(e.occurred_at)));
+    inactive.delete(currentMonth);
+    return inactive;
+  });
   const [showArchived, setShowArchived] = useState(false);
 
   const cutoff = get6MonthCutoff();

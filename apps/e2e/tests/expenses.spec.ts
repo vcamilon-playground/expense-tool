@@ -55,3 +55,64 @@ test.describe('Expenses page', () => {
     await expect(dialog).toBeVisible();
   });
 });
+
+test.describe('Expenses — month group collapse behaviour', () => {
+  let expenses!: ExpensesPage;
+
+  test.beforeEach(async ({ page }) => {
+    expenses = new ExpensesPage(page);
+    await expenses.goto();
+  });
+
+  test('current month group is expanded by default', async () => {
+    const label = expenses.currentMonthLabel();
+    const group = expenses.monthGroup(label);
+    // Only run assertion if the current month group exists in the list
+    const count = await group.count();
+    if (count === 0) return;
+    await expect(expenses.monthGroupHeader(label)).toHaveAttribute('aria-expanded', 'true');
+    await expect(expenses.monthGroupBody(label)).toBeVisible();
+  });
+
+  test('past month groups are collapsed by default', async () => {
+    const currentLabel = expenses.currentMonthLabel();
+    const allGroups = expenses.page.locator('.date-group');
+    const total = await allGroups.count();
+    for (let i = 0; i < total; i++) {
+      const header = allGroups.nth(i).locator('.date-group-header');
+      const text = await header.textContent();
+      if (text?.includes(currentLabel)) continue;
+      await expect(header).toHaveAttribute('aria-expanded', 'false');
+      await expect(allGroups.nth(i).locator('.date-group-body')).toBeHidden();
+    }
+  });
+
+  test('clicking a collapsed month header expands it', async () => {
+    const currentLabel = expenses.currentMonthLabel();
+    const allGroups = expenses.page.locator('.date-group');
+    const total = await allGroups.count();
+    let tested = false;
+    for (let i = 0; i < total; i++) {
+      const header = allGroups.nth(i).locator('.date-group-header');
+      const text = await header.textContent();
+      if (text?.includes(currentLabel)) continue;
+      await header.click();
+      await expect(header).toHaveAttribute('aria-expanded', 'true');
+      await expect(allGroups.nth(i).locator('.date-group-body')).toBeVisible();
+      tested = true;
+      break;
+    }
+    if (!tested) test.skip(); // no past months in the DB
+  });
+
+  test('clicking an expanded month header collapses it', async () => {
+    const label = expenses.currentMonthLabel();
+    const group = expenses.monthGroup(label);
+    const count = await group.count();
+    if (count === 0) return;
+    const header = expenses.monthGroupHeader(label);
+    await header.click();
+    await expect(header).toHaveAttribute('aria-expanded', 'false');
+    await expect(expenses.monthGroupBody(label)).toBeHidden();
+  });
+});
