@@ -143,6 +143,52 @@ Regression specs write real rows to the production database. Cleanup rules:
 
 ---
 
+## Test Coverage Requirements for New Functionality
+
+Every new feature or UI change must be accompanied by Playwright tests. Claude must write all three categories before marking any feature task done.
+
+### 1 — Exploratory / smoke tests (`<feature>.spec.ts`)
+
+Verify the page renders correctly and key UI elements are present. These tests never mutate data.
+
+Scenarios to cover:
+- Page heading and any descriptive text are visible.
+- All key interactive elements (buttons, inputs, selects, toggles) are present.
+- Dropdowns and selects have correctly capitalised option labels.
+- Navigation from this page works (if the feature has links/tabs).
+- Any conditional UI (e.g., "No data yet" empty state) is shown when no data exists.
+
+### 2 — Regression / CRUD tests (`<feature>.regression.spec.ts`)
+
+Verify that create, edit, and delete operations work end-to-end against the real database.
+
+Scenarios to cover:
+- **Create**: open the add modal/form, fill all fields, submit, verify the new row appears with correct values.
+- **Edit**: click Edit on the created row, change at least one field, submit, verify the updated value is shown.
+- **Delete**: click Delete on the row, confirm the confirmation dialog, verify the row is gone (`toHaveCount(0)`).
+- Always wrap with `beforeAll` + `afterAll` cleanup using `tests/helpers/supabase.ts`.
+
+### 3 — Negative / validation tests (add to `<feature>.spec.ts`)
+
+Verify that invalid inputs are rejected and error feedback is shown.
+
+Scenarios to cover:
+- Submitting an empty form shows a validation error or the form is not submitted (check `required` attribute or visible error message).
+- Entering a negative or zero amount where only positive values are valid.
+- Entering a value that exceeds a stated limit (e.g., amount > 999 999 if there is one).
+- Cancelling a modal/dialog (Cancel button and Escape key) closes it without saving.
+- If a field has enum/select options, verify that an empty/placeholder value cannot be submitted.
+
+### Page Object updates
+
+When adding tests for a new feature:
+1. Create `apps/e2e/tests/pages/<FeatureName>Page.ts` extending `BasePage`.
+2. Add every new locator as a method — no raw `page.locator(...)` calls in spec files.
+3. Export the class and import it in all spec files for that feature.
+4. If the feature reuses an existing page (e.g., a new modal on the Expenses page), add new methods to the existing page object instead of creating a new file.
+
+---
+
 ## Common Pitfalls
 
 | Problem | Fix |
@@ -154,3 +200,70 @@ Regression specs write real rows to the production database. Cleanup rules:
 | Nav links not found on mobile | Call `nav.openIfMobile()` before interacting with links |
 | Tests hang in CI | Vercel Authentication is enabled — disable it in Vercel project settings |
 | Cleanup skipped in CI | Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as GitHub repository secrets |
+
+---
+
+## Auto-Healing Workflow
+
+When Playwright tests fail in CI, follow these steps to diagnose, fix, and push a resolution.
+
+### 1 — Find the failed run
+
+```bash
+gh run list --workflow=e2e.yml --limit=5
+```
+
+Note the run ID of the most recent failed run (status `failure`).
+
+### 2 — Read the failure logs
+
+```bash
+gh run view <run-id> --log-failed
+```
+
+This prints only the steps and test output that failed. Read the full error message for each failing test.
+
+### 3 — Diagnose the root cause
+
+Match the error to one of these categories:
+
+| Error pattern | Root cause | Where to fix |
+|---|---|---|
+| `locator.click: element not found` / `strict mode violation` | Selector changed (HTML restructure, class rename, new wrapper element) | Page object in `tests/pages/` |
+| `expect(locator).toHaveText(…)` mismatch | UI copy changed (button label, heading text, option value) | Page object method or spec assertion |
+| `expect(page).toHaveURL(…)` mismatch | Route renamed | Page object `goto()` and spec file |
+| `TimeoutError` waiting for element | Supabase cold start, slow network, or Vercel Authentication re-enabled | Add retry/increased timeout in `playwright.config.ts`, or re-disable Vercel Auth |
+| `TypeError: Cannot read …` | Page object method broken by refactor | Page object in `tests/pages/` |
+
+**Rule:** fix page objects (`tests/pages/`) when the app UI changed. Fix spec files only when the test logic itself is wrong.
+
+### 4 — Apply the fix
+
+- Open the failing spec file to understand which page object method is called.
+- Open the relevant page object (`tests/pages/<Page>.ts`) and update the locator/selector.
+- If a button label changed in the app, update the string in the page object — do **not** change the app to match old tests.
+- If a route changed, update `goto()` in the page object and the `toHaveURL()` assertion in the spec.
+
+### 5 — Verify locally
+
+```bash
+npm run test:e2e
+```
+
+All tests must pass (green) before pushing. If you cannot start the dev server (e.g., missing `.env.local`), run against the live Vercel URL:
+
+```bash
+BASE_URL=https://<your-vercel-url> npm run test:e2e
+```
+
+### 6 — Commit and push
+
+Write a commit message that names the test that broke and what changed:
+
+```bash
+git add apps/e2e/tests/pages/<ChangedPage>.ts
+git commit -m "fix(e2e): update <MethodName> locator — <what changed in the app>"
+git push origin main
+```
+
+Pushing to main triggers a new Vercel deployment, which triggers a new CI run automatically.
