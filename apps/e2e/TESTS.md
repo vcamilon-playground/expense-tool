@@ -1,6 +1,6 @@
 # E2E Test Suite
 
-Playwright smoke tests for the Expense Tool web app. Tests run automatically after every successful Vercel production deployment.
+Playwright smoke tests for the Expense Tool web app. Tests run automatically after every successful Vercel deployment.
 
 ---
 
