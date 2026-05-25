@@ -23,6 +23,12 @@ test.describe('Navigation', () => {
     ];
 
     for (const [label, href] of navLinks) {
+      // On mobile the hamburger closes after each navigation — reopen before each click
+      const toggle = page.getByRole('button', { name: 'Toggle navigation' });
+      if (await toggle.isVisible()) {
+        await toggle.click();
+        await expect(page.locator('.nav-links')).toHaveClass(/open/);
+      }
       // exact: true prevents the brand link "💸 Expenses" from matching "Expenses"
       await page.getByRole('navigation').getByRole('link', { name: label, exact: true }).click();
       await expect(page).toHaveURL(href);
@@ -32,6 +38,9 @@ test.describe('Navigation', () => {
   test('active nav link is highlighted on expenses page', async ({ page }) => {
     await page.goto('/expenses');
     await expect(page.locator('nav.topnav')).toBeVisible();
+    // On mobile links are hidden until hamburger is opened
+    const toggle = page.getByRole('button', { name: 'Toggle navigation' });
+    if (await toggle.isVisible()) await toggle.click();
     const expensesLink = page.getByRole('navigation').getByRole('link', { name: 'Expenses', exact: true });
     await expect(expensesLink).toHaveClass(/active/);
   });
@@ -39,6 +48,9 @@ test.describe('Navigation', () => {
   test('active nav link is highlighted on reports page', async ({ page }) => {
     await page.goto('/reports');
     await expect(page.locator('nav.topnav')).toBeVisible();
+    // On mobile links are hidden until hamburger is opened
+    const toggle = page.getByRole('button', { name: 'Toggle navigation' });
+    if (await toggle.isVisible()) await toggle.click();
     const reportsLink = page.getByRole('navigation').getByRole('link', { name: 'Reports', exact: true });
     await expect(reportsLink).toHaveClass(/active/);
   });
