@@ -160,6 +160,14 @@ th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: upp
 /* ── Forms ── */
 label { display: block; min-width: 0; }
 
+/* Required field asterisk */
+label:has(input[required]) .muted::after,
+label:has(select[required]) .muted::after,
+label:has(textarea[required]) .muted::after {
+  content: ' *';
+  color: var(--bad);
+}
+
 input:not([type="checkbox"]),
 select {
   background: var(--panel-2);

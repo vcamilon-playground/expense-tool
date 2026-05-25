@@ -20,10 +20,21 @@ function get6MonthCutoff(): string {
   return d.toISOString().slice(0, 10);
 }
 
-function formatDateLabel(iso: string): string {
+function monthKey(dateStr: string): string {
+  return dateStr.slice(0, 7); // YYYY-MM
+}
+
+function monthLabel(key: string): string {
+  const parts = key.split('-');
+  return new Date(parseInt(parts[0]!), parseInt(parts[1]!) - 1, 1).toLocaleString('default', {
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function formatDateShort(iso: string): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString('default', {
     weekday: 'short',
-    year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
@@ -40,21 +51,22 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete }: 
   const archived = expenses.filter((e) => e.occurred_at < cutoff);
   const display = showArchived ? expenses : recent;
 
-  function toggleDate(date: string) {
+  function toggleMonth(key: string) {
     setCollapsed((prev) => {
       const next = new Set(prev);
-      next.has(date) ? next.delete(date) : next.add(date);
+      next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
   }
 
-  // Group by date, newest first
+  // Group by month, newest first
   const grouped = new Map<string, Expense[]>();
   for (const e of display) {
-    if (!grouped.has(e.occurred_at)) grouped.set(e.occurred_at, []);
-    grouped.get(e.occurred_at)!.push(e);
+    const key = monthKey(e.occurred_at);
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(e);
   }
-  const dates = Array.from(grouped.keys()).sort((a, b) => b.localeCompare(a));
+  const months = Array.from(grouped.keys()).sort((a, b) => b.localeCompare(a));
 
   if (display.length === 0) {
     return (
@@ -90,26 +102,26 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete }: 
         </div>
       )}
 
-      {dates.map((date) => {
-        const items = grouped.get(date)!;
-        const isCollapsed = collapsed.has(date);
-        const isArchived = date < cutoff;
+      {months.map((key) => {
+        const items = grouped.get(key)!.sort((a, b) => b.occurred_at.localeCompare(a.occurred_at));
+        const isCollapsed = collapsed.has(key);
+        const isArchived = key < monthKey(cutoff);
         const total = items.reduce(
           (s, e) => s + (e.conversion_rate ? e.amount * e.conversion_rate : e.amount),
           0,
         );
 
         return (
-          <div key={date} className={`date-group${isArchived ? ' date-group-archived' : ''}`}>
+          <div key={key} className={`date-group${isArchived ? ' date-group-archived' : ''}`}>
             <div
               className="date-group-header"
-              onClick={() => toggleDate(date)}
+              onClick={() => toggleMonth(key)}
               role="button"
               aria-expanded={!isCollapsed}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span className="date-group-chevron">{isCollapsed ? '▶' : '▼'}</span>
-                <span className="date-group-date">{formatDateLabel(date)}</span>
+                <span className="date-group-date">{monthLabel(key)}</span>
                 <span className="muted" style={{ fontSize: 12 }}>
                   {items.length} item{items.length !== 1 ? 's' : ''}
                 </span>
@@ -123,6 +135,7 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete }: 
                 <table className="expense-table">
                   <thead>
                     <tr>
+                      <th>Date</th>
                       <th>Category</th>
                       <th>Merchant</th>
                       <th>Description</th>
@@ -136,6 +149,7 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete }: 
                       const editable = e.occurred_at.startsWith(currentMonth);
                       return (
                         <tr key={e.id}>
+                          <td data-label="Date">{formatDateShort(e.occurred_at)}</td>
                           <td data-label="Category">
                             {cat ? `${cat.icon ?? ''} ${cat.name}` : <span className="muted">—</span>}
                           </td>
