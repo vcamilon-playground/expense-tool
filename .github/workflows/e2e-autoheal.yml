@@ -15,7 +15,7 @@ jobs:
     name: Auto-heal failing tests
     if: github.event.workflow_run.conclusion == 'failure'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
       - name: Checkout main (with PAT so push re-triggers CI)
@@ -51,15 +51,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-
-      - name: Install project dependencies
-        if: steps.guard.outputs.skip == 'false'
-        run: npm ci --legacy-peer-deps
-
-      - name: Install Claude CLI
-        if: steps.guard.outputs.skip == 'false'
-        run: npm install -g @anthropic-ai/claude-code
 
       - name: Configure git
         if: steps.guard.outputs.skip == 'false'
@@ -67,36 +58,18 @@ jobs:
           git config user.name "Claude Auto-Heal"
           git config user.email "autoheal@users.noreply.github.com"
 
-      - name: Run Claude auto-heal
+      - name: Run autoheal script
         if: steps.guard.outputs.skip == 'false'
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          LOGS=$(cat /tmp/failure-logs.txt)
-          claude --dangerouslySkipPermissions -p "
-          You are auto-healing failing Playwright tests for an expense tracking app.
-          Read CLAUDE.md first — it contains the full auto-healing instructions.
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: node scripts/autoheal.mjs /tmp/failure-logs.txt
 
-          CI failure logs from workflow run ${{ github.event.workflow_run.id }}:
-          ---
-          ${LOGS}
-          ---
-
-          Follow the auto-healing workflow in CLAUDE.md exactly:
-          1. Read the logs and identify every failing test and its error message.
-          2. Diagnose the root cause for each failure (selector changed, label changed, route changed, etc.).
-          3. Fix ONLY the page object(s) in apps/e2e/tests/pages/ — do NOT edit spec files unless the test logic itself is wrong.
-          4. Do NOT run tests, do NOT start a dev server, do NOT run npm commands.
-          5. Stage only the files you changed with git add.
-          6. Commit with the message: fix(e2e): <short description of what changed> [autoheal]
-          "
-
-      - name: Push fix (only if Claude made changes)
+      - name: Commit and push fix (only if files changed)
         if: steps.guard.outputs.skip == 'false'
         run: |
-          if git diff --quiet HEAD; then
-            echo "Claude made no changes — no push needed."
-          else
-            git push origin main
-            echo "Fix pushed. Vercel will redeploy and re-trigger CI automatically."
-          fi
+          git diff --quiet && echo "No changes — nothing to push." && exit 0
+          git add apps/e2e/tests/pages/
+          CHANGED=$(git diff --cached --name-only | tr '\n' ' ')
+          git commit -m "fix(e2e): auto-heal failing tests — ${CHANGED}[autoheal]"
+          git push origin main
+          echo "Fix pushed. Vercel will redeploy and re-trigger CI automatically."
