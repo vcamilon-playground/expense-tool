@@ -1,18 +1,32 @@
 name: E2E Tests
 
-# Fires automatically when Vercel updates a GitHub Deployment status.
-# Vercel's GitHub app creates a Deployment and marks it 'success' or 'failure'
-# for every push to main — no extra secrets or webhooks needed.
 on:
   deployment_status:
 
 jobs:
+  # Diagnostic job — always runs, dumps the event payload so you can see
+  # exactly what environment name and ref Vercel sends. Safe to remove later.
+  debug-event:
+    name: Debug deployment event
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print deployment info
+        run: |
+          echo "state:       ${{ github.event.deployment_status.state }}"
+          echo "environment: ${{ github.event.deployment.environment }}"
+          echo "ref:         ${{ github.event.deployment.ref }}"
+          echo "target_url:  ${{ github.event.deployment_status.target_url }}"
+
   e2e:
     name: Playwright smoke tests
-    # Only run when the deployment succeeded AND it is the Production environment
+    # Vercel may use "Production" or "production" for the environment name.
+    # Checking the ref is more reliable: only run for main-branch deployments
+    # that succeeded.
     if: |
       github.event.deployment_status.state == 'success' &&
-      github.event.deployment.environment == 'Production'
+      (github.event.deployment.ref == 'main' ||
+       github.event.deployment.environment == 'Production' ||
+       github.event.deployment.environment == 'production')
 
     runs-on: ubuntu-latest
     timeout-minutes: 15
