@@ -12,14 +12,61 @@ type Props = {
   onDelete: (id: string) => void;
 };
 
-const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+const currentMonth = new Date().toISOString().slice(0, 7);
+
+function get6MonthCutoff(): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 6);
+  return d.toISOString().slice(0, 10);
+}
+
+function formatDateLabel(iso: string): string {
+  return new Date(iso + 'T00:00:00').toLocaleDateString('default', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
 
 export default function ExpenseList({ expenses, categories, onEdit, onDelete }: Props) {
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const [pendingDelete, setPendingDelete] = useState<Expense | null>(null);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [showArchived, setShowArchived] = useState(false);
 
-  if (expenses.length === 0) {
-    return <p className="muted">No expenses yet.</p>;
+  const cutoff = get6MonthCutoff();
+  const recent = expenses.filter((e) => e.occurred_at >= cutoff);
+  const archived = expenses.filter((e) => e.occurred_at < cutoff);
+  const display = showArchived ? expenses : recent;
+
+  function toggleDate(date: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      next.has(date) ? next.delete(date) : next.add(date);
+      return next;
+    });
+  }
+
+  // Group by date, newest first
+  const grouped = new Map<string, Expense[]>();
+  for (const e of display) {
+    if (!grouped.has(e.occurred_at)) grouped.set(e.occurred_at, []);
+    grouped.get(e.occurred_at)!.push(e);
+  }
+  const dates = Array.from(grouped.keys()).sort((a, b) => b.localeCompare(a));
+
+  if (display.length === 0) {
+    return (
+      <div>
+        <p className="muted">No expenses in the last 6 months.</p>
+        {archived.length > 0 && (
+          <button className="ghost" style={{ width: 'auto', fontSize: 13 }} onClick={() => setShowArchived(true)}>
+            Show {archived.length} archived expense{archived.length !== 1 ? 's' : ''}
+          </button>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -27,85 +74,122 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete }: 
       <DeleteModal
         open={pendingDelete !== null}
         itemLabel="Expense"
-        onConfirm={() => {
-          if (pendingDelete) onDelete(pendingDelete.id);
-          setPendingDelete(null);
-        }}
+        onConfirm={() => { if (pendingDelete) onDelete(pendingDelete.id); setPendingDelete(null); }}
         onCancel={() => setPendingDelete(null)}
       />
 
-      <table className="expense-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Category</th>
-            <th>Merchant</th>
-            <th>Description</th>
-            <th style={{ textAlign: 'right' }}>Amount</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {expenses.map((e) => {
-            const cat = e.category_id ? catMap.get(e.category_id) : null;
-            const editable = e.occurred_at.startsWith(currentMonth);
+      {archived.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+          <button
+            className="ghost"
+            style={{ width: 'auto', fontSize: 12 }}
+            onClick={() => setShowArchived(!showArchived)}
+          >
+            {showArchived ? '↑ Hide archived' : `↓ Show ${archived.length} archived`}
+          </button>
+        </div>
+      )}
 
-            return (
-              <tr key={e.id}>
-                <td data-label="Date">{e.occurred_at}</td>
-                <td data-label="Category">
-                  {cat ? `${cat.icon ?? ''} ${cat.name}` : <span className="muted">—</span>}
-                </td>
-                <td data-label="Merchant">{e.merchant ?? <span className="muted">—</span>}</td>
-                <td data-label="Description">
-                  <span>
-                    {e.description ?? <span className="muted">—</span>}
-                    {e.source === 'receipt' && (
-                      <span className="pill ok" style={{ marginLeft: 6 }}>receipt</span>
-                    )}
-                  </span>
-                </td>
-                <td data-label="Amount" style={{ textAlign: 'right' }}>
-                  <span>
-                    {formatMoney(e.amount, e.currency)}
-                    {e.conversion_rate && (
-                      <div className="muted" style={{ fontSize: 11 }}>
-                        ≈ {formatMoney(e.amount * e.conversion_rate, 'PHP')}
-                      </div>
-                    )}
-                  </span>
-                </td>
-                <td data-label="">
-                  {editable ? (
-                    <button
-                      className="ghost"
-                      style={{ width: 'auto' }}
-                      onClick={() => onEdit(e)}
-                    >
-                      Edit
-                    </button>
-                  ) : (
-                    <span
-                      className="muted"
-                      style={{ fontSize: 12, padding: '0 6px' }}
-                      title="Only current-month expenses can be edited"
-                    >
-                      🔒 Locked
-                    </span>
-                  )}
-                  <button
-                    className="danger"
-                    style={{ width: 'auto' }}
-                    onClick={() => setPendingDelete(e)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      {dates.map((date) => {
+        const items = grouped.get(date)!;
+        const isCollapsed = collapsed.has(date);
+        const isArchived = date < cutoff;
+        const total = items.reduce(
+          (s, e) => s + (e.conversion_rate ? e.amount * e.conversion_rate : e.amount),
+          0,
+        );
+
+        return (
+          <div key={date} className={`date-group${isArchived ? ' date-group-archived' : ''}`}>
+            <div
+              className="date-group-header"
+              onClick={() => toggleDate(date)}
+              role="button"
+              aria-expanded={!isCollapsed}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span className="date-group-chevron">{isCollapsed ? '▶' : '▼'}</span>
+                <span className="date-group-date">{formatDateLabel(date)}</span>
+                <span className="muted" style={{ fontSize: 12 }}>
+                  {items.length} item{items.length !== 1 ? 's' : ''}
+                </span>
+                {isArchived && <span className="pill warn" style={{ fontSize: 10 }}>archived</span>}
+              </div>
+              <span style={{ fontWeight: 600, flexShrink: 0 }}>{formatMoney(total)}</span>
+            </div>
+
+            {!isCollapsed && (
+              <div className="date-group-body">
+                <table className="expense-table">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Merchant</th>
+                      <th>Description</th>
+                      <th style={{ textAlign: 'right' }}>Amount</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((e) => {
+                      const cat = e.category_id ? catMap.get(e.category_id) : null;
+                      const editable = e.occurred_at.startsWith(currentMonth);
+                      return (
+                        <tr key={e.id}>
+                          <td data-label="Category">
+                            {cat ? `${cat.icon ?? ''} ${cat.name}` : <span className="muted">—</span>}
+                          </td>
+                          <td data-label="Merchant">{e.merchant ?? <span className="muted">—</span>}</td>
+                          <td data-label="Description">
+                            <span>
+                              {e.description ?? <span className="muted">—</span>}
+                              {e.source === 'receipt' && (
+                                <span className="pill ok" style={{ marginLeft: 6 }}>receipt</span>
+                              )}
+                            </span>
+                          </td>
+                          <td data-label="Amount" style={{ textAlign: 'right' }}>
+                            <span>
+                              {formatMoney(e.amount, e.currency)}
+                              {e.conversion_rate && (
+                                <div className="muted" style={{ fontSize: 11 }}>
+                                  ≈ {formatMoney(e.amount * e.conversion_rate, 'PHP')}
+                                </div>
+                              )}
+                            </span>
+                          </td>
+                          <td data-label="">
+                            {editable ? (
+                              <button className="ghost" style={{ width: 'auto' }} onClick={() => onEdit(e)}>
+                                Edit
+                              </button>
+                            ) : (
+                              <span
+                                className="muted"
+                                style={{ fontSize: 12, padding: '0 6px' }}
+                                title="Only current-month expenses can be edited"
+                              >
+                                🔒
+                              </span>
+                            )}
+                            <button
+                              className="danger"
+                              style={{ width: 'auto' }}
+                              onClick={() => setPendingDelete(e)}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </>
   );
 }

@@ -11,24 +11,25 @@ export default function BudgetAlerts({ statuses }: { statuses: BudgetStatus[] })
     <div>
       {statuses.map((s) => {
         const pct = Math.min(100, Math.round(s.pct_used * 100));
+        const css = s.status === 'warning' ? 'warn' : s.status; // ok | warn | over
         return (
           <div key={`${s.category_id ?? 'overall'}`} style={{ marginBottom: 12 }}>
             <div className="row" style={{ justifyContent: 'space-between' }}>
               <strong>{s.category_name}</strong>
-              <span className={`pill ${s.status}`}>
+              <span className={`pill ${css}`}>
                 {pct}% — {formatMoney(s.spent)} / {formatMoney(s.limit)}
               </span>
             </div>
-            <div className={`bar ${s.status === 'ok' ? '' : s.status}`} style={{ marginTop: 6 }}>
+            <div className={`bar bar-${css}`} style={{ marginTop: 6 }}>
               <div style={{ width: `${pct}%` }} />
             </div>
             {s.status === 'over' && (
-              <p style={{ color: 'var(--bad)', margin: '6px 0 0' }}>
+              <p style={{ color: 'var(--bad)', margin: '6px 0 0', fontSize: 13 }}>
                 Over budget by {formatMoney(-s.remaining)} this month.
               </p>
             )}
             {s.status === 'warning' && (
-              <p style={{ color: 'var(--warn)', margin: '6px 0 0' }}>
+              <p style={{ color: 'var(--warn)', margin: '6px 0 0', fontSize: 13 }}>
                 Approaching limit — {formatMoney(s.remaining)} left.
               </p>
             )}

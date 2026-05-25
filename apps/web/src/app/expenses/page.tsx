@@ -11,6 +11,7 @@ import {
 } from '@/lib/db';
 import ExpenseForm from '@/components/ExpenseForm';
 import ExpenseList from '@/components/ExpenseList';
+import FormModal from '@/components/FormModal';
 import MonthEndBanner from '@/components/MonthEndBanner';
 
 export default function ExpensesPage() {
@@ -39,16 +40,21 @@ export default function ExpensesPage() {
     })();
   }, []);
 
+  function closeModal() {
+    setShowAdd(false);
+    setEditing(null);
+  }
+
   async function handleCreate(input: ExpenseInput) {
     await createExpense(input);
-    setShowAdd(false);
+    closeModal();
     await reload();
   }
 
   async function handleUpdate(input: ExpenseInput) {
     if (!editing) return;
     await updateExpense(editing.id, input);
-    setEditing(null);
+    closeModal();
     await reload();
   }
 
@@ -60,39 +66,35 @@ export default function ExpensesPage() {
   if (loading) return <p className="muted">Loading…</p>;
   if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
 
+  const modalOpen = showAdd || editing !== null;
+  const modalTitle = editing ? 'Edit Expense' : 'Add Expense';
+
   return (
     <div>
-      <MonthEndBanner />
-      <div className="row" style={{ justifyContent: 'space-between' }}>
-        <h1>Expenses</h1>
-        {!showAdd && !editing && (
-          <button className="primary" onClick={() => setShowAdd(true)}>
-            + Add expense
-          </button>
-        )}
-      </div>
-
-      {showAdd && (
-        <ExpenseForm
-          categories={categories}
-          onSubmit={handleCreate}
-          onCancel={() => setShowAdd(false)}
-        />
-      )}
-      {editing && (
+      <FormModal open={modalOpen} title={modalTitle} onClose={closeModal}>
         <ExpenseForm
           categories={categories}
           initial={editing}
-          onSubmit={handleUpdate}
-          onCancel={() => setEditing(null)}
+          onSubmit={editing ? handleUpdate : handleCreate}
+          onCancel={closeModal}
+          embedded
         />
-      )}
+      </FormModal>
+
+      <MonthEndBanner />
+
+      <div className="row" style={{ justifyContent: 'space-between', marginBottom: 16 }}>
+        <h1 style={{ margin: 0 }}>Expenses</h1>
+        <button className="primary" style={{ width: 'auto' }} onClick={() => setShowAdd(true)}>
+          + Add Expense
+        </button>
+      </div>
 
       <div className="card">
         <ExpenseList
           expenses={expenses}
           categories={categories}
-          onEdit={setEditing}
+          onEdit={(e) => setEditing(e)}
           onDelete={handleDelete}
         />
       </div>

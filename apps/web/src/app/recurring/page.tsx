@@ -11,6 +11,7 @@ import {
   updateRecurring,
 } from '@/lib/db';
 import DeleteModal from '@/components/DeleteModal';
+import FormModal from '@/components/FormModal';
 
 const cadences: RecurringCadence[] = ['weekly', 'monthly', 'yearly'];
 const cadenceLabel: Record<RecurringCadence, string> = {
@@ -33,6 +34,7 @@ export default function RecurringPage() {
   const [items, setItems] = useState<RecurringExpense[]>([]);
   const [draft, setDraft] = useState<RecurringInput>(empty);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<RecurringExpense | null>(null);
@@ -65,11 +67,14 @@ export default function RecurringPage() {
       next_charge_date: r.next_charge_date,
       active: r.active,
     });
+    setShowForm(true);
   }
 
   function reset() {
     setEditingId(null);
     setDraft(empty);
+    setShowForm(false);
+    setErr(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -103,86 +108,99 @@ export default function RecurringPage() {
         onCancel={() => setPendingDelete(null)}
       />
 
-      <h1>Recurring Expenses</h1>
-      <p className="muted">Track subscriptions (Netflix, rent, gym). They show on the dashboard so you can plan ahead.</p>
-
-      <form onSubmit={handleSubmit} className="card">
-        <div className="grid cols-3">
-          <label>
-            <div className="muted">Name</div>
-            <input
-              value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-              required
-            />
-          </label>
-          <label>
-            <div className="muted">Amount</div>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={draft.amount || ''}
-              onChange={(e) => setDraft({ ...draft, amount: parseFloat(e.target.value) || 0 })}
-              placeholder="0.00"
-              required
-            />
-          </label>
-          <label>
-            <div className="muted">Cadence</div>
-            <select
-              value={draft.cadence}
-              onChange={(e) => setDraft({ ...draft, cadence: e.target.value as RecurringCadence })}
-            >
-              {cadences.map((c) => (
-                <option key={c} value={c}>{cadenceLabel[c]}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <div className="muted">Category</div>
-            <select
-              value={draft.category_id ?? ''}
-              onChange={(e) => setDraft({ ...draft, category_id: e.target.value || null })}
-            >
-              <option value="">— Uncategorized —</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.icon} {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <div className="muted">Next Charge Date</div>
-            <input
-              type="date"
-              value={draft.next_charge_date}
-              onChange={(e) => setDraft({ ...draft, next_charge_date: e.target.value })}
-              required
-            />
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={draft.active}
-              onChange={(e) => setDraft({ ...draft, active: e.target.checked })}
-            />
-            <span>Active</span>
-          </label>
-        </div>
-        {err && <p style={{ color: 'var(--bad)' }}>{err}</p>}
-        <div className="row" style={{ marginTop: 12 }}>
-          <button type="submit" className="primary" style={{ width: 'auto' }}>
-            {editingId ? 'Update' : 'Add Recurring'}
-          </button>
-          {editingId && (
+      <FormModal
+        open={showForm}
+        title={editingId ? 'Edit Recurring Expense' : 'Add Recurring Expense'}
+        onClose={reset}
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="grid cols-3">
+            <label>
+              <div className="muted">Name</div>
+              <input
+                value={draft.name}
+                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                required
+              />
+            </label>
+            <label>
+              <div className="muted">Amount</div>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={draft.amount || ''}
+                onChange={(e) => setDraft({ ...draft, amount: parseFloat(e.target.value) || 0 })}
+                required
+              />
+            </label>
+            <label>
+              <div className="muted">Cadence</div>
+              <select
+                value={draft.cadence}
+                onChange={(e) => setDraft({ ...draft, cadence: e.target.value as RecurringCadence })}
+              >
+                {cadences.map((c) => (
+                  <option key={c} value={c}>{cadenceLabel[c]}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <div className="muted">Category</div>
+              <select
+                value={draft.category_id ?? ''}
+                onChange={(e) => setDraft({ ...draft, category_id: e.target.value || null })}
+              >
+                <option value="">— Uncategorized —</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <div className="muted">Next Charge Date</div>
+              <input
+                type="date"
+                value={draft.next_charge_date}
+                onChange={(e) => setDraft({ ...draft, next_charge_date: e.target.value })}
+                required
+              />
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 20 }}>
+              <input
+                type="checkbox"
+                checked={draft.active}
+                onChange={(e) => setDraft({ ...draft, active: e.target.checked })}
+              />
+              <span>Active</span>
+            </label>
+          </div>
+          {err && <p style={{ color: 'var(--bad)', marginTop: 8 }}>{err}</p>}
+          <div className="row" style={{ marginTop: 16 }}>
+            <button type="submit" className="primary" style={{ width: 'auto' }}>
+              {editingId ? 'Update' : 'Add Recurring'}
+            </button>
             <button type="button" className="ghost" style={{ width: 'auto' }} onClick={reset}>
               Cancel
             </button>
-          )}
-        </div>
-      </form>
+          </div>
+        </form>
+      </FormModal>
+
+      <div className="row" style={{ justifyContent: 'space-between', marginBottom: 4 }}>
+        <h1 style={{ margin: 0 }}>Recurring Expenses</h1>
+        <button
+          className="primary"
+          style={{ width: 'auto' }}
+          onClick={() => setShowForm(true)}
+        >
+          + Add Recurring
+        </button>
+      </div>
+      <p className="muted" style={{ marginBottom: 16 }}>
+        Track subscriptions (Netflix, rent, gym). They show on the dashboard so you can plan ahead.
+      </p>
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>Current Recurring</h2>
@@ -214,20 +232,8 @@ export default function RecurringPage() {
                       <td data-label="Amount" style={{ textAlign: 'right' }}>{formatMoney(r.amount)}</td>
                       <td data-label="Active">{r.active ? 'Yes' : 'No'}</td>
                       <td data-label="">
-                        <button
-                          className="ghost"
-                          style={{ width: 'auto' }}
-                          onClick={() => startEdit(r)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="danger"
-                          style={{ width: 'auto' }}
-                          onClick={() => setPendingDelete(r)}
-                        >
-                          Delete
-                        </button>
+                        <button className="ghost" style={{ width: 'auto' }} onClick={() => startEdit(r)}>Edit</button>
+                        <button className="danger" style={{ width: 'auto' }} onClick={() => setPendingDelete(r)}>Delete</button>
                       </td>
                     </tr>
                   );

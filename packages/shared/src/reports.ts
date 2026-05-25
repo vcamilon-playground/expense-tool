@@ -107,7 +107,7 @@ export function budgetStatus(
     const spent = b.category_id ? spentByCat.get(b.category_id) ?? 0 : month.total;
     const remaining = b.monthly_limit - spent;
     const pct_used = b.monthly_limit > 0 ? spent / b.monthly_limit : 0;
-    const status: BudgetStatus['status'] = pct_used >= 1 ? 'over' : pct_used >= 0.8 ? 'warning' : 'ok';
+    const status: BudgetStatus['status'] = pct_used > 0.90 ? 'over' : pct_used > 0.75 ? 'warning' : 'ok';
     return {
       category_id: b.category_id,
       category_name: b.category_id ? catMap.get(b.category_id) ?? 'Unknown' : 'Overall',

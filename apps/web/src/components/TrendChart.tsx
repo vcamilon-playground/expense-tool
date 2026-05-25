@@ -2,6 +2,7 @@
 
 import {
   Bar,
+  Cell,
   ComposedChart,
   CartesianGrid,
   Line,
@@ -16,6 +17,14 @@ import type { Budget, Expense } from '@expense/shared';
 
 type Props = { expenses: Expense[]; budgets: Budget[] };
 type Point = { month: string; Spent: number; Budget?: number };
+
+function barColor(spent: number, budget?: number): string {
+  if (!budget || budget === 0) return '#5b8def';
+  const pct = spent / budget;
+  if (pct > 0.90) return '#ef6f6c'; // red
+  if (pct > 0.75) return '#f6c177'; // amber
+  return '#4cc38a';                  // green
+}
 
 function buildTrend(expenses: Expense[], budgets: Budget[]): Point[] {
   const overall = budgets.find((b) => b.category_id === null);
@@ -76,7 +85,11 @@ export default function TrendChart({ expenses, budgets }: Props) {
             wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
             formatter={(v: string) => <span style={{ color: 'var(--muted)' }}>{v}</span>}
           />
-          <Bar dataKey="Spent" fill="#5b8def" radius={[4, 4, 0, 0]} maxBarSize={48} />
+          <Bar dataKey="Spent" radius={[4, 4, 0, 0]} maxBarSize={48}>
+            {data.map((entry, i) => (
+              <Cell key={i} fill={barColor(entry.Spent, entry.Budget)} />
+            ))}
+          </Bar>
           {hasBudget && (
             <Line
               dataKey="Budget"

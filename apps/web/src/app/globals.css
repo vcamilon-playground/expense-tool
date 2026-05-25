@@ -26,6 +26,8 @@
 
 * { box-sizing: border-box; }
 
+/* ── Sticky footer layout ── */
+html { height: 100%; }
 html, body {
   margin: 0;
   padding: 0;
@@ -33,6 +35,11 @@ html, body {
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, sans-serif;
   font-size: 14px;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 a { color: var(--accent); text-decoration: none; }
@@ -48,6 +55,7 @@ nav.topnav {
   align-items: center;
   position: relative;
   z-index: 100;
+  flex-shrink: 0;
 }
 
 nav.topnav a.brand {
@@ -59,7 +67,6 @@ nav.topnav a.brand {
   white-space: nowrap;
 }
 nav.topnav a.brand:hover { background: transparent; text-decoration: none; }
-
 nav.topnav a { color: var(--muted); padding: 6px 10px; border-radius: 6px; }
 nav.topnav a:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
 nav.topnav a.active { background: var(--panel-2); color: var(--text); }
@@ -82,18 +89,15 @@ nav.topnav a.active { background: var(--panel-2); color: var(--text); }
 }
 .nav-toggle:hover { background: var(--panel-2); }
 
-.nav-links {
-  display: flex;
-  flex: 1;
-  gap: 2px;
-  align-items: center;
-}
+.nav-links { display: flex; flex: 1; gap: 2px; align-items: center; }
 
 /* ── Layout ── */
 main.container {
+  flex: 1;
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px;
+  width: 100%;
 }
 
 /* ── Typography ── */
@@ -113,7 +117,6 @@ h3 { font-size: 15px; margin: 16px 0 8px; color: var(--muted); }
 
 /* ── Grid ── */
 .grid { display: grid; gap: 12px; }
-/* Prevent grid children from overflowing their column */
 .grid > * { min-width: 0; }
 .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
 .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
@@ -129,10 +132,34 @@ table { width: 100%; border-collapse: collapse; }
 th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
 th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
 
+/* ── Date groups (expense list) ── */
+.date-group {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.date-group-archived { opacity: 0.72; }
+.date-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--panel-2);
+  cursor: pointer;
+  user-select: none;
+  gap: 8px;
+}
+.date-group-header:hover { background: var(--border); }
+.date-group-date { font-weight: 600; font-size: 14px; }
+.date-group-chevron { font-size: 9px; color: var(--muted); flex-shrink: 0; }
+.date-group-body { background: var(--panel); }
+.date-group-body .expense-table { margin: 0; }
+.date-group-body tr:last-child td { border-bottom: none; }
+
 /* ── Forms ── */
 label { display: block; min-width: 0; }
 
-/* Uniform field height and sizing */
 input:not([type="checkbox"]),
 select {
   background: var(--panel-2);
@@ -159,21 +186,13 @@ textarea {
   min-width: 0;
   resize: vertical;
 }
-input[type="checkbox"] {
-  width: auto;
-  height: auto;
-  accent-color: var(--accent);
-}
+input[type="checkbox"] { width: auto; height: auto; accent-color: var(--accent); }
 
-/* Remove spinner arrows from number inputs */
+/* Remove number spinner arrows */
 input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }
 
-/* Date input: prevent overflow on mobile */
 input[type="date"] { max-width: 100%; }
 
 input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
@@ -198,30 +217,25 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 /* ── Utilities ── */
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .muted { color: var(--muted); }
+
+/* ── Budget bars ── */
 .bar { background: var(--panel-2); height: 8px; border-radius: 4px; overflow: hidden; }
 .bar > div { height: 100%; background: var(--accent); }
-.bar.warn > div { background: var(--warn); }
-.bar.over > div { background: var(--bad); }
+.bar.bar-ok > div { background: var(--ok); }
+.bar.bar-warn > div { background: var(--warn); }
+.bar.bar-over > div { background: var(--bad); }
+
+/* ── Pills ── */
 .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; }
 .pill.ok { background: rgba(76, 195, 138, 0.15); color: var(--ok); }
 .pill.warn { background: rgba(246, 193, 119, 0.15); color: var(--warn); }
 .pill.over { background: rgba(239, 111, 108, 0.15); color: var(--bad); }
 
 /* ── Banners ── */
-.banner {
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-  font-size: 14px;
-  line-height: 1.5;
-}
-.banner-warn {
-  background: rgba(246, 193, 119, 0.1);
-  border: 1px solid var(--warn);
-  color: var(--warn);
-}
+.banner { border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; line-height: 1.5; }
+.banner-warn { background: rgba(246, 193, 119, 0.1); border: 1px solid var(--warn); color: var(--warn); }
 
-/* ── Modal ── */
+/* ── Modal (delete / generic) ── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -240,18 +254,44 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   max-width: 400px;
   width: 100%;
 }
-.modal h3 { color: var(--text); font-size: 17px; }
+.modal h3 { color: var(--text); font-size: 17px; margin: 0 0 10px; }
 .modal p { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 0 0 8px; }
 .modal-warning { color: var(--warn) !important; }
+
+/* ── Form modal (wider, scrollable) ── */
+.form-overlay { align-items: center; }
+.form-modal {
+  max-width: 580px;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { margin: 0; font-size: 17px; }
+.close-btn {
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 8px;
+  height: 32px;
+  color: var(--muted);
+}
 
 /* ── Footer ── */
 .site-footer {
   text-align: center;
-  padding: 20px 24px;
+  padding: 16px 24px;
   color: var(--muted);
   font-size: 12px;
   border-top: 1px solid var(--border);
-  margin-top: 16px;
+  flex-shrink: 0;
 }
 
 /* ── Responsive: tablet (≤800px) ── */
@@ -262,7 +302,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Responsive: mobile (≤640px) ── */
 @media (max-width: 640px) {
-  /* Nav hamburger */
   .nav-toggle { display: flex; }
   .nav-links {
     display: none;
@@ -280,23 +319,30 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   .nav-links.open { display: flex; }
   nav.topnav a:not(.brand) { padding: 12px 20px; border-radius: 0; width: 100%; }
 
-  /* Layout */
   main.container { padding: 12px; }
   h1 { font-size: 19px; }
   h2 { font-size: 16px; }
 
-  /* Grids collapse to single column */
   .grid.cols-2,
   .grid.cols-3,
   .grid.cols-4 { grid-template-columns: 1fr; }
 
-  /* Stat values slightly smaller */
   .stat .value { font-size: 18px; }
-
-  /* Labels in flex rows stack full-width */
   .row > label { flex: 1 1 100%; }
 
-  /* Expense table: card view on mobile */
+  /* Date group header on mobile */
+  .date-group-date { font-size: 13px; }
+
+  /* Form modal: near full-screen on mobile */
+  .form-overlay { align-items: flex-end; padding: 0; }
+  .form-modal {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 16px;
+  }
+
+  /* Expense table: card view */
   .expense-table thead { display: none; }
   .expense-table tbody tr {
     display: block;
@@ -323,14 +369,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     line-height: 1.7;
     min-width: 80px;
   }
-  .expense-table td[data-label=""] {
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 6px;
-  }
+  .expense-table td[data-label=""] { justify-content: flex-end; gap: 8px; margin-top: 6px; }
   .expense-table td[data-label=""]::before { display: none; }
 
-  /* Recurring table: card view on mobile */
+  /* Recurring table: card view */
   .recurring-table thead { display: none; }
   .recurring-table tbody tr {
     display: block;
@@ -358,11 +400,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     line-height: 1.7;
     min-width: 90px;
   }
-  .recurring-table td[data-label=""] {
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 6px;
-  }
+  .recurring-table td[data-label=""] { justify-content: flex-end; gap: 8px; margin-top: 6px; }
   .recurring-table td[data-label=""]::before { display: none; }
 }
 

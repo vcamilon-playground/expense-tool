@@ -8,11 +8,12 @@ type Props = {
   initial?: Expense | null;
   onSubmit: (input: ExpenseInput) => Promise<void>;
   onCancel?: () => void;
+  embedded?: boolean;
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export default function ExpenseForm({ categories, initial, onSubmit, onCancel }: Props) {
+export default function ExpenseForm({ categories, initial, onSubmit, onCancel, embedded }: Props) {
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
   const [currency, setCurrency] = useState(initial?.currency ?? 'PHP');
   const [conversionRate, setConversionRate] = useState(
@@ -62,7 +63,7 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel }:
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card">
+    <form onSubmit={handleSubmit} className={embedded ? undefined : 'card'}>
       <div className="grid cols-3">
         <label>
           <div className="muted">Amount</div>
@@ -70,6 +71,7 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel }:
             type="number"
             step="0.01"
             min="0"
+            placeholder="0.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
@@ -109,11 +111,10 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel }:
         <label>
           <div className="muted">Category</div>
           <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-            <option value="">— uncategorized —</option>
+            <option value="">— Uncategorized —</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.icon ? `${c.icon} ` : ''}
-                {c.name}
+                {c.icon ? `${c.icon} ` : ''}{c.name}
               </option>
             ))}
           </select>
@@ -128,17 +129,16 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel }:
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            style={{ width: '100%' }}
           />
         </label>
       </div>
-      {error && <p style={{ color: 'var(--bad)' }}>{error}</p>}
+      {error && <p style={{ color: 'var(--bad)', marginTop: 8 }}>{error}</p>}
       <div className="row" style={{ marginTop: 12 }}>
-        <button type="submit" className="primary" disabled={submitting}>
-          {submitting ? 'Saving…' : initial ? 'Update' : 'Add expense'}
+        <button type="submit" className="primary" style={{ width: 'auto' }} disabled={submitting}>
+          {submitting ? 'Saving…' : initial ? 'Update' : 'Add Expense'}
         </button>
         {onCancel && (
-          <button type="button" className="ghost" onClick={onCancel}>
+          <button type="button" className="ghost" style={{ width: 'auto' }} onClick={onCancel}>
             Cancel
           </button>
         )}
