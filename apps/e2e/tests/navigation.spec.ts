@@ -3,14 +3,14 @@ import { test, expect } from '@playwright/test';
 test.describe('Navigation', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    // Wait for the nav to be rendered — avoids networkidle which hangs on Next.js
+    // Wait for the nav to render — avoids networkidle which hangs on Next.js
     await expect(page.locator('nav.topnav')).toBeVisible();
   });
 
   test('brand link navigates to dashboard', async ({ page }) => {
     await page.goto('/expenses');
     await expect(page.locator('nav.topnav')).toBeVisible();
-    await page.getByRole('link', { name: /💸 Expenses/i }).click();
+    await page.getByRole('link', { name: '💸 Expenses' }).click();
     await expect(page).toHaveURL('/');
   });
 
@@ -23,7 +23,8 @@ test.describe('Navigation', () => {
     ];
 
     for (const [label, href] of navLinks) {
-      await page.getByRole('navigation').getByRole('link', { name: label }).click();
+      // exact: true prevents the brand link "💸 Expenses" from matching "Expenses"
+      await page.getByRole('navigation').getByRole('link', { name: label, exact: true }).click();
       await expect(page).toHaveURL(href);
     }
   });
@@ -31,14 +32,14 @@ test.describe('Navigation', () => {
   test('active nav link is highlighted on expenses page', async ({ page }) => {
     await page.goto('/expenses');
     await expect(page.locator('nav.topnav')).toBeVisible();
-    const expensesLink = page.getByRole('navigation').getByRole('link', { name: 'Expenses' });
+    const expensesLink = page.getByRole('navigation').getByRole('link', { name: 'Expenses', exact: true });
     await expect(expensesLink).toHaveClass(/active/);
   });
 
   test('active nav link is highlighted on reports page', async ({ page }) => {
     await page.goto('/reports');
     await expect(page.locator('nav.topnav')).toBeVisible();
-    const reportsLink = page.getByRole('navigation').getByRole('link', { name: 'Reports' });
+    const reportsLink = page.getByRole('navigation').getByRole('link', { name: 'Reports', exact: true });
     await expect(reportsLink).toHaveClass(/active/);
   });
 
@@ -69,7 +70,7 @@ test.describe('Navigation — mobile hamburger', () => {
     await page.goto('/');
     await expect(page.locator('nav.topnav')).toBeVisible();
     await page.getByRole('button', { name: 'Toggle navigation' }).click();
-    await page.locator('.nav-links').getByRole('link', { name: 'Expenses' }).click();
+    await page.locator('.nav-links').getByRole('link', { name: 'Expenses', exact: true }).click();
     await expect(page).toHaveURL('/expenses');
     await expect(page.locator('.nav-links')).not.toHaveClass(/open/);
   });

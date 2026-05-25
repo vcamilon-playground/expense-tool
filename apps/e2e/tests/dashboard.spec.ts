@@ -17,8 +17,8 @@ test.describe('Dashboard', () => {
   test('four KPI stat cards are visible', async ({ page }) => {
     // Today, This Week, This Month, This Year
     await expect(page.locator('.stat')).toHaveCount(4);
-    await expect(page.getByText('Today')).toBeVisible();
-    await expect(page.getByText('This Month')).toBeVisible();
+    await expect(page.locator('.stat .label').filter({ hasText: 'Today' })).toBeVisible();
+    await expect(page.locator('.stat .label').filter({ hasText: 'This Month' })).toBeVisible();
   });
 
   test('budget status section is present', async ({ page }) => {
