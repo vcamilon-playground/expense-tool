@@ -1,0 +1,102 @@
+name: E2E Auto-Heal
+
+on:
+  workflow_run:
+    workflows: ["E2E Tests"]
+    types: [completed]
+
+# Only one autoheal at a time; cancel a queued one if a newer failure arrives.
+concurrency:
+  group: autoheal
+  cancel-in-progress: true
+
+jobs:
+  autoheal:
+    name: Auto-heal failing tests
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout main (with PAT so push re-triggers CI)
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          ref: main
+          fetch-depth: 2
+
+      - name: Skip if last commit is already an autoheal fix
+        id: guard
+        run: |
+          LAST_MSG=$(git log -1 --format="%s")
+          echo "Last commit: $LAST_MSG"
+          if echo "$LAST_MSG" | grep -q "\[autoheal\]"; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Last commit is already an autoheal fix — stopping to prevent loop."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Get failure logs
+        if: steps.guard.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run view ${{ github.event.workflow_run.id }} --log-failed \
+            > /tmp/failure-logs.txt 2>&1 || true
+          echo "=== Failure logs ===" && cat /tmp/failure-logs.txt
+
+      - name: Set up Node
+        if: steps.guard.outputs.skip == 'false'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install project dependencies
+        if: steps.guard.outputs.skip == 'false'
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Claude CLI
+        if: steps.guard.outputs.skip == 'false'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Configure git
+        if: steps.guard.outputs.skip == 'false'
+        run: |
+          git config user.name "Claude Auto-Heal"
+          git config user.email "autoheal@users.noreply.github.com"
+
+      - name: Run Claude auto-heal
+        if: steps.guard.outputs.skip == 'false'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          LOGS=$(cat /tmp/failure-logs.txt)
+          claude --dangerouslySkipPermissions -p "
+          You are auto-healing failing Playwright tests for an expense tracking app.
+          Read CLAUDE.md first — it contains the full auto-healing instructions.
+
+          CI failure logs from workflow run ${{ github.event.workflow_run.id }}:
+          ---
+          ${LOGS}
+          ---
+
+          Follow the auto-healing workflow in CLAUDE.md exactly:
+          1. Read the logs and identify every failing test and its error message.
+          2. Diagnose the root cause for each failure (selector changed, label changed, route changed, etc.).
+          3. Fix ONLY the page object(s) in apps/e2e/tests/pages/ — do NOT edit spec files unless the test logic itself is wrong.
+          4. Do NOT run tests, do NOT start a dev server, do NOT run npm commands.
+          5. Stage only the files you changed with git add.
+          6. Commit with the message: fix(e2e): <short description of what changed> [autoheal]
+          "
+
+      - name: Push fix (only if Claude made changes)
+        if: steps.guard.outputs.skip == 'false'
+        run: |
+          if git diff --quiet HEAD; then
+            echo "Claude made no changes — no push needed."
+          else
+            git push origin main
+            echo "Fix pushed. Vercel will redeploy and re-trigger CI automatically."
+          fi
