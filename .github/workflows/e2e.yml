@@ -41,6 +41,7 @@ jobs:
         working-directory: apps/e2e
         env:
           BASE_URL: ${{ github.event.deployment_status.target_url }}
+          VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_BYPASS_SECRET }}
           CI: true
 
       - name: Upload test report

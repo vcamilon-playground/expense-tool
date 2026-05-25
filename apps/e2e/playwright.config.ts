@@ -21,6 +21,11 @@ export default defineConfig({
     actionTimeout: 15_000,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    ...(process.env.VERCEL_BYPASS_SECRET && {
+      extraHTTPHeaders: {
+        'x-vercel-protection-bypass': process.env.VERCEL_BYPASS_SECRET,
+      },
+    }),
   },
 
   projects: [
