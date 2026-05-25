@@ -125,6 +125,42 @@ await expect(page.getByText('Loading…')).toBeHidden({ timeout: 20_000 });
 4. Prefer role-based selectors (`getByRole`, `getByRole` scoped to a container) over CSS class selectors.
 5. When a locator could match multiple elements, scope it — e.g. `dialog.getByRole('button', ...)` instead of `page.getByRole('button', ...)`.
 
+### Tests that write data
+
+Tests run against the live production Supabase database. **All current tests are intentionally read-only** — they open modals but never submit a form successfully.
+
+If a future test must write a row, follow this pattern to avoid leaving test data behind:
+
+1. Prefix every test-created value with `[E2E]` (e.g. description `"[E2E] coffee"`).
+2. Delete all `[E2E]`-tagged rows in an `afterAll` hook via the Supabase REST API — no SDK needed:
+
+```ts
+import { test } from '@playwright/test';
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+async function deleteTestRows(table: string) {
+  await fetch(
+    `${SUPABASE_URL}/rest/v1/${table}?description=like.*%5BE2E%5D*`,
+    {
+      method: 'DELETE',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        Prefer: 'return=minimal',
+      },
+    },
+  );
+}
+
+test.afterAll(async () => {
+  await deleteTestRows('expenses');
+});
+```
+
+3. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to the workflow env block so the cleanup hook can reach Supabase from CI.
+
 ---
 
 ## Troubleshooting
