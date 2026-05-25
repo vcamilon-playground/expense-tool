@@ -40,6 +40,8 @@ jobs:
         working-directory: apps/e2e
         env:
           BASE_URL: ${{ github.event.deployment_status.target_url }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           CI: true
 
       - name: Upload test report

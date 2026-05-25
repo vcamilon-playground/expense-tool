@@ -63,9 +63,12 @@ cd apps/e2e && npx playwright show-report
 | `tests/navigation.spec.ts` | Nav links, active state highlighting, brand link, mobile hamburger menu |
 | `tests/dashboard.spec.ts` | Dashboard heading, KPI stat cards, Budget Status / Category Chart / Trend sections |
 | `tests/expenses.spec.ts` | Page load, Add Expense modal open/close, required fields, Escape key, backdrop dismiss |
+| `tests/expenses.regression.spec.ts` | Full CRUD: create → verify → edit → verify → delete → verify; cleans up via API |
 | `tests/recurring.spec.ts` | Page load, Add Recurring modal, required fields, cadence dropdown capitalization |
+| `tests/recurring.regression.spec.ts` | Full CRUD: create → verify → edit → verify → delete → verify; cleans up via API |
 | `tests/reports.spec.ts` | Page load, Period select, export buttons (CSV/Excel/PDF), period change updates range |
 | `tests/budgets.spec.ts` | Page load, inline budget form, Save Budget button, Current Budgets section |
+| `tests/helpers/supabase.ts` | Shared Supabase REST helper — tags and deletes E2E test rows after each run |
 
 ---
 
@@ -127,39 +130,13 @@ await expect(page.getByText('Loading…')).toBeHidden({ timeout: 20_000 });
 
 ### Tests that write data
 
-Tests run against the live production Supabase database. **All current tests are intentionally read-only** — they open modals but never submit a form successfully.
+Regression tests (`*.regression.spec.ts`) run full CRUD cycles against the live production Supabase database. They use a shared cleanup helper at `tests/helpers/supabase.ts` to ensure no test data is left behind:
 
-If a future test must write a row, follow this pattern to avoid leaving test data behind:
+- **Expenses** are tagged with `merchant = 'E2E-TEST'` and deleted via `cleanup.expenses()`.
+- **Recurring** items are named `'E2E Test Subscription'` and deleted via `cleanup.recurring()`.
+- Both `beforeAll` (to clear leftovers from a previous failed run) and `afterAll` (to clean up after the current run) call the cleanup functions — so the database is always clean regardless of whether the test passes or fails.
 
-1. Prefix every test-created value with `[E2E]` (e.g. description `"[E2E] coffee"`).
-2. Delete all `[E2E]`-tagged rows in an `afterAll` hook via the Supabase REST API — no SDK needed:
-
-```ts
-import { test } from '@playwright/test';
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-async function deleteTestRows(table: string) {
-  await fetch(
-    `${SUPABASE_URL}/rest/v1/${table}?description=like.*%5BE2E%5D*`,
-    {
-      method: 'DELETE',
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        Prefer: 'return=minimal',
-      },
-    },
-  );
-}
-
-test.afterAll(async () => {
-  await deleteTestRows('expenses');
-});
-```
-
-3. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to the workflow env block so the cleanup hook can reach Supabase from CI.
+The cleanup uses the Supabase REST API directly (no SDK) with a `DELETE` request scoped to the tagged rows. For CI, add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as GitHub repository secrets (same values as your Vercel `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`). For local runs, export them in your shell or `.env` file.
 
 ---
 
