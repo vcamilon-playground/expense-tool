@@ -1,9 +1,9 @@
 /**
- * Reads Playwright CI failure logs, asks Groq to identify fixes,
+ * Reads Playwright CI failure logs, asks Claude to identify fixes,
  * then writes corrected page-object files back to disk.
  *
  * Usage:
- *   GROQ_API_KEY=<key> node scripts/autoheal.mjs <log-file>
+ *   ANTHROPIC_API_KEY=<key> node scripts/autoheal.mjs <log-file>
  */
 
 import fs from 'fs';
@@ -13,9 +13,9 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-if (!GROQ_API_KEY) {
-  console.error('[autoheal] GROQ_API_KEY is not set — aborting.');
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+if (!ANTHROPIC_API_KEY) {
+  console.error('[autoheal] ANTHROPIC_API_KEY is not set — aborting.');
   process.exit(1);
 }
 
@@ -28,17 +28,30 @@ if (!logFile || !fs.existsSync(logFile)) {
 const logs = fs.readFileSync(logFile, 'utf-8');
 const claudeMd = fs.readFileSync(path.join(ROOT, 'CLAUDE.md'), 'utf-8');
 
-// Collect all page objects so Groq has full context
+// Collect all page objects so Claude has full context
 const pagesDir = path.join(ROOT, 'apps/e2e/tests/pages');
 const pageFiles = fs.readdirSync(pagesDir).filter((f) => f.endsWith('.ts'));
 const pageObjects = pageFiles
   .map((f) => `=== apps/e2e/tests/pages/${f} ===\n${fs.readFileSync(path.join(pagesDir, f), 'utf-8')}`)
   .join('\n\n');
 
+// Also collect the web app NavBar component so Claude knows the real HTML
+const navBarComponent = path.join(ROOT, 'apps/web/src/components/NavBar.tsx');
+const appContext = fs.existsSync(navBarComponent)
+  ? `=== apps/web/src/components/NavBar.tsx ===\n${fs.readFileSync(navBarComponent, 'utf-8')}`
+  : '';
+
 const systemPrompt = `
 You are an expert Playwright test maintainer. Your only job is to fix failing tests
 by updating page object locators — you never touch spec files unless test logic is wrong,
 and you never run tests or servers.
+
+When choosing a locator, always prefer Playwright's recommended priority:
+1. getByRole (with accessible name) — most resilient
+2. getByText / getByLabel — for non-interactive elements
+3. CSS class selectors — only as a last resort, and only for classes that exist in the provided source
+
+Never invent selectors. Only use selectors that are visible in the provided source files.
 
 The project conventions are documented in CLAUDE.md (provided below).
 `.trim();
@@ -46,6 +59,9 @@ The project conventions are documented in CLAUDE.md (provided below).
 const userPrompt = `
 ## CLAUDE.md (project conventions)
 ${claudeMd}
+
+## Web app component source (use this to find correct selectors)
+${appContext}
 
 ## Current page objects
 ${pageObjects}
@@ -55,7 +71,7 @@ ${logs}
 
 ## Your task
 1. Read every failing test error in the logs.
-2. For each failure, identify the root cause (wrong selector, wrong label text, wrong URL, etc.).
+2. Cross-reference the web app source to find the correct selector.
 3. Produce the minimal fix for each affected page object file.
 
 Respond with ONLY a JSON array. Each element has exactly these keys:
@@ -67,19 +83,20 @@ If no changes are needed, respond with an empty array: []
 Do not include any explanation outside the JSON array.
 `.trim();
 
-console.log('[autoheal] Sending logs to Groq…');
+console.log('[autoheal] Sending logs to Claude…');
 
-const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+const response = await fetch('https://api.anthropic.com/v1/messages', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${GROQ_API_KEY}`,
+    'x-api-key': ANTHROPIC_API_KEY,
+    'anthropic-version': '2023-06-01',
   },
   body: JSON.stringify({
-    model: 'llama-3.3-70b-versatile',
-    temperature: 0,
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 4096,
+    system: systemPrompt,
     messages: [
-      { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
   }),
@@ -87,26 +104,26 @@ const response = await fetch('https://api.groq.com/openai/v1/chat/completions', 
 
 if (!response.ok) {
   const err = await response.text();
-  console.error(`[autoheal] Groq API error ${response.status}: ${err}`);
+  console.error(`[autoheal] Claude API error ${response.status}: ${err}`);
   process.exit(1);
 }
 
 const data = await response.json();
-const raw = data.choices?.[0]?.message?.content ?? '';
+const raw = data.content?.[0]?.text ?? '';
 
-// Strip markdown code fences if Groq wraps the JSON
+// Strip markdown code fences if Claude wraps the JSON
 const jsonText = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
 
 let fixes;
 try {
   fixes = JSON.parse(jsonText);
 } catch {
-  console.error('[autoheal] Could not parse Groq response as JSON:\n', raw);
+  console.error('[autoheal] Could not parse Claude response as JSON:\n', raw);
   process.exit(1);
 }
 
 if (!Array.isArray(fixes) || fixes.length === 0) {
-  console.log('[autoheal] Groq found no fixes needed.');
+  console.log('[autoheal] Claude found no fixes needed.');
   process.exit(0);
 }
 
