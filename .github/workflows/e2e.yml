@@ -34,7 +34,10 @@ jobs:
         working-directory: apps/e2e
 
       - name: Run E2E tests against deployed URL
-        run: npx playwright test --project=chromium
+        id: run-tests
+        continue-on-error: true
+        shell: bash
+        run: npx playwright test --project=chromium 2>&1 | tee /tmp/failure-logs.txt
         working-directory: apps/e2e
         env:
           BASE_URL: ${{ github.event.deployment_status.target_url }}
@@ -49,6 +52,18 @@ jobs:
           name: playwright-report-${{ github.run_id }}
           path: apps/e2e/playwright-report/
           retention-days: 14
+
+      - name: Upload failure logs for autoheal
+        uses: actions/upload-artifact@v4
+        if: steps.run-tests.outcome == 'failure'
+        with:
+          name: failure-logs-${{ github.run_id }}
+          path: /tmp/failure-logs.txt
+          retention-days: 1
+
+      - name: Fail job if tests failed
+        if: steps.run-tests.outcome == 'failure'
+        run: exit 1
 
   autoheal:
     name: Auto-heal failing tests
@@ -83,19 +98,12 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Get failure logs
+      - name: Download failure logs
         if: steps.guard.outputs.skip == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          for i in 1 2 3 4 5; do
-            gh run view ${{ github.run_id }} --log-failed \
-              > /tmp/failure-logs.txt 2>&1 || true
-            grep -q "still in progress" /tmp/failure-logs.txt || break
-            echo "Logs not ready yet, retrying in 15s… (attempt $i/5)"
-            sleep 15
-          done
-          echo "=== Failure logs ===" && cat /tmp/failure-logs.txt
+        uses: actions/download-artifact@v4
+        with:
+          name: failure-logs-${{ github.run_id }}
+          path: /tmp
 
       - name: Set up Node
         if: steps.guard.outputs.skip == 'false'
