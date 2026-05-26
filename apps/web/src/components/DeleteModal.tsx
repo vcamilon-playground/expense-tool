@@ -13,19 +13,30 @@ export default function DeleteModal({ open, itemLabel, onConfirm, onCancel }: Pr
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ margin: '0 0 10px' }}>Remove {itemLabel}?</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+          <h3 style={{ margin: 0 }}>Remove {itemLabel}?</h3>
+          <button
+            className="ghost close-btn"
+            onClick={onCancel}
+            aria-label="Close"
+            style={{ marginLeft: 12, flexShrink: 0 }}
+          >
+            ✕
+          </button>
+        </div>
         <p style={{ margin: '0 0 8px' }}>
-          Do you want to permanently remove this {itemLabel.toLowerCase()}?
+          Are you really sure you want to remove the record? This will not be retrieved anymore and
+          you have to create a new record if you want to have it added again.
         </p>
         <p className="modal-warning">
           ⚠️ Note that this will affect your reports and insights.
         </p>
         <div className="row" style={{ justifyContent: 'flex-end', marginTop: 20, gap: 10 }}>
-          <button className="ghost" style={{ width: 'auto' }} onClick={onCancel}>
-            Cancel
-          </button>
           <button className="danger" style={{ width: 'auto' }} onClick={onConfirm}>
-            Remove
+            Yes, remove
+          </button>
+          <button className="primary" style={{ width: 'auto' }} onClick={onCancel}>
+            No, keep it
           </button>
         </div>
       </div>
