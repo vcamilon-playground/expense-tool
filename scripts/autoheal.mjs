@@ -1,9 +1,11 @@
 /**
- * Reads Playwright CI failure logs, asks Gemini to identify fixes,
- * then writes corrected page-object files back to disk.
+ * Reads Playwright CI failure logs, asks GitHub Models (GPT-4o mini) to identify
+ * fixes, then writes corrected page-object files back to disk.
+ *
+ * Uses the GH_PAT already configured for the autoheal push — no extra key needed.
  *
  * Usage:
- *   GOOGLE_API_KEY=<key> node scripts/autoheal.mjs <log-file>
+ *   GH_TOKEN=<pat> node scripts/autoheal.mjs <log-file>
  */
 
 import fs from 'fs';
@@ -13,9 +15,9 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
-if (!GOOGLE_API_KEY) {
-  console.error('[autoheal] GOOGLE_API_KEY is not set — aborting.');
+const GH_TOKEN = process.env.GH_TOKEN;
+if (!GH_TOKEN) {
+  console.error('[autoheal] GH_TOKEN is not set — aborting.');
   process.exit(1);
 }
 
@@ -68,7 +70,7 @@ STRICT RULES — violating any of these makes the fix useless:
    c. CSS class / attribute selectors — only for classes that exist in the source
 3. Never touch spec files unless the test logic itself is wrong.
 4. Never touch files unrelated to the failing test.
-5. Output only valid JSON — no explanation, no markdown fences.
+5. Respond ONLY with a valid JSON array — no explanation, no markdown fences.
 `.trim();
 
 const userPrompt = `
@@ -87,7 +89,7 @@ ${logs}
 ## Task
 1. Identify every failing test and its exact error.
 2. Find the element in the web app source that the test is trying to reach.
-3. Write the correct Playwright locator for that element using the rules above.
+3. Write the correct Playwright locator for that element.
 4. Return the minimal fix for each affected page object.
 
 Respond with a JSON array where each element has:
@@ -97,42 +99,46 @@ Respond with a JSON array where each element has:
 If no fix is needed, return [].
 `.trim();
 
-console.log('[autoheal] Sending logs to Gemini…');
+console.log('[autoheal] Sending logs to GitHub Models (gpt-4o-mini)…');
 
-const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_API_KEY}`;
-
-const response = await fetch(url, {
+const response = await fetch('https://models.inference.ai.azure.com/chat/completions', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${GH_TOKEN}`,
+  },
   body: JSON.stringify({
-    systemInstruction: { parts: [{ text: systemPrompt }] },
-    contents: [{ parts: [{ text: userPrompt }] }],
-    generationConfig: {
-      temperature: 0,
-      responseMimeType: 'application/json',
-    },
+    model: 'gpt-4o-mini',
+    temperature: 0,
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
   }),
 });
 
 if (!response.ok) {
   const err = await response.text();
-  console.error(`[autoheal] Gemini API error ${response.status}: ${err}`);
+  console.error(`[autoheal] GitHub Models API error ${response.status}: ${err}`);
   process.exit(1);
 }
 
 const data = await response.json();
-const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+const raw = data.choices?.[0]?.message?.content ?? '';
 
+// GitHub Models JSON mode wraps arrays in an object — unwrap if needed
 let fixes;
 try {
-  fixes = JSON.parse(raw);
+  const parsed = JSON.parse(raw);
+  fixes = Array.isArray(parsed) ? parsed : (parsed.fixes ?? parsed.changes ?? Object.values(parsed)[0] ?? []);
 } catch {
-  console.error('[autoheal] Could not parse Gemini response as JSON:\n', raw);
+  console.error('[autoheal] Could not parse response as JSON:\n', raw);
   process.exit(1);
 }
 
 if (!Array.isArray(fixes) || fixes.length === 0) {
-  console.log('[autoheal] Gemini found no fixes needed.');
+  console.log('[autoheal] No fixes needed.');
   process.exit(0);
 }
 
