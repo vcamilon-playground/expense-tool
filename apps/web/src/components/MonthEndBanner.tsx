@@ -7,14 +7,16 @@ export default function MonthEndBanner() {
 
   if (daysLeft > 7) return null;
 
+  const monthYear = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+
   const label =
     daysLeft === 0
       ? 'Today is the last day of the month'
       : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left this month`;
 
   return (
-    <div className="banner banner-warn">
-      ⚠️ {label} — please update all your expenses before the month closes.
+    <div className="banner banner-danger">
+      ⚠️ {label} — please update all your expenses before {monthYear} closes.
     </div>
   );
 }

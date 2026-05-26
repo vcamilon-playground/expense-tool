@@ -242,6 +242,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 /* ── Banners ── */
 .banner { border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; line-height: 1.5; }
 .banner-warn { background: rgba(246, 193, 119, 0.1); border: 1px solid var(--warn); color: var(--warn); }
+.banner-danger { background: rgba(239, 111, 108, 0.1); border: 1px solid var(--bad); color: var(--bad); }
 
 /* ── Modal (delete / generic) ── */
 .modal-overlay {
