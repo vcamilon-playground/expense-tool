@@ -19,10 +19,54 @@ async function del(table: string, filter: string): Promise<void> {
   }
 }
 
+async function post(table: string, data: Record<string, unknown>): Promise<void> {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    console.warn(`[seed] skipped ${table} — SUPABASE_URL/SUPABASE_ANON_KEY not set`);
+    return;
+  }
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    console.error(`[seed] ${table}: HTTP ${res.status}`);
+  }
+}
+
 export const E2E_MERCHANT = 'E2E-TEST';
 export const E2E_RECURRING_NAME = 'E2E Test Subscription';
 
 export const cleanup = {
   expenses: () => del('expenses', `merchant=eq.${E2E_MERCHANT}`),
   recurring: () => del('recurring_expenses', 'name=like.E2E*'),
+};
+
+export const seed = {
+  expense: () =>
+    post('expenses', {
+      amount: 1,
+      currency: 'PHP',
+      occurred_at: new Date().toISOString().slice(0, 10),
+      source: 'manual',
+      merchant: E2E_MERCHANT,
+      description: 'E2E delete modal test',
+      conversion_rate: null,
+      category_id: null,
+      receipt_url: null,
+    }),
+  recurring: () =>
+    post('recurring_expenses', {
+      name: E2E_RECURRING_NAME,
+      amount: 1,
+      cadence: 'monthly',
+      next_charge_date: new Date().toISOString().slice(0, 10),
+      active: true,
+      category_id: null,
+    }),
 };

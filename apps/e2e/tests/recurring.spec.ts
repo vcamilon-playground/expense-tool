@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { E2E_RECURRING_NAME, cleanup, seed } from './helpers/supabase';
 import { RecurringPage } from './pages/RecurringPage';
 
 test.describe('Recurring Expenses page', () => {
@@ -51,5 +52,56 @@ test.describe('Recurring Expenses page', () => {
     for (const opt of options) {
       expect(opt[0]).toBe(opt[0]?.toUpperCase());
     }
+  });
+});
+
+test.describe('Recurring Expenses — delete confirmation modal', () => {
+  let recurring!: RecurringPage;
+
+  test.beforeAll(async () => {
+    await cleanup.recurring();
+    await seed.recurring();
+  });
+
+  test.afterAll(async () => {
+    await cleanup.recurring();
+  });
+
+  test.beforeEach(async ({ page }) => {
+    recurring = new RecurringPage(page);
+    await recurring.goto();
+  });
+
+  test('delete confirmation heading and message are visible', async () => {
+    await recurring.openDeleteModal(E2E_RECURRING_NAME);
+    const dialog = recurring.deleteDialog();
+    await expect(dialog.getByRole('heading')).toContainText('Remove');
+    await expect(dialog).toContainText('Are you really sure you want to remove the record?');
+    await expect(dialog).toContainText('This will not be retrieved anymore');
+  });
+
+  test('Yes, remove and No, keep it buttons are present', async () => {
+    await recurring.openDeleteModal(E2E_RECURRING_NAME);
+    await expect(recurring.deleteYesButton()).toBeVisible();
+    await expect(recurring.deleteNoButton()).toBeVisible();
+  });
+
+  test('X button is present in the upper right', async () => {
+    await recurring.openDeleteModal(E2E_RECURRING_NAME);
+    await expect(recurring.deleteXButton()).toBeVisible();
+  });
+
+  test('X button closes the modal without deleting the record', async () => {
+    await recurring.openDeleteModal(E2E_RECURRING_NAME);
+    await recurring.deleteXButton().click();
+    await expect(recurring.deleteDialog()).toBeHidden();
+    await expect(recurring.row(E2E_RECURRING_NAME)).toBeVisible();
+  });
+
+  test('No, keep it button closes the modal without deleting the record', async () => {
+    await recurring.openDeleteModal(E2E_RECURRING_NAME);
+    await recurring.deleteNoButton().click();
+    await expect(recurring.deleteDialog()).toBeHidden();
+    await expect(recurring.row(E2E_RECURRING_NAME)).toBeVisible();
   });
 });

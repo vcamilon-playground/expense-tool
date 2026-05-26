@@ -66,10 +66,31 @@ export class ExpensesPage extends BasePage {
     await expect(this.dialog().getByRole('heading', { name: 'Edit Expense' })).toBeVisible();
   }
 
-  async deleteRow(merchant: string): Promise<void> {
+  deleteDialog(): Locator {
+    return this.page.getByRole('dialog').filter({ hasText: 'Are you really sure' });
+  }
+
+  deleteXButton(): Locator {
+    return this.deleteDialog().getByRole('button', { name: 'Close' });
+  }
+
+  deleteNoButton(): Locator {
+    return this.deleteDialog().getByRole('button', { name: 'No, keep it' });
+  }
+
+  deleteYesButton(): Locator {
+    return this.deleteDialog().getByRole('button', { name: 'Yes, remove' });
+  }
+
+  async openDeleteModal(merchant: string): Promise<void> {
     await this.row(merchant).getByRole('button', { name: 'Delete' }).click();
-    await expect(this.dialog()).toBeVisible();
-    await this.dialog().getByRole('button', { name: 'Remove' }).click();
+    await expect(this.deleteDialog()).toBeVisible();
+  }
+
+  async deleteRow(merchant: string): Promise<void> {
+    await this.openDeleteModal(merchant);
+    await this.deleteYesButton().click();
+    await expect(this.deleteDialog()).toBeHidden();
   }
 
   monthGroup(label: string): Locator {
