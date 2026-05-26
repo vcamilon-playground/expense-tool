@@ -9,20 +9,29 @@ test.describe('Budgets page', () => {
     await budgets.goto();
   });
 
-  test('page heading is visible', async () => {
+  test('page heading shows "Budgets"', async () => {
     await expect(budgets.heading()).toBeVisible();
+    await expect(budgets.heading()).toHaveText('Budgets');
   });
 
-  test('budget form is visible with Save Budget button', async () => {
+  test('page description text is present', async () => {
+    await expect(budgets.page.getByText('Set a monthly limit overall or per category')).toBeVisible();
+  });
+
+  test('budget form has Category and Monthly Limit labels with Save Budget button', async () => {
+    await expect(budgets.page.getByText('Category').first()).toBeVisible();
+    await expect(budgets.page.getByText('Monthly Limit').first()).toBeVisible();
     await expect(budgets.saveBudgetButton()).toBeVisible();
+    await expect(budgets.saveBudgetButton()).toHaveText('Save Budget');
   });
 
   test('Monthly Limit input is visible', async () => {
     await expect(budgets.monthlyLimitInput()).toBeVisible();
   });
 
-  test('Current Budgets section is visible', async () => {
+  test('Current Budgets section heading is correct', async () => {
     await expect(budgets.currentBudgetsHeading()).toBeVisible();
+    await expect(budgets.currentBudgetsHeading()).toHaveText('Current Budgets');
   });
 
   test('each budget row has Edit and Delete buttons', async () => {
@@ -64,5 +73,17 @@ test.describe('Budgets page', () => {
     await expect(budgets.page.locator('select')).toBeDisabled();
     await budgets.cancelEdit();
     await expect(budgets.page.locator('select')).toBeEnabled();
+  });
+
+  test('submitting empty Monthly Limit keeps Save Budget button visible', async () => {
+    await budgets.monthlyLimitInput().fill('');
+    await budgets.saveBudgetButton().click();
+    await expect(budgets.saveBudgetButton()).toBeVisible();
+  });
+
+  test('submitting negative Monthly Limit keeps Save Budget button visible', async () => {
+    await budgets.monthlyLimitInput().fill('-1');
+    await budgets.saveBudgetButton().click();
+    await expect(budgets.saveBudgetButton()).toBeVisible();
   });
 });

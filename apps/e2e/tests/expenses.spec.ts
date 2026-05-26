@@ -10,17 +10,21 @@ test.describe('Expenses page', () => {
     await expenses.goto();
   });
 
-  test('page heading is visible', async () => {
+  test('page heading shows "Expenses"', async () => {
     await expect(expenses.heading()).toBeVisible();
+    await expect(expenses.heading()).toHaveText('Expenses');
   });
 
-  test('Add Expense button is visible', async () => {
+  test('Add Expense button is visible with correct label', async () => {
     await expect(expenses.addButton()).toBeVisible();
+    await expect(expenses.addButton()).toHaveText('+ Add Expense');
   });
 
-  test('clicking Add Expense opens the modal', async () => {
+  test('clicking Add Expense opens the modal with correct heading', async () => {
     await expenses.openAddModal();
-    await expect(expenses.dialog().getByRole('heading', { name: 'Add Expense' })).toBeVisible();
+    const heading = expenses.dialog().getByRole('heading', { name: 'Add Expense' });
+    await expect(heading).toBeVisible();
+    await expect(heading).toHaveText('Add Expense');
   });
 
   test('required fields have required attribute in modal', async () => {
@@ -52,6 +56,14 @@ test.describe('Expenses page', () => {
     await expenses.openAddModal();
     const dialog = expenses.dialog();
     await dialog.locator('input[type="number"]').fill('');
+    await dialog.getByRole('button', { name: 'Add Expense' }).click();
+    await expect(dialog).toBeVisible();
+  });
+
+  test('submitting with negative amount keeps modal open', async () => {
+    await expenses.openAddModal();
+    const dialog = expenses.dialog();
+    await dialog.locator('input[type="number"]').fill('-1');
     await dialog.getByRole('button', { name: 'Add Expense' }).click();
     await expect(dialog).toBeVisible();
   });

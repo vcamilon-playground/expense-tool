@@ -10,21 +10,25 @@ test.describe('Recurring Expenses page', () => {
     await recurring.goto();
   });
 
-  test('page heading is visible', async () => {
+  test('page heading shows "Recurring Expenses"', async () => {
     await expect(recurring.heading()).toBeVisible();
+    await expect(recurring.heading()).toHaveText('Recurring Expenses');
   });
 
-  test('description text is present', async () => {
+  test('description text contains correct content', async () => {
     await expect(recurring.descriptionText()).toBeVisible();
+    await expect(recurring.descriptionText()).toContainText('Track subscriptions');
   });
 
-  test('Add Recurring button is visible', async () => {
+  test('Add Recurring button is visible with correct label', async () => {
     await expect(recurring.addButton()).toBeVisible();
+    await expect(recurring.addButton()).toHaveText('+ Add Recurring');
   });
 
-  test('clicking Add Recurring opens the modal', async () => {
+  test('clicking Add Recurring opens the modal with correct heading', async () => {
     await recurring.openAddModal();
-    await expect(recurring.dialog()).toBeVisible();
+    await expect(recurring.dialog().getByRole('heading', { name: 'Add Recurring Expense' })).toBeVisible();
+    await expect(recurring.dialog().getByRole('heading', { name: 'Add Recurring Expense' })).toHaveText('Add Recurring Expense');
   });
 
   test('form has required fields with required attribute', async () => {
@@ -52,6 +56,14 @@ test.describe('Recurring Expenses page', () => {
     for (const opt of options) {
       expect(opt[0]).toBe(opt[0]?.toUpperCase());
     }
+  });
+
+  test('submitting without amount keeps modal open', async () => {
+    await recurring.addButton().click();
+    const dialog = recurring.dialog();
+    await dialog.locator('label').filter({ hasText: 'Name' }).locator('input').fill('Test Name');
+    await dialog.getByRole('button', { name: 'Add Recurring' }).click();
+    await expect(dialog).toBeVisible();
   });
 });
 
