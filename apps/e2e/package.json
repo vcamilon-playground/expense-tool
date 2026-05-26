@@ -5,6 +5,8 @@
   "scripts": {
     "install:browsers": "playwright install",
     "test": "playwright test",
+    "test:smoke": "SMOKE_ONLY=1 playwright test",
+    "test:regression": "playwright test tests/budgets.regression.spec.ts tests/expenses.regression.spec.ts tests/recurring.regression.spec.ts",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report"
   },

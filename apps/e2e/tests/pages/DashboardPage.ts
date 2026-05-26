@@ -34,4 +34,8 @@ export class DashboardPage extends BasePage {
   trendSection(): Locator {
     return this.page.getByRole('heading', { level: 2, name: '6-Month Trend' });
   }
+
+  banner(): Locator {
+    return this.page.locator('.banner.banner-danger');
+  }
 }

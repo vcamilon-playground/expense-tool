@@ -190,23 +190,48 @@ All workspaces must pass with zero errors before committing.
 
 ### 6 — Update and run Playwright tests
 
-Before committing, identify every Playwright test that could be affected by the changes:
+#### 6a — Fix affected tests
 
-- Any page object in `apps/e2e/tests/pages/` whose locators reference changed UI elements (text, roles, classes, routes).
-- Any spec file that asserts against changed copy, button labels, headings, or modal content.
-- Any regression spec that exercises the modified feature's create/edit/delete flow.
+Before running, update every file that could break:
+- Page objects in `apps/e2e/tests/pages/` whose locators reference changed UI elements (text, roles, classes, routes).
+- Smoke spec assertions against changed copy, button labels, headings, or modal content.
 
-Fix or update all affected tests, then run the full suite locally:
+#### 6b — Always run all smoke tests
+
+Smoke tests are fast and cover broad regressions. Always run them:
 
 ```bash
 npm run test:e2e
 ```
 
-All tests must pass (exit 0) before proceeding. If a test fails:
+This runs every `*.spec.ts` (excludes `*.regression.spec.ts`). All must pass.
+
+#### 6c — Run only the regression spec(s) for changed feature areas
+
+Regression tests hit the real database and are slow. Only run the spec(s) whose feature was changed:
+
+| Changed area | Regression spec to run |
+|---|---|
+| `apps/web/src/app/expenses/` or `ExpensesPage.ts` | `tests/expenses.regression.spec.ts` |
+| `apps/web/src/app/budgets/` or `BudgetsPage.ts` | `tests/budgets.regression.spec.ts` |
+| `apps/web/src/app/recurring/` or `RecurringPage.ts` | `tests/recurring.regression.spec.ts` |
+| Shared component used across pages | all regression specs |
+| Docs, styles, or config only | skip regression |
+
+```bash
+npm run test:e2e:regression -- tests/<feature>.regression.spec.ts
+```
+
+Or run all regression specs at once:
+
+```bash
+npm run test:e2e:regression
+```
+
+If a test fails:
 1. Read the failure output.
-2. Identify whether the app changed or the test is wrong.
-3. Fix the page object or spec, then re-run.
-4. Only proceed to commit once the suite is green.
+2. Decide: did the app change (fix the test) or did a bug regress (fix the code)?
+3. Re-run the failing spec. Only proceed to commit once it is green.
 
 ### 7 — Commit and push automatically
 

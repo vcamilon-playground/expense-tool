@@ -11,7 +11,9 @@
     "dev:web": "npm run dev -w @expense/web",
     "dev:mobile": "npm run start -w @expense/mobile",
     "typecheck": "npm run typecheck -w @expense/shared && npm run typecheck -w @expense/web && npm run typecheck -w @expense/mobile",
-    "test:e2e": "npm run test -w @expense/e2e",
+    "test:e2e": "npm run test:smoke -w @expense/e2e",
+    "test:e2e:all": "npm run test -w @expense/e2e",
+    "test:e2e:regression": "npm run test:regression -w @expense/e2e",
     "test:e2e:ui": "npm run test:ui -w @expense/e2e",
     "install:browsers": "npm run install:browsers -w @expense/e2e"
   },
