@@ -186,9 +186,9 @@ npm run typecheck
 
 All workspaces must pass with zero errors before committing.
 
-### 6 — Commit automatically
+### 6 — Commit and push automatically
 
-Once the code review and type-check pass, commit and push **without asking for user approval**:
+Once code review, documentation, and typecheck all pass:
 
 ```bash
 git add <changed files>
@@ -196,7 +196,7 @@ git commit -m "<type>(<scope>): <what and why>"
 git push origin main
 ```
 
-Do not pause to ask "should I commit?" — just do it.
+**This is mandatory and unconditional.** Never ask "should I commit?", "should I push?", or "do you want me to commit this?" — always commit and push immediately. No manual action from the user should ever be required to land a change.
 
 ---
 
