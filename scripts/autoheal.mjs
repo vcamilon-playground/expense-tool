@@ -1,9 +1,9 @@
 /**
- * Reads Playwright CI failure logs, asks Claude to identify fixes,
+ * Reads Playwright CI failure logs, asks Gemini to identify fixes,
  * then writes corrected page-object files back to disk.
  *
  * Usage:
- *   ANTHROPIC_API_KEY=<key> node scripts/autoheal.mjs <log-file>
+ *   GOOGLE_API_KEY=<key> node scripts/autoheal.mjs <log-file>
  */
 
 import fs from 'fs';
@@ -13,9 +13,9 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-if (!ANTHROPIC_API_KEY) {
-  console.error('[autoheal] ANTHROPIC_API_KEY is not set — aborting.');
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+if (!GOOGLE_API_KEY) {
+  console.error('[autoheal] GOOGLE_API_KEY is not set — aborting.');
   process.exit(1);
 }
 
@@ -28,40 +28,55 @@ if (!logFile || !fs.existsSync(logFile)) {
 const logs = fs.readFileSync(logFile, 'utf-8');
 const claudeMd = fs.readFileSync(path.join(ROOT, 'CLAUDE.md'), 'utf-8');
 
-// Collect all page objects so Claude has full context
+// Collect all page objects
 const pagesDir = path.join(ROOT, 'apps/e2e/tests/pages');
 const pageFiles = fs.readdirSync(pagesDir).filter((f) => f.endsWith('.ts'));
 const pageObjects = pageFiles
   .map((f) => `=== apps/e2e/tests/pages/${f} ===\n${fs.readFileSync(path.join(pagesDir, f), 'utf-8')}`)
   .join('\n\n');
 
-// Also collect the web app NavBar component so Claude knows the real HTML
-const navBarComponent = path.join(ROOT, 'apps/web/src/components/NavBar.tsx');
-const appContext = fs.existsSync(navBarComponent)
-  ? `=== apps/web/src/components/NavBar.tsx ===\n${fs.readFileSync(navBarComponent, 'utf-8')}`
-  : '';
+// Collect web app source so the model can verify selectors actually exist
+function readDir(dir, ext) {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) return readDir(full, ext);
+    if (entry.isFile() && entry.name.endsWith(ext)) return [full];
+    return [];
+  });
+}
+
+const webSourceFiles = [
+  ...readDir(path.join(ROOT, 'apps/web/src/components'), '.tsx'),
+  ...readDir(path.join(ROOT, 'apps/web/src/app'), '.tsx'),
+];
+
+const webSource = webSourceFiles
+  .map((f) => `=== ${path.relative(ROOT, f)} ===\n${fs.readFileSync(f, 'utf-8')}`)
+  .join('\n\n');
 
 const systemPrompt = `
-You are an expert Playwright test maintainer. Your only job is to fix failing tests
-by updating page object locators — you never touch spec files unless test logic is wrong,
-and you never run tests or servers.
+You are an expert Playwright test maintainer. Your only job is to fix failing Playwright
+tests by updating page object locators.
 
-When choosing a locator, always prefer Playwright's recommended priority:
-1. getByRole (with accessible name) — most resilient
-2. getByText / getByLabel — for non-interactive elements
-3. CSS class selectors — only as a last resort, and only for classes that exist in the provided source
-
-Never invent selectors. Only use selectors that are visible in the provided source files.
-
-The project conventions are documented in CLAUDE.md (provided below).
+STRICT RULES — violating any of these makes the fix useless:
+1. Only use selectors that are visible in the web app source files provided. Never invent
+   class names, IDs, roles, or text that do not appear in those files.
+2. Prefer Playwright's recommended locator priority:
+   a. getByRole (with accessible name) — most resilient
+   b. getByText / getByLabel
+   c. CSS class / attribute selectors — only for classes that exist in the source
+3. Never touch spec files unless the test logic itself is wrong.
+4. Never touch files unrelated to the failing test.
+5. Output only valid JSON — no explanation, no markdown fences.
 `.trim();
 
 const userPrompt = `
 ## CLAUDE.md (project conventions)
 ${claudeMd}
 
-## Web app component source (use this to find correct selectors)
-${appContext}
+## Web app source (ground truth — only use selectors from here)
+${webSource}
 
 ## Current page objects
 ${pageObjects}
@@ -69,61 +84,55 @@ ${pageObjects}
 ## CI failure logs
 ${logs}
 
-## Your task
-1. Read every failing test error in the logs.
-2. Cross-reference the web app source to find the correct selector.
-3. Produce the minimal fix for each affected page object file.
+## Task
+1. Identify every failing test and its exact error.
+2. Find the element in the web app source that the test is trying to reach.
+3. Write the correct Playwright locator for that element using the rules above.
+4. Return the minimal fix for each affected page object.
 
-Respond with ONLY a JSON array. Each element has exactly these keys:
-- "file": relative path from repo root, e.g. "apps/e2e/tests/pages/RecurringPage.ts"
+Respond with a JSON array where each element has:
+- "file": relative path from repo root (e.g. "apps/e2e/tests/pages/NavBar.ts")
 - "content": the COMPLETE corrected file content as a string
 
-If no changes are needed, respond with an empty array: []
-
-Do not include any explanation outside the JSON array.
+If no fix is needed, return [].
 `.trim();
 
-console.log('[autoheal] Sending logs to Claude…');
+console.log('[autoheal] Sending logs to Gemini…');
 
-const response = await fetch('https://api.anthropic.com/v1/messages', {
+const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_API_KEY}`;
+
+const response = await fetch(url, {
   method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'x-api-key': ANTHROPIC_API_KEY,
-    'anthropic-version': '2023-06-01',
-  },
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 4096,
-    system: systemPrompt,
-    messages: [
-      { role: 'user', content: userPrompt },
-    ],
+    systemInstruction: { parts: [{ text: systemPrompt }] },
+    contents: [{ parts: [{ text: userPrompt }] }],
+    generationConfig: {
+      temperature: 0,
+      responseMimeType: 'application/json',
+    },
   }),
 });
 
 if (!response.ok) {
   const err = await response.text();
-  console.error(`[autoheal] Claude API error ${response.status}: ${err}`);
+  console.error(`[autoheal] Gemini API error ${response.status}: ${err}`);
   process.exit(1);
 }
 
 const data = await response.json();
-const raw = data.content?.[0]?.text ?? '';
-
-// Strip markdown code fences if Claude wraps the JSON
-const jsonText = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 
 let fixes;
 try {
-  fixes = JSON.parse(jsonText);
+  fixes = JSON.parse(raw);
 } catch {
-  console.error('[autoheal] Could not parse Claude response as JSON:\n', raw);
+  console.error('[autoheal] Could not parse Gemini response as JSON:\n', raw);
   process.exit(1);
 }
 
 if (!Array.isArray(fixes) || fixes.length === 0) {
-  console.log('[autoheal] Claude found no fixes needed.');
+  console.log('[autoheal] Gemini found no fixes needed.');
   process.exit(0);
 }
 
