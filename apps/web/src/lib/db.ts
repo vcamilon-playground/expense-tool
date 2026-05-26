@@ -63,6 +63,17 @@ export async function upsertBudget(input: BudgetInput): Promise<Budget> {
   return data;
 }
 
+export async function updateBudget(id: string, monthly_limit: number): Promise<Budget> {
+  const { data, error } = await supabase
+    .from('budgets')
+    .update({ monthly_limit })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function deleteBudget(id: string): Promise<void> {
   const { error } = await supabase.from('budgets').delete().eq('id', id);
   if (error) throw error;

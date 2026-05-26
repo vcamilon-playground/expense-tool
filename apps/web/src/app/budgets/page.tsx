@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { Budget, Category } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
-import { deleteBudget, listBudgets, listCategories, upsertBudget } from '@/lib/db';
+import { deleteBudget, listBudgets, listCategories, updateBudget, upsertBudget } from '@/lib/db';
 import DeleteModal from '@/components/DeleteModal';
 
 export default function BudgetsPage() {
@@ -14,6 +14,7 @@ export default function BudgetsPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Budget | null>(null);
+  const [editing, setEditing] = useState<Budget | null>(null);
 
   async function reload() {
     const [c, b] = await Promise.all([listCategories(), listBudgets()]);
@@ -33,6 +34,20 @@ export default function BudgetsPage() {
     })();
   }, []);
 
+  function handleEdit(b: Budget) {
+    setEditing(b);
+    setCategoryId(b.category_id ?? '');
+    setLimit(String(b.monthly_limit));
+    setErr(null);
+  }
+
+  function handleCancelEdit() {
+    setEditing(null);
+    setCategoryId('');
+    setLimit('');
+    setErr(null);
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     const parsed = parseFloat(limit);
@@ -41,7 +56,12 @@ export default function BudgetsPage() {
       return;
     }
     setErr(null);
-    await upsertBudget({ category_id: categoryId || null, monthly_limit: parsed });
+    if (editing) {
+      await updateBudget(editing.id, parsed);
+      setEditing(null);
+    } else {
+      await upsertBudget({ category_id: categoryId || null, monthly_limit: parsed });
+    }
     setLimit('');
     setCategoryId('');
     await reload();
@@ -71,10 +91,15 @@ export default function BudgetsPage() {
       <p className="muted">Set a monthly limit overall or per category. Dashboard will warn at 80% and flag overspend.</p>
 
       <form onSubmit={handleSave} className="card">
+        {editing && (
+          <p className="muted" style={{ marginTop: 0 }}>
+            Editing budget for <strong>{editing.category_id ? (catMap.get(editing.category_id)?.name ?? 'Unknown') : 'Overall'}</strong>
+          </p>
+        )}
         <div className="grid cols-3">
           <label>
             <div className="muted">Category</div>
-            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} disabled={editing !== null}>
               <option value="">Overall (any category)</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -94,8 +119,15 @@ export default function BudgetsPage() {
               required
             />
           </label>
-          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <button type="submit" className="primary" style={{ width: '100%' }}>Save Budget</button>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+            <button type="submit" className="primary" style={{ flex: 1 }}>
+              {editing ? 'Update Budget' : 'Save Budget'}
+            </button>
+            {editing && (
+              <button type="button" className="ghost" style={{ flex: 1 }} onClick={handleCancelEdit}>
+                Cancel
+              </button>
+            )}
           </div>
         </div>
         {err && <p style={{ color: 'var(--bad)' }}>{err}</p>}
@@ -123,13 +155,22 @@ export default function BudgetsPage() {
                       <td>{cat ? `${cat.icon ?? ''} ${cat.name}` : 'Overall'}</td>
                       <td style={{ textAlign: 'right' }}>{formatMoney(b.monthly_limit)}</td>
                       <td style={{ textAlign: 'right' }}>
-                        <button
-                          className="danger"
-                          style={{ width: 'auto' }}
-                          onClick={() => setPendingDelete(b)}
-                        >
-                          Delete
-                        </button>
+                        <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
+                          <button
+                            className="ghost"
+                            style={{ width: 'auto' }}
+                            onClick={() => handleEdit(b)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="danger"
+                            style={{ width: 'auto' }}
+                            onClick={() => setPendingDelete(b)}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
