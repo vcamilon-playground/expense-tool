@@ -2,13 +2,15 @@ import { defineConfig, devices } from '@playwright/test';
 
 const isRemote = !!process.env.BASE_URL;
 const fullBrowsers = !!process.env.FULL_BROWSERS;
+const smokeOnly = !!process.env.SMOKE_ONLY;
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: true,
+  ...(smokeOnly && { testIgnore: '**/*.regression.spec.ts' }),
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 0,
-  workers: isRemote ? 3 : 1,
+  workers: 1,
   timeout: 60_000,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'html',
 
