@@ -88,8 +88,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh run view ${{ github.run_id }} --log-failed \
-            > /tmp/failure-logs.txt 2>&1 || true
+          for i in 1 2 3 4 5; do
+            gh run view ${{ github.run_id }} --log-failed \
+              > /tmp/failure-logs.txt 2>&1 || true
+            grep -q "still in progress" /tmp/failure-logs.txt || break
+            echo "Logs not ready yet, retrying in 15s… (attempt $i/5)"
+            sleep 15
+          done
           echo "=== Failure logs ===" && cat /tmp/failure-logs.txt
 
       - name: Set up Node
