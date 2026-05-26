@@ -19,9 +19,6 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GH_PAT || github.token }}
-          fetch-depth: 2
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -37,9 +34,7 @@ jobs:
         working-directory: apps/e2e
 
       - name: Run E2E tests against deployed URL
-        id: run-tests
-        continue-on-error: true
-        run: npx playwright test --project=chromium 2>&1 | tee /tmp/failure-logs.txt
+        run: npx playwright test --project=chromium
         working-directory: apps/e2e
         env:
           BASE_URL: ${{ github.event.deployment_status.target_url }}
@@ -55,18 +50,6 @@ jobs:
           path: apps/e2e/playwright-report/
           retention-days: 14
 
-      - name: Upload failure logs for autoheal
-        uses: actions/upload-artifact@v4
-        if: steps.run-tests.outcome == 'failure'
-        with:
-          name: failure-logs-${{ github.run_id }}
-          path: /tmp/failure-logs.txt
-          retention-days: 1
-
-      - name: Fail job if tests failed
-        if: steps.run-tests.outcome == 'failure'
-        run: exit 1
-
   autoheal:
     name: Auto-heal failing tests
     needs: e2e
@@ -76,6 +59,9 @@ jobs:
     concurrency:
       group: autoheal
       cancel-in-progress: true
+    permissions:
+      contents: write
+      actions: read
 
     steps:
       - name: Checkout main
@@ -97,12 +83,14 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Download failure logs
+      - name: Get failure logs
         if: steps.guard.outputs.skip == 'false'
-        uses: actions/download-artifact@v4
-        with:
-          name: failure-logs-${{ github.run_id }}
-          path: /tmp
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run view ${{ github.run_id }} --log-failed \
+            > /tmp/failure-logs.txt 2>&1 || true
+          echo "=== Failure logs ===" && cat /tmp/failure-logs.txt
 
       - name: Set up Node
         if: steps.guard.outputs.skip == 'false'
