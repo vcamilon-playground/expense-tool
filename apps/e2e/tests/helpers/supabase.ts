@@ -1,3 +1,18 @@
+import fs from 'fs';
+import path from 'path';
+
+// Load apps/e2e/.env into process.env so credentials are available in worker processes
+const envFile = path.join(__dirname, '..', '..', '.env');
+if (fs.existsSync(envFile)) {
+  for (const line of fs.readFileSync(envFile, 'utf-8').split('\n')) {
+    const eq = line.indexOf('=');
+    if (eq === -1 || line.startsWith('#')) continue;
+    const key = line.slice(0, eq).trim();
+    const val = line.slice(eq + 1).trim();
+    if (key && !process.env[key]) process.env[key] = val;
+  }
+}
+
 const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 

@@ -188,9 +188,29 @@ npm run typecheck
 
 All workspaces must pass with zero errors before committing.
 
-### 6 — Commit and push automatically
+### 6 — Update and run Playwright tests
 
-Once code review, documentation, and typecheck all pass:
+Before committing, identify every Playwright test that could be affected by the changes:
+
+- Any page object in `apps/e2e/tests/pages/` whose locators reference changed UI elements (text, roles, classes, routes).
+- Any spec file that asserts against changed copy, button labels, headings, or modal content.
+- Any regression spec that exercises the modified feature's create/edit/delete flow.
+
+Fix or update all affected tests, then run the full suite locally:
+
+```bash
+npm run test:e2e
+```
+
+All tests must pass (exit 0) before proceeding. If a test fails:
+1. Read the failure output.
+2. Identify whether the app changed or the test is wrong.
+3. Fix the page object or spec, then re-run.
+4. Only proceed to commit once the suite is green.
+
+### 7 — Commit and push automatically
+
+Once code review, documentation, typecheck, and local E2E tests all pass:
 
 ```bash
 git add <changed files>

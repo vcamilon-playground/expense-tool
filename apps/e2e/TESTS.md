@@ -87,8 +87,13 @@ cd apps/e2e && npx playwright show-report
 | `trace` | `retain-on-failure` | Trace files saved only when a test fails |
 | `screenshot` | `only-on-failure` | Screenshots saved only on failure |
 
-**Local runs** use three browser projects: Chromium, Firefox, and Pixel 5 (mobile Chrome).  
-**CI runs** (`BASE_URL` set) use Chromium only — faster, sufficient for smoke testing.
+**Local runs** use Chromium only by default (matches CI). Set `FULL_BROWSERS=true` to also run Firefox and Pixel 5 (mobile Chrome):
+
+```bash
+FULL_BROWSERS=true npm run test:e2e
+```
+
+**CI runs** (`BASE_URL` set) always use Chromium only.
 
 ---
 

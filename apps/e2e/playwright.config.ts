@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const isRemote = !!process.env.BASE_URL;
+const fullBrowsers = !!process.env.FULL_BROWSERS;
 
 export default defineConfig({
   testDir: './tests',
@@ -28,9 +29,8 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    ...(isRemote
-      ? []
-      : [
+    ...(fullBrowsers
+      ? [
           {
             name: 'firefox',
             use: { ...devices['Desktop Firefox'] },
@@ -39,7 +39,8 @@ export default defineConfig({
             name: 'mobile-chrome',
             use: { ...devices['Pixel 5'] },
           },
-        ]),
+        ]
+      : []),
   ],
 
   ...(!isRemote && {
