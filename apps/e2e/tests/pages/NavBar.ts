@@ -18,7 +18,7 @@ export class NavBar {
   }
 
   brandLink(): Locator {
-    return this.page.getByRole('link', { name: '💸 Expensivensaa' });
+    return this.page.getByRole('link', { name: 'Expensivensaa' });
   }
 
   footer(): Locator {
