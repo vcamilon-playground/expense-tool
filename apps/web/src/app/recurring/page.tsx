@@ -33,6 +33,7 @@ export default function RecurringPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<RecurringExpense[]>([]);
   const [draft, setDraft] = useState<RecurringInput>(empty);
+  const [amountInput, setAmountInput] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -59,6 +60,7 @@ export default function RecurringPage() {
 
   function startEdit(r: RecurringExpense) {
     setEditingId(r.id);
+    setAmountInput(String(r.amount));
     setDraft({
       name: r.name,
       amount: r.amount,
@@ -73,6 +75,7 @@ export default function RecurringPage() {
   function reset() {
     setEditingId(null);
     setDraft(empty);
+    setAmountInput('');
     setShowForm(false);
     setErr(null);
   }
@@ -130,8 +133,11 @@ export default function RecurringPage() {
                 step="0.01"
                 min="0"
                 placeholder="0.00"
-                value={draft.amount || ''}
-                onChange={(e) => setDraft({ ...draft, amount: parseFloat(e.target.value) || 0 })}
+                value={amountInput}
+                onChange={(e) => {
+                  setAmountInput(e.target.value);
+                  setDraft({ ...draft, amount: parseFloat(e.target.value) || 0 });
+                }}
                 required
               />
             </label>

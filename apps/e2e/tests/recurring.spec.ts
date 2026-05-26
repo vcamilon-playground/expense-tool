@@ -65,6 +65,15 @@ test.describe('Recurring Expenses page', () => {
     await dialog.getByRole('button', { name: 'Add Recurring' }).click();
     await expect(dialog).toBeVisible();
   });
+
+  test('submitting with zero amount shows validation error', async () => {
+    await recurring.addButton().click();
+    const dialog = recurring.dialog();
+    await dialog.locator('label').filter({ hasText: 'Name' }).locator('input').fill('Test Name');
+    await dialog.locator('input[type="number"]').fill('0');
+    await dialog.getByRole('button', { name: 'Add Recurring' }).click();
+    await expect(dialog.getByText('Name and a positive amount required')).toBeVisible();
+  });
 });
 
 test.describe('Recurring Expenses — delete confirmation modal', () => {
