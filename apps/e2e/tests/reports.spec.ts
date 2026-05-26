@@ -9,8 +9,9 @@ test.describe('Reports page', () => {
     await reports.goto();
   });
 
-  test('page heading is visible', async () => {
+  test('page heading shows "Reports"', async () => {
     await expect(reports.heading()).toBeVisible();
+    await expect(reports.heading()).toHaveText('Reports');
   });
 
   test('Period select is visible', async () => {
@@ -21,20 +22,15 @@ test.describe('Reports page', () => {
     await expect(reports.dateInput()).toBeVisible();
   });
 
-  test('all three export buttons are present', async () => {
-    await expect(reports.exportCsvButton()).toBeVisible();
-    await expect(reports.exportExcelButton()).toBeVisible();
-    await expect(reports.exportPdfButton()).toBeVisible();
-  });
-
-  test('summary stat cards are visible', async () => {
+  test('summary stat cards show correct labels', async () => {
     await expect(reports.statLabel('Total')).toBeVisible();
     await expect(reports.statLabel('Expenses')).toBeVisible();
     await expect(reports.statLabel('Average')).toBeVisible();
   });
 
-  test('by category section is visible', async () => {
+  test('by category section heading is correct', async () => {
     await expect(reports.byCategoryHeading()).toBeVisible();
+    await expect(reports.byCategoryHeading()).toHaveText('By Category');
   });
 
   test('date range text is shown', async () => {

@@ -23,18 +23,6 @@ export class ReportsPage extends BasePage {
     return this.page.locator('input[type="date"]');
   }
 
-  exportCsvButton(): Locator {
-    return this.page.getByTitle('Export as CSV');
-  }
-
-  exportExcelButton(): Locator {
-    return this.page.getByTitle('Export as Excel');
-  }
-
-  exportPdfButton(): Locator {
-    return this.page.getByTitle('Export as PDF');
-  }
-
   statLabel(text: string): Locator {
     return this.page.locator('.stat .label').filter({ hasText: text });
   }

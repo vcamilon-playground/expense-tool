@@ -10,7 +10,6 @@ import {
   type ReportPeriod,
 } from '@expense/shared';
 import { listCategories, listExpenses } from '@/lib/db';
-import { exportCSV, exportExcel, exportPDF } from '@/lib/export';
 
 const periods: ReportPeriod[] = ['day', 'week', 'month', 'year'];
 const periodLabel: Record<ReportPeriod, string> = {
@@ -27,7 +26,6 @@ export default function ReportsPage() {
   const [refDate, setRefDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
-  const [exporting, setExporting] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -53,51 +51,12 @@ export default function ReportsPage() {
     [expenses, summary.from, summary.to],
   );
 
-  async function handleExport(format: 'csv' | 'excel' | 'pdf') {
-    setExporting(format);
-    try {
-      if (format === 'csv') exportCSV(summary, periodExpenses, categories);
-      else if (format === 'excel') await exportExcel(summary, periodExpenses, categories);
-      else await exportPDF(summary, periodExpenses, categories);
-    } finally {
-      setExporting(null);
-    }
-  }
-
   if (loading) return <p className="muted">Loading…</p>;
   if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
 
   return (
     <div>
-      <div className="row" style={{ justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 8 }}>
-        <h1 style={{ margin: 0 }}>Reports</h1>
-        <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-          <button
-            style={{ width: 'auto', fontSize: 13 }}
-            onClick={() => handleExport('csv')}
-            disabled={exporting !== null || summary.count === 0}
-            title="Export as CSV"
-          >
-            {exporting === 'csv' ? '…' : '⬇ CSV'}
-          </button>
-          <button
-            style={{ width: 'auto', fontSize: 13 }}
-            onClick={() => handleExport('excel')}
-            disabled={exporting !== null || summary.count === 0}
-            title="Export as Excel"
-          >
-            {exporting === 'excel' ? '…' : '⬇ Excel'}
-          </button>
-          <button
-            style={{ width: 'auto', fontSize: 13 }}
-            onClick={() => handleExport('pdf')}
-            disabled={exporting !== null || summary.count === 0}
-            title="Export as PDF"
-          >
-            {exporting === 'pdf' ? '…' : '⬇ PDF'}
-          </button>
-        </div>
-      </div>
+      <h1 style={{ marginBottom: 4 }}>Reports</h1>
 
       <div className="card">
         <div className="grid cols-2">
