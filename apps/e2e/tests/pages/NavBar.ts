@@ -18,7 +18,7 @@ export class NavBar {
   }
 
   brandLink(): Locator {
-    return this.page.locator('#brand-link'); // updated selector
+    return this.page.locator('#brand-link');
   }
 
   footer(): Locator {
