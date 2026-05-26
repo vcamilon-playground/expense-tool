@@ -132,6 +132,56 @@ Regression specs write real rows to the production database. Cleanup rules:
 
 ---
 
+## Change Workflow
+
+Follow these steps for every change, no matter how small.
+
+### 1 — Sync with main before starting
+
+Always pull the latest main branch before making any changes:
+
+```bash
+git pull origin main
+```
+
+Never start work on a stale local branch.
+
+### 2 — Make the changes
+
+Implement the feature, fix, or update as requested.
+
+### 3 — Code review
+
+Before committing, review every changed file:
+
+- No unused imports, variables, or dead code.
+- No hardcoded values that belong in constants or config.
+- TypeScript strict mode — no `any`, no non-null assertions without justification.
+- Follows existing code conventions (no comments unless WHY is non-obvious, no new paid services, no auth).
+- If a page object or E2E test is affected, verify locators still match the UI.
+
+### 4 — Type-check
+
+```bash
+npm run typecheck
+```
+
+All workspaces must pass with zero errors before committing.
+
+### 5 — Commit automatically
+
+Once the code review and type-check pass, commit and push **without asking for user approval**:
+
+```bash
+git add <changed files>
+git commit -m "<type>(<scope>): <what and why>"
+git push origin main
+```
+
+Do not pause to ask "should I commit?" — just do it.
+
+---
+
 ## Adding a New Feature
 
 1. Add or update types in `packages/shared/src/types.ts`.
