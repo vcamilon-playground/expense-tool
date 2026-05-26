@@ -111,11 +111,19 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Configure git
+      - name: Configure git as repo owner
         if: steps.guard.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          git config user.name "Claude Auto-Heal"
-          git config user.email "autoheal@users.noreply.github.com"
+          USERNAME=$(gh api /user --jq .login)
+          EMAIL=$(gh api /user --jq '.email // empty')
+          if [ -z "$EMAIL" ]; then
+            USER_ID=$(gh api /user --jq .id)
+            EMAIL="${USER_ID}+${USERNAME}@users.noreply.github.com"
+          fi
+          git config user.name "$USERNAME"
+          git config user.email "$EMAIL"
 
       - name: Run autoheal script
         if: steps.guard.outputs.skip == 'false'
