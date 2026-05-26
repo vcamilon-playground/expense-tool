@@ -160,7 +160,25 @@ Before committing, review every changed file:
 - Follows existing code conventions (no comments unless WHY is non-obvious, no new paid services, no auth).
 - If a page object or E2E test is affected, verify locators still match the UI.
 
-### 4 — Type-check
+### 4 — Update documentation
+
+After every change, ask: does this affect something a developer or user would need to know?
+
+**Update `README.md` when:**
+- A new feature is added or an existing one is removed/renamed.
+- The stack changes (new dependency, new AI provider, new service).
+- Setup steps change (new env vars, new scripts, new one-time commands).
+- A behaviour or limitation worth noting changes (e.g. auth, storage, free-tier limits).
+
+**Update `TESTS.md` when:**
+- A new test file is added or removed.
+- The CI/CD pipeline changes (triggers, jobs, artifact behaviour).
+- Playwright configuration changes (timeouts, browsers, retry policy).
+- A new troubleshooting case is discovered.
+
+If neither file needs updating, skip this step — do not pad them with trivial changes.
+
+### 5 — Type-check
 
 ```bash
 npm run typecheck
@@ -168,7 +186,7 @@ npm run typecheck
 
 All workspaces must pass with zero errors before committing.
 
-### 5 — Commit automatically
+### 6 — Commit automatically
 
 Once the code review and type-check pass, commit and push **without asking for user approval**:
 

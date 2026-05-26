@@ -59,7 +59,8 @@ export default function AddExpenseScreen() {
     setSaving(true);
     const payload: ExpenseInput = {
       amount: parsed,
-      currency: currency.toUpperCase() || 'USD',
+      currency: currency.toUpperCase() || 'PHP',
+      conversion_rate: editing?.conversion_rate ?? null,
       category_id: categoryId,
       merchant: merchant || null,
       description: description || null,
