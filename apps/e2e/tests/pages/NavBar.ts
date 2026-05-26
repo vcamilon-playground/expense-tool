@@ -18,7 +18,7 @@ export class NavBar {
   }
 
   brandLink(): Locator {
-    return this.page.locator('#brand-link').locator('a'); // updated to use 'a' instead of the id directly
+    return this.page.locator('#brand-link').locator('a');
   }
 
   footer(): Locator {
