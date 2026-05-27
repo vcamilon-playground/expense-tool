@@ -24,7 +24,7 @@ type CategoryRow = {
   '%': string;
 };
 
-function buildSummaryRows(summary: PeriodSummary): SummaryRow[] {
+export function buildSummaryRows(summary: PeriodSummary): SummaryRow[] {
   const avg = summary.count > 0 ? summary.total / summary.count : 0;
   return [
     { Metric: 'Period', Value: summary.period },
@@ -36,7 +36,7 @@ function buildSummaryRows(summary: PeriodSummary): SummaryRow[] {
   ];
 }
 
-function buildCategoryRows(cats: CategoryTotal[], total: number): CategoryRow[] {
+export function buildCategoryRows(cats: CategoryTotal[], total: number): CategoryRow[] {
   return cats.map((c) => ({
     Category: c.category_name,
     Count: c.count,
@@ -45,7 +45,7 @@ function buildCategoryRows(cats: CategoryTotal[], total: number): CategoryRow[] 
   }));
 }
 
-function buildExpenseRows(expenses: Expense[], categories: Category[]): ExpenseRow[] {
+export function buildExpenseRows(expenses: Expense[], categories: Category[]): ExpenseRow[] {
   const catMap = new Map(categories.map((c) => [c.id, c.name]));
   return expenses
     .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))
@@ -62,7 +62,7 @@ function buildExpenseRows(expenses: Expense[], categories: Category[]): ExpenseR
 }
 
 // ── CSV ────────────────────────────────────────────────────────────────────
-function rowsToCSV(rows: Record<string, unknown>[]): string {
+export function rowsToCSV(rows: Record<string, unknown>[]): string {
   if (rows.length === 0) return '';
   const headers = Object.keys(rows[0]!);
   const escape = (v: unknown) => {
