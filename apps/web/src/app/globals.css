@@ -13,6 +13,7 @@
   --accent-ring: rgba(59, 111, 212, 0.2);
   --shadow-sm: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
   --shadow-md: 0 4px 14px rgba(0,0,0,.09), 0 2px 4px rgba(0,0,0,.06);
+  --sidebar-bg: #3b6fd4;
 }
 
 [data-theme="dark"] {
@@ -30,6 +31,7 @@
   --accent-ring: rgba(91, 141, 239, 0.2);
   --shadow-sm: 0 1px 3px rgba(0,0,0,.25), 0 1px 2px rgba(0,0,0,.18);
   --shadow-md: 0 4px 14px rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.2);
+  --sidebar-bg: #252d3d;
 }
 
 * { box-sizing: border-box; }
@@ -76,7 +78,7 @@ a:hover { text-decoration: underline; }
 nav.sidenav {
   width: 220px;
   flex-shrink: 0;
-  background: var(--accent);
+  background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -91,21 +93,54 @@ nav.sidenav {
 
 nav.sidenav.collapsed { width: 60px; }
 
+/* Brand row: holds the logo link + collapse toggle */
+.brand-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  flex-shrink: 0;
+  padding-right: 6px;
+}
+
 nav.sidenav a.brand {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 20px 18px 18px;
+  padding: 18px 6px 16px 18px;
   color: rgba(255,255,255,0.95);
   font-weight: 700;
   font-size: 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.15);
   text-decoration: none;
-  flex-shrink: 0;
   white-space: nowrap;
+  overflow: hidden;
+  min-width: 0;
 }
 nav.sidenav a.brand:hover { text-decoration: none; }
-nav.sidenav.collapsed a.brand { justify-content: center; padding-left: 0; padding-right: 0; }
+
+/* Collapse/expand icon button in brand row */
+.brand-collapse-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.brand-collapse-btn:hover { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9); }
+.brand-collapse-btn:active { transform: scale(0.94); }
+
+/* Collapsed: brand row centers the emoji + collapse icon side by side */
+nav.sidenav.collapsed .brand-row { padding-right: 0; justify-content: center; gap: 2px; }
+nav.sidenav.collapsed a.brand { flex: 0 0 auto; padding: 18px 0 16px; }
+nav.sidenav.collapsed .brand-text { display: none; }
 
 .nav-toggle {
   display: none;
@@ -174,9 +209,6 @@ nav.sidenav.collapsed .nav-links .nav-label { display: none; }
   padding: 10px 8px;
   border-top: 1px solid rgba(255,255,255,0.15);
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
 }
 
 /* All buttons inside sidebar get white text */
@@ -192,24 +224,9 @@ nav.sidenav button:hover:not(:disabled) {
 }
 nav.sidenav button:active:not(:disabled) { transform: scale(0.97); }
 
-/* Collapse toggle button */
-.nav-collapse-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  height: auto;
-  white-space: nowrap;
-}
-nav.sidenav.collapsed .nav-collapse-btn {
-  justify-content: center;
-  padding: 10px 0;
-}
-nav.sidenav.collapsed .nav-collapse-label { display: none; }
+/* Theme label hidden in collapsed mode */
 nav.sidenav.collapsed .theme-label { display: none; }
+nav.sidenav.collapsed .nav-bottom button { justify-content: center; padding-left: 0; padding-right: 0; }
 
 /* ── Layout ── */
 main.container {
@@ -536,13 +553,23 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
     transition: none;
   }
 
+  .brand-row,
+  nav.sidenav.collapsed .brand-row {
+    border-bottom: none;
+    padding-right: 0;
+    justify-content: flex-start;
+    flex: 1;
+    gap: 0;
+  }
+
   nav.sidenav a.brand,
   nav.sidenav.collapsed a.brand {
-    border-bottom: none;
     padding: 0;
     flex: 1;
     justify-content: flex-start;
   }
+
+  .brand-collapse-btn { display: none; }
 
   .nav-bottom { display: none; }
 
@@ -581,8 +608,11 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
     background: rgba(255,255,255,0.18);
     color: #fff;
   }
-  /* Always show labels on mobile, even when sidebar is collapsed on desktop */
+  /* Always show labels and brand text on mobile regardless of desktop collapsed state */
   nav.sidenav.collapsed .nav-links .nav-label { display: inline; }
+  nav.sidenav.collapsed .brand-text { display: inline; }
+  nav.sidenav.collapsed .theme-label { display: inline; }
+  nav.sidenav.collapsed .nav-bottom button { justify-content: flex-start; padding-left: 12px; padding-right: 12px; }
 
   main.container { padding: 12px; }
   h1 { font-size: 20px; }

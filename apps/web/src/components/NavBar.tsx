@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
@@ -63,14 +63,25 @@ const links = [
   },
 ];
 
+const ChevronLeft = () => (
+  <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+);
+
+const ChevronRight = () => (
+  <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 18 15 12 9 6"/>
+  </svg>
+);
+
 export default function NavBar() {
   const [open, setOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('sidebar-collapsed') === 'true';
-    }
-    return false;
-  });
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem('sidebar-collapsed') === 'true') setCollapsed(true);
+  }, []);
   const pathname = usePathname();
 
   const isActive = (href: string) =>
@@ -84,11 +95,24 @@ export default function NavBar() {
 
   return (
     <nav className={`sidenav${collapsed ? ' collapsed' : ''}`}>
-      <Link href="/" className="brand" aria-label="💸 Expenses" onClick={() => setOpen(false)}>
-        <span>💸</span>
-        <span className="brand-text"> Expenses</span>
-      </Link>
 
+      {/* Brand row: logo + collapse toggle (desktop only) */}
+      <div className="brand-row">
+        <Link href="/" className="brand" aria-label="💸 Expenses" onClick={() => setOpen(false)}>
+          <span>💸</span>
+          <span className="brand-text"> Expenses</span>
+        </Link>
+        <button
+          className="brand-collapse-btn"
+          onClick={toggleCollapsed}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? <ChevronRight /> : <ChevronLeft />}
+        </button>
+      </div>
+
+      {/* Mobile hamburger toggle */}
       <button
         className="nav-toggle"
         onClick={() => setOpen(!open)}
@@ -98,6 +122,7 @@ export default function NavBar() {
         {open ? '✕' : '☰'}
       </button>
 
+      {/* Nav links */}
       <div className={`nav-links${open ? ' open' : ''}`}>
         {links.map((l) => (
           <Link
@@ -113,23 +138,9 @@ export default function NavBar() {
         ))}
       </div>
 
+      {/* Bottom: theme toggle */}
       <div className="nav-bottom">
         <ThemeToggle />
-        <button
-          className="nav-collapse-btn"
-          onClick={toggleCollapsed}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            {collapsed ? (
-              <polyline points="9 18 15 12 9 6"/>
-            ) : (
-              <polyline points="15 18 9 12 15 6"/>
-            )}
-          </svg>
-          <span className="nav-collapse-label">{collapsed ? 'Expand' : 'Collapse'}</span>
-        </button>
       </div>
     </nav>
   );
