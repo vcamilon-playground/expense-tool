@@ -112,6 +112,17 @@ test.describe('Navigation — sidebar collapse', () => {
     await page.goto('/expenses');
     await expect(nav.nav()).toHaveClass(/collapsed/);
   });
+
+  test('theme toggle is visible in expanded sidebar', async ({ page }) => {
+    const nav = new NavBar(page);
+    await expect(nav.themeToggle()).toBeVisible();
+  });
+
+  test('theme toggle is visible in collapsed sidebar', async ({ page }) => {
+    const nav = new NavBar(page);
+    await nav.collapseButton().click();
+    await expect(nav.themeToggle()).toBeVisible();
+  });
 });
 
 test.describe('Navigation — mobile hamburger', () => {
@@ -154,5 +165,21 @@ test.describe('Navigation — mobile hamburger', () => {
       (el) => window.getComputedStyle(el).color
     );
     expect(color).not.toMatch(/^rgba?\(255,\s*255,\s*255/);
+  });
+
+  test('collapse button is not visible on mobile', async ({ page }) => {
+    const nav = new NavBar(page);
+    await page.goto('/');
+    await expect(nav.collapseButton()).not.toBeVisible();
+  });
+
+  test('all nav links are accessible from mobile hamburger menu', async ({ page }) => {
+    const nav = new NavBar(page);
+    await page.goto('/');
+    await nav.toggle.click();
+    await expect(nav.navLinks).toHaveClass(/open/);
+    for (const label of ['Dashboard', 'Expenses', 'Reports', 'Budgets', 'Recurring']) {
+      await expect(nav.navLinks.getByRole('link', { name: label, exact: true })).toBeVisible();
+    }
   });
 });
