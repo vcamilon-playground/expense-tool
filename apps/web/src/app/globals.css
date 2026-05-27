@@ -571,9 +571,17 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 
   .brand-collapse-btn { display: none; }
 
-  .nav-bottom { display: none; }
+  .nav-bottom {
+    display: flex;
+    align-items: center;
+    border-top: none;
+    padding: 0;
+    margin-right: 4px;
+  }
+  nav.sidenav .nav-bottom .theme-label { display: none; }
+  nav.sidenav .nav-bottom button { width: auto; height: 36px; padding: 0 10px; }
 
-  .nav-toggle { display: flex; margin-left: auto; }
+  .nav-toggle { display: flex; order: 1; margin-left: 0; }
 
   .nav-links {
     display: none;

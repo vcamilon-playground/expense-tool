@@ -37,6 +37,10 @@ export class NavBar {
     return this.page.locator('.brand-text');
   }
 
+  themeToggle(): Locator {
+    return this.page.locator('nav.sidenav .nav-bottom button');
+  }
+
   footer(): Locator {
     return this.page.locator('footer.site-footer');
   }

@@ -117,6 +117,13 @@ test.describe('Navigation — sidebar collapse', () => {
 test.describe('Navigation — mobile hamburger', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
+  test('theme toggle is visible in mobile top bar', async ({ page }) => {
+    const nav = new NavBar(page);
+    await page.goto('/');
+    await expect(nav.nav()).toBeVisible();
+    await expect(nav.themeToggle()).toBeVisible();
+  });
+
   test('hamburger toggle opens and closes the nav menu', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');

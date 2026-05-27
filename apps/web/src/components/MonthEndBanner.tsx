@@ -16,7 +16,7 @@ export default function MonthEndBanner() {
 
   return (
     <div className="banner banner-danger">
-      ⚠️ {label} — please update all your expenses before {monthYear} closes.
+      ⚠️ {label} — Please update all your expenses before {monthYear} closes.
     </div>
   );
 }

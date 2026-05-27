@@ -56,7 +56,7 @@ test.describe('Dashboard', () => {
       await expect(dashboard.banner()).toBeVisible();
       await expect(dashboard.banner()).toHaveClass(/banner-danger/);
       await expect(dashboard.banner()).toContainText(monthYear);
-      await expect(dashboard.banner()).toContainText('please update all your expenses');
+      await expect(dashboard.banner()).toContainText('Please update all your expenses');
       if (daysLeft === 0) {
         await expect(dashboard.banner()).toContainText('last day');
       } else {
