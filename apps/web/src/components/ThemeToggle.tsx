@@ -28,7 +28,7 @@ export default function ThemeToggle() {
       title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
     >
       <span style={{ fontSize: 16 }}>{theme === 'light' ? '🌙' : '☀️'}</span>
-      <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
+      <span className="theme-label">{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
     </button>
   );
 }

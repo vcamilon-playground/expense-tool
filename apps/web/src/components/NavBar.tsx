@@ -65,15 +65,28 @@ const links = [
 
 export default function NavBar() {
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sidebar-collapsed') === 'true';
+    }
+    return false;
+  });
   const pathname = usePathname();
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href);
 
+  function toggleCollapsed() {
+    const next = !collapsed;
+    setCollapsed(next);
+    localStorage.setItem('sidebar-collapsed', String(next));
+  }
+
   return (
-    <nav className="sidenav">
-      <Link href="/" className="brand" onClick={() => setOpen(false)}>
-        💸 Expenses
+    <nav className={`sidenav${collapsed ? ' collapsed' : ''}`}>
+      <Link href="/" className="brand" aria-label="💸 Expenses" onClick={() => setOpen(false)}>
+        <span>💸</span>
+        <span className="brand-text"> Expenses</span>
       </Link>
 
       <button
@@ -91,16 +104,32 @@ export default function NavBar() {
             key={l.href}
             href={l.href}
             className={isActive(l.href) ? 'active' : ''}
+            title={l.label}
             onClick={() => setOpen(false)}
           >
             <span className="nav-icon">{l.icon}</span>
-            <span>{l.label}</span>
+            <span className="nav-label">{l.label}</span>
           </Link>
         ))}
       </div>
 
       <div className="nav-bottom">
         <ThemeToggle />
+        <button
+          className="nav-collapse-btn"
+          onClick={toggleCollapsed}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {collapsed ? (
+              <polyline points="9 18 15 12 9 6"/>
+            ) : (
+              <polyline points="15 18 9 12 15 6"/>
+            )}
+          </svg>
+          <span className="nav-collapse-label">{collapsed ? 'Expand' : 'Collapse'}</span>
+        </button>
       </div>
     </nav>
   );
