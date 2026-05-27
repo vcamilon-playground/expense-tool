@@ -18,7 +18,7 @@ test.describe('Reports page', () => {
     await expect(reports.periodSelect()).toBeVisible();
   });
 
-  test('Reference Date input is visible', async () => {
+  test('Reference Date input is visible in preset mode', async () => {
     await expect(reports.dateInput()).toBeVisible();
   });
 
@@ -49,5 +49,32 @@ test.describe('Reports page', () => {
     for (const opt of options) {
       expect(opt[0]).toBe(opt[0]?.toUpperCase());
     }
+  });
+
+  test('Preset Period and Date Range mode buttons are visible', async () => {
+    await expect(reports.presetPeriodButton()).toBeVisible();
+    await expect(reports.dateRangeButton()).toBeVisible();
+  });
+
+  test('switching to Date Range shows From and To inputs', async () => {
+    await reports.dateRangeButton().click();
+    await expect(reports.customFromInput()).toBeVisible();
+    await expect(reports.customToInput()).toBeVisible();
+    await expect(reports.periodSelect()).not.toBeVisible();
+  });
+
+  test('switching back to Preset Period restores period select', async () => {
+    await reports.dateRangeButton().click();
+    await reports.presetPeriodButton().click();
+    await expect(reports.periodSelect()).toBeVisible();
+    await expect(reports.customFromInput()).not.toBeVisible();
+  });
+
+  test('custom date range updates the Showing text', async () => {
+    await reports.dateRangeButton().click();
+    await reports.customFromInput().fill('2026-01-01');
+    await reports.customToInput().fill('2026-01-31');
+    await expect(reports.dateRangeText()).toContainText('2026-01-01');
+    await expect(reports.dateRangeText()).toContainText('2026-01-31');
   });
 });

@@ -5,11 +5,14 @@ import {
   formatMoney,
   inRange,
   summarize,
+  summarizeRange,
   type Category,
   type Expense,
   type ReportPeriod,
 } from '@expense/shared';
 import { listCategories, listExpenses } from '@/lib/db';
+
+type ViewMode = 'preset' | 'custom';
 
 const periods: ReportPeriod[] = ['day', 'week', 'month', 'year'];
 const periodLabel: Record<ReportPeriod, string> = {
@@ -17,13 +20,27 @@ const periodLabel: Record<ReportPeriod, string> = {
   week: 'Week',
   month: 'Month',
   year: 'Year',
+  custom: 'Custom',
 };
+
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function oneMonthAgoISO(): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 1);
+  return d.toISOString().slice(0, 10);
+}
 
 export default function ReportsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [period, setPeriod] = useState<ReportPeriod>('month');
-  const [refDate, setRefDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [refDate, setRefDate] = useState<string>(todayISO);
+  const [viewMode, setViewMode] = useState<ViewMode>('preset');
+  const [customFrom, setCustomFrom] = useState<string>(oneMonthAgoISO);
+  const [customTo, setCustomTo] = useState<string>(todayISO);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -42,8 +59,11 @@ export default function ReportsPage() {
   }, []);
 
   const summary = useMemo(
-    () => summarize(expenses, categories, period, new Date(refDate), true),
-    [expenses, categories, period, refDate],
+    () =>
+      viewMode === 'custom'
+        ? summarizeRange(expenses, categories, customFrom, customTo)
+        : summarize(expenses, categories, period, new Date(refDate), true),
+    [viewMode, expenses, categories, period, refDate, customFrom, customTo],
   );
 
   const periodExpenses = useMemo(
@@ -59,25 +79,66 @@ export default function ReportsPage() {
       <h1 style={{ marginBottom: 4 }}>Reports</h1>
 
       <div className="card">
-        <div className="grid cols-2">
-          <label>
-            <div className="muted">Period</div>
-            <select value={period} onChange={(e) => setPeriod(e.target.value as ReportPeriod)}>
-              {periods.map((p) => (
-                <option key={p} value={p}>{periodLabel[p]}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <div className="muted">Reference Date</div>
-            <input
-              type="date"
-              value={refDate}
-              onChange={(e) => setRefDate(e.target.value)}
-              style={{ maxWidth: '100%' }}
-            />
-          </label>
+        <div className="row" style={{ gap: 8, marginBottom: 16 }}>
+          <button
+            className={viewMode === 'preset' ? 'primary' : 'ghost'}
+            style={{ width: 'auto' }}
+            onClick={() => setViewMode('preset')}
+          >
+            Preset Period
+          </button>
+          <button
+            className={viewMode === 'custom' ? 'primary' : 'ghost'}
+            style={{ width: 'auto' }}
+            onClick={() => setViewMode('custom')}
+          >
+            Date Range
+          </button>
         </div>
+
+        {viewMode === 'preset' ? (
+          <div className="grid cols-2">
+            <label>
+              <div className="muted">Period</div>
+              <select value={period} onChange={(e) => setPeriod(e.target.value as ReportPeriod)}>
+                {periods.map((p) => (
+                  <option key={p} value={p}>{periodLabel[p]}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <div className="muted">Reference Date</div>
+              <input
+                type="date"
+                value={refDate}
+                onChange={(e) => setRefDate(e.target.value)}
+                style={{ maxWidth: '100%' }}
+              />
+            </label>
+          </div>
+        ) : (
+          <div className="grid cols-2">
+            <label>
+              <div className="muted">From</div>
+              <input
+                type="date"
+                value={customFrom}
+                onChange={(e) => setCustomFrom(e.target.value)}
+                style={{ maxWidth: '100%' }}
+              />
+            </label>
+            <label>
+              <div className="muted">To</div>
+              <input
+                type="date"
+                value={customTo}
+                onChange={(e) => setCustomTo(e.target.value)}
+                style={{ maxWidth: '100%' }}
+              />
+            </label>
+          </div>
+        )}
+
         <p className="muted" style={{ marginTop: 12, marginBottom: 0 }}>
           Showing {summary.from} → {summary.to}
         </p>

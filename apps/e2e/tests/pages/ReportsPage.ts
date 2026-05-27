@@ -19,8 +19,24 @@ export class ReportsPage extends BasePage {
     return this.page.locator('label').filter({ hasText: 'Period' }).locator('select');
   }
 
+  presetPeriodButton(): Locator {
+    return this.page.getByRole('button', { name: 'Preset Period' });
+  }
+
+  dateRangeButton(): Locator {
+    return this.page.getByRole('button', { name: 'Date Range' });
+  }
+
   dateInput(): Locator {
-    return this.page.locator('input[type="date"]');
+    return this.page.locator('label').filter({ hasText: 'Reference Date' }).locator('input[type="date"]');
+  }
+
+  customFromInput(): Locator {
+    return this.page.locator('label').filter({ hasText: 'From' }).locator('input[type="date"]');
+  }
+
+  customToInput(): Locator {
+    return this.page.locator('label').filter({ hasText: 'To' }).locator('input[type="date"]');
   }
 
   statLabel(text: string): Locator {

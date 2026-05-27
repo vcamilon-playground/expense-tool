@@ -1,6 +1,6 @@
 import type { Budget, Category, Expense } from './types';
 
-export type ReportPeriod = 'day' | 'week' | 'month' | 'year';
+export type ReportPeriod = 'day' | 'week' | 'month' | 'year' | 'custom';
 
 export type CategoryTotal = {
   category_id: string | null;
@@ -82,17 +82,15 @@ export function inRange(expense: Expense, from: string, to: string): boolean {
   return expense.occurred_at >= from && expense.occurred_at <= to;
 }
 
-export function summarize(
+function buildPeriodSummary(
   expenses: Expense[],
   categories: Category[],
   period: ReportPeriod,
-  ref = new Date(),
-  rolling = false,
+  from: string,
+  to: string,
 ): PeriodSummary {
-  const { from, to } = periodBounds(period, ref, rolling);
   const scoped = expenses.filter((e) => inRange(e, from, to));
   const catMap = new Map(categories.map((c) => [c.id, c.name]));
-
   const phpAmount = (e: Expense) => e.conversion_rate ? e.amount * e.conversion_rate : e.amount;
 
   const buckets = new Map<string, CategoryTotal>();
@@ -116,6 +114,26 @@ export function summarize(
   const by_category = Array.from(buckets.values()).sort((a, b) => b.total - a.total);
   const total = scoped.reduce((sum, e) => sum + phpAmount(e), 0);
   return { period, from, to, total, count: scoped.length, by_category };
+}
+
+export function summarize(
+  expenses: Expense[],
+  categories: Category[],
+  period: ReportPeriod,
+  ref = new Date(),
+  rolling = false,
+): PeriodSummary {
+  const { from, to } = periodBounds(period, ref, rolling);
+  return buildPeriodSummary(expenses, categories, period, from, to);
+}
+
+export function summarizeRange(
+  expenses: Expense[],
+  categories: Category[],
+  from: string,
+  to: string,
+): PeriodSummary {
+  return buildPeriodSummary(expenses, categories, 'custom', from, to);
 }
 
 export function budgetStatus(
