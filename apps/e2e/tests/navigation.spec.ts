@@ -138,4 +138,14 @@ test.describe('Navigation — mobile hamburger', () => {
     await expect(page).toHaveURL('/expenses');
     await expect(nav.navLinks).not.toHaveClass(/open/);
   });
+
+  test('nav link text is readable when mobile menu is open', async ({ page }) => {
+    const nav = new NavBar(page);
+    await page.goto('/');
+    await nav.toggle.click();
+    const color = await nav.navLabel('Dashboard').evaluate(
+      (el) => window.getComputedStyle(el).color
+    );
+    expect(color).not.toMatch(/^rgba?\(255,\s*255,\s*255/);
+  });
 });
