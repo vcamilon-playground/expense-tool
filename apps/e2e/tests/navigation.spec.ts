@@ -95,6 +95,17 @@ test.describe('Navigation — sidebar collapse', () => {
     await expect(page).toHaveURL('/expenses');
   });
 
+  test('brand text is visible when expanded', async ({ page }) => {
+    const nav = new NavBar(page);
+    await expect(nav.brandText()).toBeVisible();
+  });
+
+  test('brand text is hidden when collapsed', async ({ page }) => {
+    const nav = new NavBar(page);
+    await nav.collapseButton().click();
+    await expect(nav.brandText()).not.toBeVisible();
+  });
+
   test('collapse state persists across page navigations', async ({ page }) => {
     const nav = new NavBar(page);
     await nav.collapseButton().click();

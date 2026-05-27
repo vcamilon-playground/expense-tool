@@ -33,6 +33,10 @@ export class NavBar {
     return this.page.locator('.nav-label').filter({ hasText: name });
   }
 
+  brandText(): Locator {
+    return this.page.locator('.brand-text');
+  }
+
   footer(): Locator {
     return this.page.locator('footer.site-footer');
   }
