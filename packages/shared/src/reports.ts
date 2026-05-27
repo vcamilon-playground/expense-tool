@@ -31,27 +31,51 @@ export type BudgetStatus = {
 const pad = (n: number) => String(n).padStart(2, '0');
 const toISO = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-export function periodBounds(period: ReportPeriod, ref = new Date()): { from: string; to: string } {
+export function periodBounds(
+  period: ReportPeriod,
+  ref = new Date(),
+  rolling = false,
+): { from: string; to: string } {
   const d = new Date(ref);
-  if (period === 'day') {
-    return { from: toISO(d), to: toISO(d) };
-  }
-  if (period === 'week') {
-    const day = d.getDay(); // 0=Sun
-    const monday = new Date(d);
-    monday.setDate(d.getDate() - ((day + 6) % 7));
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    return { from: toISO(monday), to: toISO(sunday) };
-  }
-  if (period === 'month') {
-    const from = new Date(d.getFullYear(), d.getMonth(), 1);
-    const to = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+
+  if (!rolling) {
+    if (period === 'day') {
+      return { from: toISO(d), to: toISO(d) };
+    }
+    if (period === 'week') {
+      const day = d.getDay(); // 0=Sun
+      const monday = new Date(d);
+      monday.setDate(d.getDate() - ((day + 6) % 7));
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      return { from: toISO(monday), to: toISO(sunday) };
+    }
+    if (period === 'month') {
+      const from = new Date(d.getFullYear(), d.getMonth(), 1);
+      const to = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      return { from: toISO(from), to: toISO(to) };
+    }
+    const from = new Date(d.getFullYear(), 0, 1);
+    const to = new Date(d.getFullYear(), 11, 31);
     return { from: toISO(from), to: toISO(to) };
   }
-  const from = new Date(d.getFullYear(), 0, 1);
-  const to = new Date(d.getFullYear(), 11, 31);
-  return { from: toISO(from), to: toISO(to) };
+
+  // Rolling windows: period ends on ref date
+  const to = toISO(d);
+  if (period === 'day') return { from: to, to };
+
+  const from = new Date(d);
+  const origDay = d.getDate();
+  if (period === 'week') {
+    from.setDate(origDay - 7);
+  } else if (period === 'month') {
+    from.setMonth(d.getMonth() - 1);
+    if (from.getDate() !== origDay) from.setDate(0); // clamp: e.g. Mar 31 → Feb 28
+  } else {
+    from.setFullYear(d.getFullYear() - 1);
+    if (from.getDate() !== origDay) from.setDate(0); // clamp: Feb 29 → Feb 28 non-leap
+  }
+  return { from: toISO(from), to };
 }
 
 export function inRange(expense: Expense, from: string, to: string): boolean {
@@ -63,8 +87,9 @@ export function summarize(
   categories: Category[],
   period: ReportPeriod,
   ref = new Date(),
+  rolling = false,
 ): PeriodSummary {
-  const { from, to } = periodBounds(period, ref);
+  const { from, to } = periodBounds(period, ref, rolling);
   const scoped = expenses.filter((e) => inRange(e, from, to));
   const catMap = new Map(categories.map((c) => [c.id, c.name]));
 

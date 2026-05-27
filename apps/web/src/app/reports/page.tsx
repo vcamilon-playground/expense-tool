@@ -42,7 +42,7 @@ export default function ReportsPage() {
   }, []);
 
   const summary = useMemo(
-    () => summarize(expenses, categories, period, new Date(refDate)),
+    () => summarize(expenses, categories, period, new Date(refDate), true),
     [expenses, categories, period, refDate],
   );
 
