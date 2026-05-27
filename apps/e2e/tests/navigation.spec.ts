@@ -52,6 +52,57 @@ test.describe('Navigation', () => {
   });
 });
 
+test.describe('Navigation — sidebar collapse', () => {
+  test.beforeEach(async ({ page }) => {
+    // Reset collapse state so tests start with expanded sidebar
+    await page.goto('/');
+    await page.evaluate(() => localStorage.removeItem('sidebar-collapsed'));
+    await page.reload();
+  });
+
+  test('collapse button is visible on desktop', async ({ page }) => {
+    const nav = new NavBar(page);
+    await expect(nav.collapseButton()).toBeVisible();
+  });
+
+  test('clicking collapse adds collapsed class to sidebar', async ({ page }) => {
+    const nav = new NavBar(page);
+    await expect(nav.nav()).not.toHaveClass(/collapsed/);
+    await nav.collapseButton().click();
+    await expect(nav.nav()).toHaveClass(/collapsed/);
+  });
+
+  test('nav labels are hidden when collapsed', async ({ page }) => {
+    const nav = new NavBar(page);
+    await nav.collapseButton().click();
+    await expect(nav.navLabel('Dashboard')).not.toBeVisible();
+    await expect(nav.navLabel('Expenses')).not.toBeVisible();
+  });
+
+  test('expand button restores the sidebar', async ({ page }) => {
+    const nav = new NavBar(page);
+    await nav.collapseButton().click();
+    await expect(nav.nav()).toHaveClass(/collapsed/);
+    await nav.expandButton().click();
+    await expect(nav.nav()).not.toHaveClass(/collapsed/);
+    await expect(nav.navLabel('Dashboard')).toBeVisible();
+  });
+
+  test('nav links still navigate in collapsed mode', async ({ page }) => {
+    const nav = new NavBar(page);
+    await nav.collapseButton().click();
+    await nav.link('Expenses').click();
+    await expect(page).toHaveURL('/expenses');
+  });
+
+  test('collapse state persists across page navigations', async ({ page }) => {
+    const nav = new NavBar(page);
+    await nav.collapseButton().click();
+    await page.goto('/expenses');
+    await expect(nav.nav()).toHaveClass(/collapsed/);
+  });
+});
+
 test.describe('Navigation — mobile hamburger', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 

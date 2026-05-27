@@ -21,6 +21,18 @@ export class NavBar {
     return this.page.getByRole('link', { name: /💸 Expenses/ });
   }
 
+  collapseButton(): Locator {
+    return this.page.getByRole('button', { name: /Collapse sidebar/i });
+  }
+
+  expandButton(): Locator {
+    return this.page.getByRole('button', { name: /Expand sidebar/i });
+  }
+
+  navLabel(name: string): Locator {
+    return this.page.locator('.nav-label').filter({ hasText: name });
+  }
+
   footer(): Locator {
     return this.page.locator('footer.site-footer');
   }
