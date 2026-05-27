@@ -5,7 +5,7 @@ export type Category = {
   created_at?: string;
 };
 
-export type ExpenseSource = 'manual' | 'receipt';
+export type ExpenseSource = 'manual' | 'receipt' | 'recurring';
 
 export type Expense = {
   id: string;

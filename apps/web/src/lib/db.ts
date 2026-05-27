@@ -79,6 +79,17 @@ export async function deleteBudget(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function listDueRecurring(asOf: string): Promise<RecurringExpense[]> {
+  const { data, error } = await supabase
+    .from('recurring_expenses')
+    .select('*')
+    .eq('active', true)
+    .lte('next_charge_date', asOf)
+    .order('next_charge_date');
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function listRecurring(): Promise<RecurringExpense[]> {
   const { data, error } = await supabase
     .from('recurring_expenses')

@@ -22,7 +22,7 @@ create table if not exists expenses (
   description text,
   occurred_at date not null default current_date,
   receipt_url text,
-  source text not null default 'manual' check (source in ('manual','receipt')),
+  source text not null default 'manual' check (source in ('manual','receipt','recurring')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -110,6 +110,10 @@ alter default privileges in schema public
 -- ---------- Migration: add conversion_rate (run once on existing DB) ----------
 -- alter table expenses add column if not exists conversion_rate numeric(12,6);
 -- alter table expenses alter column currency set default 'PHP';
+
+-- ---------- Migration: allow recurring source (run once on existing DB) ----------
+-- alter table expenses drop constraint if exists expenses_source_check;
+-- alter table expenses add constraint expenses_source_check check (source in ('manual','receipt','recurring'));
 
 -- ---------- Storage bucket for receipts ----------
 -- Run in Supabase Dashboard > Storage:
