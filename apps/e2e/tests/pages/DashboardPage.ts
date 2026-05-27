@@ -35,6 +35,10 @@ export class DashboardPage extends BasePage {
     return this.page.getByRole('heading', { level: 2, name: '6-Month Trend' });
   }
 
+  upcomingChargesSection(): Locator {
+    return this.page.getByRole('heading', { level: 2, name: 'Upcoming Charges' });
+  }
+
   banner(): Locator {
     return this.page.locator('.banner.banner-danger');
   }

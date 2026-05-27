@@ -15,6 +15,14 @@ export class ExpensesPage extends BasePage {
     return this.page.getByRole('heading', { level: 1, name: 'Expenses' });
   }
 
+  searchInput(): Locator {
+    return this.page.locator('input[type="search"]');
+  }
+
+  categoryFilterSelect(): Locator {
+    return this.page.locator('select').first();
+  }
+
   addButton(): Locator {
     return this.page.getByRole('button', { name: '+ Add Expense' });
   }

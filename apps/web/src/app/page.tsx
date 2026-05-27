@@ -3,14 +3,16 @@
 import { useEffect, useState } from 'react';
 import {
   budgetStatus,
+  formatMoney,
   summarize,
   type Budget,
   type BudgetStatus,
   type Category,
   type Expense,
   type PeriodSummary,
+  type RecurringExpense,
 } from '@expense/shared';
-import { listBudgets, listCategories, listExpenses } from '@/lib/db';
+import { listBudgets, listCategories, listExpenses, listRecurring } from '@/lib/db';
 import SummaryCards from '@/components/SummaryCards';
 import BudgetAlerts from '@/components/BudgetAlerts';
 import InsightCard from '@/components/InsightCard';
@@ -22,20 +24,23 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [recurring, setRecurring] = useState<RecurringExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const [cats, exps, buds] = await Promise.all([
+        const [cats, exps, buds, recs] = await Promise.all([
           listCategories(),
           listExpenses(),
           listBudgets(),
+          listRecurring(),
         ]);
         setCategories(cats);
         setExpenses(exps);
         setBudgets(buds);
+        setRecurring(recs);
       } catch (e) {
         setErr(e instanceof Error ? e.message : 'Failed to load');
       } finally {
@@ -58,6 +63,14 @@ export default function DashboardPage() {
     total: c.total,
   }));
 
+  const today = new Date().toISOString().slice(0, 10);
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() + 30);
+  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  const upcoming = recurring
+    .filter((r) => r.active && r.next_charge_date >= today && r.next_charge_date <= cutoffStr)
+    .sort((a, b) => a.next_charge_date.localeCompare(b.next_charge_date));
+
   return (
     <div>
       <MonthEndBanner />
@@ -65,6 +78,37 @@ export default function DashboardPage() {
 
       {/* KPIs */}
       <SummaryCards day={day} week={week} month={month} year={year} />
+
+      {/* Upcoming Charges */}
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>Upcoming Charges</h2>
+        {upcoming.length === 0 ? (
+          <p className="muted">No charges due in the next 30 days.</p>
+        ) : (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th style={{ textAlign: 'right' }}>Amount</th>
+                  <th>Due Date</th>
+                  <th>Cadence</th>
+                </tr>
+              </thead>
+              <tbody>
+                {upcoming.map((r) => (
+                  <tr key={r.id}>
+                    <td>{r.name}</td>
+                    <td style={{ textAlign: 'right' }}>{formatMoney(r.amount)}</td>
+                    <td>{r.next_charge_date}</td>
+                    <td style={{ textTransform: 'capitalize' }}>{r.cadence}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Budget Status */}
       <div className="card">

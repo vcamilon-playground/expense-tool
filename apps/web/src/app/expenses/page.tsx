@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Category, Expense, ExpenseInput } from '@expense/shared';
 import {
   createExpense,
@@ -19,6 +19,8 @@ export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -63,6 +65,18 @@ export default function ExpensesPage() {
     await reload();
   }
 
+  const filteredExpenses = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return expenses.filter((e) => {
+      const matchesSearch =
+        !q ||
+        (e.merchant?.toLowerCase().includes(q) ?? false) ||
+        (e.description?.toLowerCase().includes(q) ?? false);
+      const matchesCategory = !categoryFilter || e.category_id === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [expenses, search, categoryFilter]);
+
   if (loading) return <p className="muted">Loading…</p>;
   if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
 
@@ -90,13 +104,36 @@ export default function ExpensesPage() {
         </button>
       </div>
 
+      <div className="card" style={{ padding: '12px 16px', marginBottom: 8 }}>
+        <div className="grid cols-2" style={{ gap: 8 }}>
+          <input
+            type="search"
+            placeholder="Search merchant or description…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+            <option value="">All Categories</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.icon ? `${c.icon} ${c.name}` : c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div className="card">
-        <ExpenseList
-          expenses={expenses}
-          categories={categories}
-          onEdit={(e) => setEditing(e)}
-          onDelete={handleDelete}
-        />
+        {filteredExpenses.length === 0 && (search || categoryFilter) ? (
+          <p className="muted">No expenses match your search.</p>
+        ) : (
+          <ExpenseList
+            expenses={filteredExpenses}
+            categories={categories}
+            onEdit={(e) => setEditing(e)}
+            onDelete={handleDelete}
+          />
+        )}
       </div>
     </div>
   );

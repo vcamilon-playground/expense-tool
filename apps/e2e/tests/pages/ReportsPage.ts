@@ -51,6 +51,14 @@ export class ReportsPage extends BasePage {
     return this.page.getByText(/Showing/);
   }
 
+  compareCheckbox(): Locator {
+    return this.page.locator('input[type="checkbox"]');
+  }
+
+  comparisonHeading(): Locator {
+    return this.page.getByRole('heading', { level: 2, name: 'Period Comparison' });
+  }
+
   async selectPeriod(value: string): Promise<void> {
     await this.periodSelect().selectOption(value);
   }

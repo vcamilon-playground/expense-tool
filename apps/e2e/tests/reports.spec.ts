@@ -70,6 +70,21 @@ test.describe('Reports page', () => {
     await expect(reports.customFromInput()).not.toBeVisible();
   });
 
+  test('compare with previous period checkbox is visible', async () => {
+    await expect(reports.compareCheckbox()).toBeVisible();
+  });
+
+  test('checking compare shows the Period Comparison heading', async () => {
+    await reports.compareCheckbox().check();
+    await expect(reports.comparisonHeading()).toBeVisible();
+  });
+
+  test('unchecking compare hides the Period Comparison section', async () => {
+    await reports.compareCheckbox().check();
+    await reports.compareCheckbox().uncheck();
+    await expect(reports.comparisonHeading()).not.toBeVisible();
+  });
+
   test('custom date range updates the Showing text', async () => {
     await reports.dateRangeButton().click();
     await reports.customFromInput().fill('2026-01-01');

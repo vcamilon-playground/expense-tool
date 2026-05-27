@@ -41,6 +41,11 @@ test.describe('Dashboard', () => {
     await expect(dashboard.trendSection()).toHaveText('6-Month Trend');
   });
 
+  test('upcoming charges section heading is correct', async () => {
+    await expect(dashboard.upcomingChargesSection()).toBeVisible();
+    await expect(dashboard.upcomingChargesSection()).toHaveText('Upcoming Charges');
+  });
+
   test('month-end reminder banner is conditional on days remaining in month', async () => {
     const now = new Date();
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();

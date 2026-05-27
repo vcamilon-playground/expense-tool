@@ -67,6 +67,26 @@ test.describe('Expenses page', () => {
     await dialog.getByRole('button', { name: 'Add Expense' }).click();
     await expect(dialog).toBeVisible();
   });
+
+  test('search input is visible', async () => {
+    await expect(expenses.searchInput()).toBeVisible();
+  });
+
+  test('category filter select is visible with All Categories default', async () => {
+    await expect(expenses.categoryFilterSelect()).toBeVisible();
+    await expect(expenses.categoryFilterSelect()).toHaveValue('');
+  });
+
+  test('typing in search filters to no results message when nothing matches', async () => {
+    await expenses.searchInput().fill('zzznomatch999');
+    await expect(expenses.page.getByText('No expenses match your search.')).toBeVisible();
+  });
+
+  test('clearing search restores the expense list', async () => {
+    await expenses.searchInput().fill('zzznomatch999');
+    await expenses.searchInput().fill('');
+    await expect(expenses.page.getByText('No expenses match your search.')).not.toBeVisible();
+  });
 });
 
 test.describe('Expenses — delete confirmation modal', () => {

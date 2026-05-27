@@ -33,6 +33,42 @@ function oneMonthAgoISO(): string {
   return d.toISOString().slice(0, 10);
 }
 
+function prevRefDate(refDateStr: string, period: ReportPeriod): Date {
+  const d = new Date(refDateStr);
+  const origDay = d.getDate();
+  if (period === 'day') {
+    d.setDate(origDay - 1);
+  } else if (period === 'week') {
+    d.setDate(origDay - 7);
+  } else if (period === 'month') {
+    d.setMonth(d.getMonth() - 1);
+    if (d.getDate() !== origDay) d.setDate(0);
+  } else {
+    d.setFullYear(d.getFullYear() - 1);
+    if (d.getDate() !== origDay) d.setDate(0);
+  }
+  return d;
+}
+
+function shiftBack(fromStr: string, toStr: string): { from: string; to: string } {
+  const msPerDay = 86400000;
+  const fromMs = new Date(fromStr).getTime();
+  const toMs = new Date(toStr).getTime();
+  const durationMs = toMs - fromMs;
+  const newToMs = fromMs - msPerDay;
+  const newFromMs = newToMs - durationMs;
+  return {
+    from: new Date(newFromMs).toISOString().slice(0, 10),
+    to: new Date(newToMs).toISOString().slice(0, 10),
+  };
+}
+
+function changePct(current: number, prev: number): string {
+  if (prev === 0) return current > 0 ? '+100%' : '—';
+  const pct = ((current - prev) / prev) * 100;
+  return `${pct >= 0 ? '+' : ''}${Math.round(pct)}%`;
+}
+
 export default function ReportsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -41,6 +77,7 @@ export default function ReportsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('preset');
   const [customFrom, setCustomFrom] = useState<string>(oneMonthAgoISO);
   const [customTo, setCustomTo] = useState<string>(todayISO);
+  const [compare, setCompare] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -70,6 +107,15 @@ export default function ReportsPage() {
     () => expenses.filter((e) => inRange(e, summary.from, summary.to)),
     [expenses, summary.from, summary.to],
   );
+
+  const prevSummary = useMemo(() => {
+    if (!compare) return null;
+    if (viewMode === 'custom') {
+      const { from, to } = shiftBack(customFrom, customTo);
+      return summarizeRange(expenses, categories, from, to);
+    }
+    return summarize(expenses, categories, period, prevRefDate(refDate, period), true);
+  }, [compare, viewMode, expenses, categories, period, refDate, customFrom, customTo]);
 
   if (loading) return <p className="muted">Loading…</p>;
   if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
@@ -139,9 +185,19 @@ export default function ReportsPage() {
           </div>
         )}
 
-        <p className="muted" style={{ marginTop: 12, marginBottom: 0 }}>
-          Showing {summary.from} → {summary.to}
-        </p>
+        <div className="row" style={{ marginTop: 12, justifyContent: 'space-between', alignItems: 'center' }}>
+          <p className="muted" style={{ margin: 0 }}>
+            Showing {summary.from} → {summary.to}
+          </p>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', userSelect: 'none' }}>
+            <input
+              type="checkbox"
+              checked={compare}
+              onChange={(e) => setCompare(e.target.checked)}
+            />
+            <span className="muted" style={{ fontSize: 13 }}>Compare with previous period</span>
+          </label>
+        </div>
       </div>
 
       <div className="grid cols-3">
@@ -160,6 +216,56 @@ export default function ReportsPage() {
           </div>
         </div>
       </div>
+
+      {compare && prevSummary && (
+        <div className="card">
+          <h2 style={{ marginTop: 0 }}>Period Comparison</h2>
+          <p className="muted" style={{ marginTop: 0, marginBottom: 12, fontSize: 13 }}>
+            {summary.from} → {summary.to} &nbsp;vs&nbsp; {prevSummary.from} → {prevSummary.to}
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th style={{ textAlign: 'right' }}>Current</th>
+                  <th style={{ textAlign: 'right' }}>Previous</th>
+                  <th style={{ textAlign: 'right' }}>Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Total</td>
+                  <td style={{ textAlign: 'right' }}>{formatMoney(summary.total)}</td>
+                  <td style={{ textAlign: 'right' }}>{formatMoney(prevSummary.total)}</td>
+                  <td style={{ textAlign: 'right' }}>{changePct(summary.total, prevSummary.total)}</td>
+                </tr>
+                <tr>
+                  <td>Expenses</td>
+                  <td style={{ textAlign: 'right' }}>{summary.count}</td>
+                  <td style={{ textAlign: 'right' }}>{prevSummary.count}</td>
+                  <td style={{ textAlign: 'right' }}>{changePct(summary.count, prevSummary.count)}</td>
+                </tr>
+                <tr>
+                  <td>Average</td>
+                  <td style={{ textAlign: 'right' }}>
+                    {formatMoney(summary.count ? summary.total / summary.count : 0)}
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    {formatMoney(prevSummary.count ? prevSummary.total / prevSummary.count : 0)}
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    {changePct(
+                      summary.count ? summary.total / summary.count : 0,
+                      prevSummary.count ? prevSummary.total / prevSummary.count : 0,
+                    )}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>By Category</h2>
