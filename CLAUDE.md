@@ -40,7 +40,8 @@ Single-user expense tracking tool. No authentication. All data belongs to one pe
 | `npm run dev:web` | Start Next.js dev server on http://localhost:3000 |
 | `npm run typecheck` | Type-check all three workspaces |
 | `npm run build:shared` | Build the shared package |
-| `npm run test:e2e` | Run Playwright tests locally (auto-starts dev server) |
+| `npm run test:unit` | Run Vitest unit tests (packages/shared logic, ~400 ms) |
+| `npm run test:e2e` | Run full Playwright smoke suite locally (auto-starts dev server) |
 | `npm run test:e2e:ui` | Open Playwright UI mode |
 | `npm run install:browsers` | Download all Playwright browser binaries (run once after clone) |
 
@@ -58,7 +59,7 @@ Four tables in Supabase Postgres:
 | `recurring_expenses` | `id`, `name`, `amount`, `category_id`, `cadence` (weekly/monthly/yearly), `next_charge_date`, `active` |
 
 - Currency defaults to `PHP`. Overseas expenses store `conversion_rate` (rate to PHP).
-- `source` is `'manual'` or `'receipt'` (AI-extracted from photo).
+- `source` is `'manual'`, `'receipt'` (AI-extracted from photo), or `'recurring'` (auto-created by the daily cron).
 - Edit button on expenses is only shown for current-month rows (`occurred_at.startsWith(currentMonth)`).
 - `budgets.category_id` is nullable — a null category_id means "overall" budget.
 
@@ -188,7 +189,17 @@ npm run typecheck
 
 All workspaces must pass with zero errors before committing.
 
-### 6 — Update and run Playwright tests
+### 5b — Unit tests
+
+Always run unit tests after any code change:
+
+```bash
+npm run test:unit
+```
+
+Unit tests cover pure logic in `packages/shared/` (e.g. `advanceDate`). They run in under a second — there is no reason to skip them. If you add new pure logic to `packages/shared/`, write a corresponding `*.test.ts` file alongside it before committing.
+
+### 6 — Update and run targeted tests
 
 #### 6a — Fix affected tests
 
@@ -196,15 +207,28 @@ Before running, update every file that could break:
 - Page objects in `apps/e2e/tests/pages/` whose locators reference changed UI elements (text, roles, classes, routes).
 - Smoke spec assertions against changed copy, button labels, headings, or modal content.
 
-#### 6b — Always run all smoke tests
+#### 6b — Run only the smoke spec(s) for changed feature areas
 
-Smoke tests are fast and cover broad regressions. Always run them:
+Do NOT run the full smoke suite locally. Run only the spec file(s) whose page or component was touched. The full suite runs in CI after every Vercel deployment — running it all locally before every commit is unnecessary and slow.
+
+| Changed area | Smoke spec to run |
+|---|---|
+| `apps/web/src/app/expenses/` or `ExpensesPage.ts` | `tests/expenses.spec.ts` |
+| `apps/web/src/app/recurring/` or `RecurringPage.ts` | `tests/recurring.spec.ts` |
+| `apps/web/src/app/budgets/` or `BudgetsPage.ts` | `tests/budgets.spec.ts` |
+| `apps/web/src/app/reports/` or `ReportsPage.ts` | `tests/reports.spec.ts` |
+| `apps/web/src/app/` (dashboard) or `DashboardPage.ts` | `tests/dashboard.spec.ts` |
+| `apps/web/src/components/NavBar.tsx` or `NavBar.ts` | `tests/navigation.spec.ts` |
+| Shared component used across multiple pages | all spec files that use it |
+| `packages/shared/` logic only | unit tests only — no smoke needed |
+| API routes, DB lib, cron, config | no smoke needed |
+| Docs, styles only | skip |
 
 ```bash
-npm run test:e2e
+cd apps/e2e && SMOKE_ONLY=1 npx playwright test tests/<feature>.spec.ts
 ```
 
-This runs every `*.spec.ts` (excludes `*.regression.spec.ts`). All must pass.
+All targeted specs must pass before proceeding.
 
 #### 6c — Run only the regression spec(s) for changed feature areas
 
@@ -219,7 +243,7 @@ Regression tests hit the real database and are slow. Only run the spec(s) whose 
 | Docs, styles, or config only | skip regression |
 
 ```bash
-npm run test:e2e:regression -- tests/<feature>.regression.spec.ts
+cd apps/e2e && npx playwright test tests/<feature>.regression.spec.ts
 ```
 
 Or run all regression specs at once:
