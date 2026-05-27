@@ -257,6 +257,37 @@ If a test fails:
 2. Decide: did the app change (fix the test) or did a bug regress (fix the code)?
 3. Re-run the failing spec. Only proceed to commit once it is green.
 
+#### 6d — Assess and add missing test scenarios (mandatory for every change)
+
+After every feature, bug fix, or UI change, explicitly ask: **"Does this change expose a gap in test coverage?"**
+
+This assessment is not optional. Run through this checklist before moving to step 7:
+
+**For new features:**
+- Are all new interactive elements (buttons, inputs, toggles) covered by a smoke test?
+- Is every new conditional UI state (empty state, hidden element, mode switch) tested?
+- If the feature writes to the database, is there a regression spec?
+
+**For bug fixes:**
+- Write a test that would have caught the bug *before* the fix was applied. If the test passes after the fix and would have failed before, it is the right test.
+- Add it to the smoke spec if the bug was a UI/CSS/visibility issue (no DB involved).
+- Add it to the regression spec if the bug was in a CRUD or data flow.
+
+**For UI/layout changes:**
+- Is the changed visual state (class toggled, element shown/hidden, text content) covered?
+- Add a positive case ("X is visible when Y") and a negative case ("X is hidden when Z") for every toggled element.
+
+**Deciding smoke vs regression:**
+
+| Scenario type | Where to add |
+|---|---|
+| Element visible / hidden, class toggled, text content | Smoke (`<feature>.spec.ts`) |
+| Navigation, URL change, page heading | Smoke (`<feature>.spec.ts`) |
+| localStorage state, session behaviour | Smoke (`<feature>.spec.ts`) |
+| Create / edit / delete against real DB | Regression (`<feature>.regression.spec.ts`) |
+
+If new scenarios are identified, write and run them **before** step 7. Never defer test additions to a follow-up commit.
+
 ### 7 — Commit and push automatically
 
 Once code review, documentation, typecheck, and local E2E tests all pass:
@@ -282,9 +313,9 @@ git push origin main
 
 ---
 
-## Test Coverage Requirements for New Functionality
+## Test Coverage Requirements for Every Change
 
-Every new feature or UI change must be accompanied by Playwright tests. Claude must write all three categories before marking any feature task done.
+Every new feature, bug fix, or UI change must be accompanied by Playwright tests. Claude must write all applicable categories and run them before marking any task done. **This applies equally to bug fixes — every fix must include a test that would have caught the regression.**
 
 ### 1 — Exploratory / smoke tests (`<feature>.spec.ts`)
 
