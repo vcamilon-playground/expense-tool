@@ -106,6 +106,11 @@ All locators and actions are centralised in `apps/e2e/tests/pages/`:
 - Never use `waitForLoadState('networkidle')` — Next.js keeps connections open. Use `waitForLoad()` instead.
 - Scope locators to dialogs: `expenses.dialog().getByRole('button', { name: '...' })`.
 - Use `exact: true` on nav link locators to avoid the brand link matching "Expenses".
+- **`toBeVisible()` is blind to CSS color and contrast.** An element with white text on a white background passes `toBeVisible()` because it is DOM-visible. When the bug could be a color or contrast issue (text on a colored background, elements hidden by matching fg/bg), use `evaluate()` to read the computed style instead:
+  ```ts
+  const color = await locator.evaluate(el => window.getComputedStyle(el).color);
+  expect(color).not.toMatch(/^rgba?\(255,\s*255,\s*255/); // not white
+  ```
 
 ### Test Data Cleanup
 
@@ -121,7 +126,17 @@ Regression specs write real rows to the production database. Cleanup rules:
 
 ### Mobile viewport handling
 
-`nav.topnav` hides links behind a hamburger on mobile. Before interacting with nav links, call `nav.openIfMobile()`. This is a no-op on desktop (toggle button is not visible).
+`nav.sidenav` converts to a top bar on mobile and hides links behind a hamburger. Before interacting with nav links, call `nav.openIfMobile()`. This is a no-op on desktop (toggle button is not visible).
+
+**Cross-viewport coverage rule:** Whenever a navbar or sidebar element is added, removed, or restyled, tests must cover **both** viewports:
+- Desktop tests live in the `Navigation — sidebar collapse` describe block (no `test.use` override → default 1280px).
+- Mobile tests live in the `Navigation — mobile hamburger` describe block (`test.use({ viewport: { width: 390, height: 844 } })`).
+
+For every new control in the sidebar, ask two questions:
+1. Is there a desktop test asserting it is **visible**?
+2. Is there a mobile test asserting it is **visible** (if it should appear on mobile) or **not visible** (if it is intentionally hidden by the mobile media query)?
+
+Failure to answer both questions is what allows a feature that works on desktop to silently disappear on mobile (or vice versa).
 
 ### CI/CD
 
@@ -297,6 +312,7 @@ Ask: **"Does this change expose coverage that does not exist at all?"**
 **For UI/layout changes:**
 - Is the changed visual state (class toggled, element shown/hidden, text content) covered?
 - Add a positive case ("X is visible when Y") and a negative case ("X is hidden when Z") for every toggled element.
+- **If the change affects the navbar or sidebar:** update both the desktop describe block and the mobile describe block. A desktop-only test does not guard mobile layout. See the cross-viewport coverage rule in the Mobile viewport handling section.
 
 ---
 
@@ -391,6 +407,8 @@ When adding tests for a new feature:
 | `.stat` count is wrong | Use `.stat .label` with `.filter({ hasText: '...' })` — MonthEndBanner also renders `.stat` |
 | `getByLabel('Period')` doesn't find select | Label uses implicit association. Use `locator('label').filter({ hasText: 'Period' }).locator('select')` |
 | Nav links not found on mobile | Call `nav.openIfMobile()` before interacting with links |
+| Element is invisible due to matching fg/bg color but `toBeVisible()` passes | Use `evaluate(el => getComputedStyle(el).color)` to assert the computed color is not the same as the background |
+| Sidebar control works on desktop but missing on mobile (or vice versa) | Each sidebar control needs a test in both the desktop describe block and the mobile hamburger describe block — see cross-viewport coverage rule |
 | Tests hang in CI | Vercel Authentication is enabled — disable it in Vercel project settings |
 | Cleanup skipped in CI | Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as GitHub repository secrets |
 
