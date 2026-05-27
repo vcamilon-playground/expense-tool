@@ -1,16 +1,6 @@
 import { NextResponse } from 'next/server';
-import type { RecurringCadence } from '@expense/shared';
+import { advanceDate } from '@expense/shared';
 import { createExpense, listDueRecurring, updateRecurring } from '@/lib/db';
-
-export const runtime = 'nodejs';
-
-function advanceDate(dateStr: string, cadence: RecurringCadence): string {
-  const d = new Date(dateStr + 'T00:00:00Z');
-  if (cadence === 'weekly') d.setUTCDate(d.getUTCDate() + 7);
-  else if (cadence === 'monthly') d.setUTCMonth(d.getUTCMonth() + 1);
-  else d.setUTCFullYear(d.getUTCFullYear() + 1);
-  return d.toISOString().slice(0, 10);
-}
 
 export async function GET(req: Request) {
   const cronSecret = process.env.CRON_SECRET;
