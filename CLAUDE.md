@@ -257,11 +257,32 @@ If a test fails:
 2. Decide: did the app change (fix the test) or did a bug regress (fix the code)?
 3. Re-run the failing spec. Only proceed to commit once it is green.
 
-#### 6d — Assess and add missing test scenarios (mandatory for every change)
+#### 6d — Review and update existing scenarios, then add missing ones (mandatory for every change)
 
-After every feature, bug fix, or UI change, explicitly ask: **"Does this change expose a gap in test coverage?"**
+After every feature, bug fix, or UI change, run **both** parts of this assessment before moving to step 7. Neither part is optional.
 
-This assessment is not optional. Run through this checklist before moving to step 7:
+---
+
+**Part A — Review existing scenarios for accuracy**
+
+Open every spec file and page object that touches the changed area and ask for each existing test:
+
+1. **Is this test still accurate?** If the UI changed (new text, new class name, restructured HTML, removed element), the test may pass for the wrong reason or silently test nothing. Update it to reflect the current behaviour.
+2. **Is this test still needed?** If the feature the test covered was removed or replaced, delete the test rather than leaving a false-positive.
+3. **Is the assertion specific enough?** A test that only checks an element is visible may miss a regression in its content. Tighten it if the change makes a more precise assertion possible.
+4. **Does any existing test now have a missing counterpart?** For example, if there is a test that an element is visible in state A, there should also be a test that it is hidden in state B — add the counterpart if it is absent.
+
+Signs an existing test needs updating:
+- It references a CSS class, label, heading, or copy that was renamed or removed.
+- It tests a default state that changed (e.g., default theme switched, default mode changed).
+- It was written for an old layout and now targets a wrapper element that no longer exists.
+- A positive-only test exists for a toggle/conditional element but no negative case does.
+
+---
+
+**Part B — Add new scenarios for gaps**
+
+Ask: **"Does this change expose coverage that does not exist at all?"**
 
 **For new features:**
 - Are all new interactive elements (buttons, inputs, toggles) covered by a smoke test?
@@ -277,6 +298,8 @@ This assessment is not optional. Run through this checklist before moving to ste
 - Is the changed visual state (class toggled, element shown/hidden, text content) covered?
 - Add a positive case ("X is visible when Y") and a negative case ("X is hidden when Z") for every toggled element.
 
+---
+
 **Deciding smoke vs regression:**
 
 | Scenario type | Where to add |
@@ -286,7 +309,7 @@ This assessment is not optional. Run through this checklist before moving to ste
 | localStorage state, session behaviour | Smoke (`<feature>.spec.ts`) |
 | Create / edit / delete against real DB | Regression (`<feature>.regression.spec.ts`) |
 
-If new scenarios are identified, write and run them **before** step 7. Never defer test additions to a follow-up commit.
+All updates and additions must be written and passing **before** step 7. Never defer to a follow-up commit.
 
 ### 7 — Commit and push automatically
 
