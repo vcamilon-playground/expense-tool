@@ -4,7 +4,7 @@ import { NavBar } from './pages/NavBar';
 test.describe('Navigation', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('nav.topnav')).toBeVisible();
+    await expect(page.locator('nav.sidenav')).toBeVisible();
   });
 
   test('brand link navigates to dashboard', async ({ page }) => {

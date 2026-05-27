@@ -14,38 +14,38 @@ describe('ThemeToggle', () => {
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
-  it('defaults to dark mode (shows ☀️)', () => {
+  it('defaults to light mode (shows 🌙)', () => {
     render(<ThemeToggle />);
-    expect(screen.getByRole('button')).toHaveTextContent('☀️');
+    expect(screen.getByRole('button')).toHaveTextContent('🌙');
   });
 
-  it('toggles to light mode on click (shows 🌙)', async () => {
+  it('toggles to dark mode on click (shows ☀️)', async () => {
     render(<ThemeToggle />);
     await userEvent.click(screen.getByRole('button'));
-    expect(screen.getByRole('button')).toHaveTextContent('🌙');
+    expect(screen.getByRole('button')).toHaveTextContent('☀️');
   });
 
   it('saves theme to localStorage on click', async () => {
     render(<ThemeToggle />);
     await userEvent.click(screen.getByRole('button'));
-    expect(localStorage.getItem('theme')).toBe('light');
+    expect(localStorage.getItem('theme')).toBe('dark');
   });
 
   it('sets data-theme attribute on documentElement when toggled', async () => {
     render(<ThemeToggle />);
     await userEvent.click(screen.getByRole('button'));
-    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 
-  it('reads saved light theme from localStorage on mount', () => {
-    localStorage.setItem('theme', 'light');
+  it('reads saved dark theme from localStorage on mount', () => {
+    localStorage.setItem('theme', 'dark');
     render(<ThemeToggle />);
-    expect(screen.getByRole('button')).toHaveTextContent('🌙');
+    expect(screen.getByRole('button')).toHaveTextContent('☀️');
   });
 
   it('applies saved theme to data-theme attribute on mount', () => {
-    localStorage.setItem('theme', 'light');
+    localStorage.setItem('theme', 'dark');
     render(<ThemeToggle />);
-    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 });

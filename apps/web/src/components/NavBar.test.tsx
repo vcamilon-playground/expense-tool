@@ -21,26 +21,26 @@ vi.mock('next/link', () => ({
 describe('NavBar', () => {
   it('renders the brand link', () => {
     render(<NavBar />);
-    expect(screen.getByText(/💸 Expenses/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /💸 Expenses/ })).toBeInTheDocument();
   });
 
   it('renders all nav links', () => {
     render(<NavBar />);
-    expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Expenses' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Reports' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Budgets' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Recurring' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Dashboard/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^Expenses$/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Reports/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Budgets/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Recurring/ })).toBeInTheDocument();
   });
 
   it('marks Dashboard as active when pathname is "/"', () => {
     render(<NavBar />);
-    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveClass('active');
+    expect(screen.getByRole('link', { name: /Dashboard/ })).toHaveClass('active');
   });
 
   it('does not mark Expenses as active when pathname is "/"', () => {
     render(<NavBar />);
-    expect(screen.getByRole('link', { name: 'Expenses' })).not.toHaveClass('active');
+    expect(screen.getByRole('link', { name: /^Expenses$/ })).not.toHaveClass('active');
   });
 
   it('renders the toggle button', () => {

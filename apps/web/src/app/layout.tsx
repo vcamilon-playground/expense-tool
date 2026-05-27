@@ -15,11 +15,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}` }} />
       </head>
       <body>
-        <NavBar />
-        <main className="container">{children}</main>
-        <footer className="site-footer">
-          Created by Vegil Camilon &amp; Claude Code
-        </footer>
+        <div className="app-layout">
+          <NavBar />
+          <div className="main-wrapper">
+            <main className="container">{children}</main>
+            <footer className="site-footer">
+              Created by Vegil Camilon &amp; Claude Code
+            </footer>
+          </div>
+        </div>
       </body>
     </html>
   );

@@ -10,7 +10,7 @@ export class NavBar {
   }
 
   nav(): Locator {
-    return this.page.locator('nav.topnav');
+    return this.page.locator('nav.sidenav');
   }
 
   link(name: string): Locator {
@@ -18,7 +18,7 @@ export class NavBar {
   }
 
   brandLink(): Locator {
-    return this.page.getByRole('link', { name: '💸 Expenses' });
+    return this.page.getByRole('link', { name: /💸 Expenses/ });
   }
 
   footer(): Locator {
