@@ -85,6 +85,8 @@ insert into categories (name, icon) values
   ('Travel', '✈️'),
   ('Subscriptions', '🔁'),
   ('Education', '📚'),
+  ('Investment', '📈'),
+  ('Savings', '🏦'),
   ('Other', '📦')
 on conflict (name) do nothing;
 
