@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { E2E_RECURRING_NAME, cleanup } from './helpers/supabase';
+import { E2E_MERCHANT, E2E_RECURRING_NAME, cleanup, seed } from './helpers/supabase';
+import { ExpensesPage } from './pages/ExpensesPage';
 import { RecurringPage } from './pages/RecurringPage';
 
 test.describe('Recurring Expenses — CRUD regression', () => {
@@ -37,5 +38,74 @@ test.describe('Recurring Expenses — CRUD regression', () => {
 
     // Verify deleted
     await expect(recurring.row(E2E_RECURRING_NAME)).toHaveCount(0);
+  });
+});
+
+test.describe('Recurring Expenses — confirm YES adds expense', () => {
+  test.beforeAll(async () => {
+    await cleanup.recurring();
+    await cleanup.expenses();
+    await seed.recurring(); // next_charge_date = today → due
+  });
+
+  test.afterAll(async () => {
+    await cleanup.recurring();
+    await cleanup.expenses();
+  });
+
+  test('confirming payment creates an expense record and advances the charge date', async ({ page }) => {
+    const recurring = new RecurringPage(page);
+    const expenses = new ExpensesPage(page);
+
+    await recurring.goto();
+    await expect(recurring.dueBadge(E2E_RECURRING_NAME)).toBeVisible();
+
+    // Confirm payment — YES path
+    await recurring.confirmPaymentButton(E2E_RECURRING_NAME).click();
+    await expect(recurring.confirmModal()).toBeVisible();
+    await recurring.confirmYesButton().click();
+    await expect(recurring.confirmModal()).toBeHidden();
+
+    // Due badge is gone — date was advanced
+    await expect(recurring.dueBadge(E2E_RECURRING_NAME)).toHaveCount(0);
+
+    // Expense appears in expenses page
+    await expenses.goto();
+    await expect(expenses.row(E2E_RECURRING_NAME)).toBeVisible();
+  });
+});
+
+test.describe('Recurring Expenses — confirm NO skips expense', () => {
+  test.beforeAll(async () => {
+    await cleanup.recurring();
+    await cleanup.expenses();
+    await seed.recurring(); // next_charge_date = today → due
+  });
+
+  test.afterAll(async () => {
+    await cleanup.recurring();
+    await cleanup.expenses();
+  });
+
+  test('declining payment advances charge date without creating an expense record', async ({ page }) => {
+    const recurring = new RecurringPage(page);
+    const expenses = new ExpensesPage(page);
+
+    await recurring.goto();
+    await expect(recurring.dueBadge(E2E_RECURRING_NAME)).toBeVisible();
+
+    // Confirm payment — NO path → reminder → OK
+    await recurring.confirmPaymentButton(E2E_RECURRING_NAME).click();
+    await recurring.confirmNoButton().click();
+    await expect(recurring.reminderModal()).toBeVisible();
+    await recurring.reminderOkButton().click();
+    await expect(recurring.reminderModal()).toBeHidden();
+
+    // Due badge is gone — date was advanced
+    await expect(recurring.dueBadge(E2E_RECURRING_NAME)).toHaveCount(0);
+
+    // No expense was created
+    await expenses.goto();
+    await expect(expenses.row(E2E_RECURRING_NAME)).toHaveCount(0);
   });
 });

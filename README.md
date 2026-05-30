@@ -50,7 +50,8 @@ the mobile bundle.
 
 1. Go to <https://supabase.com> → new project (free tier).
 2. In **SQL Editor**, paste the contents of [`supabase/schema.sql`](supabase/schema.sql) and run it.
-3. In **Storage**, create a bucket named `receipts` and mark it **Public**.
+3. **If upgrading an existing database**, also run any files in [`supabase/migrations/`](supabase/migrations/) that you haven't applied yet. Each file lists the feature it enables.
+4. In **Storage**, create a bucket named `receipts` and mark it **Public**.
    Add a policy that lets `anon` `INSERT` and `SELECT` from this bucket.
 4. In **Project Settings → API**, copy the `Project URL` and the `anon` public key.
 

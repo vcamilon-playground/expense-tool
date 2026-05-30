@@ -76,6 +76,76 @@ test.describe('Recurring Expenses page', () => {
   });
 });
 
+test.describe('Recurring Expenses — payment confirmation flow', () => {
+  let recurring!: RecurringPage;
+
+  test.beforeAll(async () => {
+    await cleanup.recurring();
+    await seed.recurring(); // next_charge_date = today → item is due
+  });
+
+  test.afterAll(async () => {
+    await cleanup.recurring();
+  });
+
+  test.beforeEach(async ({ page }) => {
+    recurring = new RecurringPage(page);
+    await recurring.goto();
+  });
+
+  test('due badge is visible on an item whose charge date has arrived', async () => {
+    await expect(recurring.dueBadge(E2E_RECURRING_NAME)).toBeVisible();
+    await expect(recurring.dueBadge(E2E_RECURRING_NAME)).toHaveText('Due');
+  });
+
+  test('Confirm Payment button is visible for a due item', async () => {
+    await expect(recurring.confirmPaymentButton(E2E_RECURRING_NAME)).toBeVisible();
+  });
+
+  test('clicking Confirm Payment opens confirmation modal with item details', async () => {
+    await recurring.confirmPaymentButton(E2E_RECURRING_NAME).click();
+    await expect(recurring.confirmModal()).toBeVisible();
+    await expect(recurring.confirmModal()).toContainText(E2E_RECURRING_NAME);
+    await expect(recurring.confirmModal()).toContainText('already been paid');
+    await expect(recurring.confirmYesButton()).toBeVisible();
+    await expect(recurring.confirmNoButton()).toBeVisible();
+  });
+
+  test('confirmation modal closes on X button without advancing the date', async () => {
+    await recurring.confirmPaymentButton(E2E_RECURRING_NAME).click();
+    await expect(recurring.confirmModal()).toBeVisible();
+    await recurring.confirmModal().getByRole('button', { name: 'Close' }).click();
+    await expect(recurring.confirmModal()).toBeHidden();
+    await expect(recurring.dueBadge(E2E_RECURRING_NAME)).toBeVisible();
+  });
+
+  test('clicking No opens reminder modal with OK button', async () => {
+    await recurring.confirmPaymentButton(E2E_RECURRING_NAME).click();
+    await recurring.confirmNoButton().click();
+    await expect(recurring.confirmModal()).toBeHidden();
+    await expect(recurring.reminderModal()).toBeVisible();
+    await expect(recurring.reminderModal()).toContainText(E2E_RECURRING_NAME);
+    await expect(recurring.reminderModal()).toContainText('not be added to your records');
+    await expect(recurring.reminderOkButton()).toBeVisible();
+  });
+
+  test('reminder modal does not close on backdrop click', async () => {
+    await recurring.confirmPaymentButton(E2E_RECURRING_NAME).click();
+    await recurring.confirmNoButton().click();
+    await expect(recurring.reminderModal()).toBeVisible();
+    await recurring.page.mouse.click(5, 5);
+    await expect(recurring.reminderModal()).toBeVisible();
+  });
+
+  test('reminder modal does not close on Escape key', async () => {
+    await recurring.confirmPaymentButton(E2E_RECURRING_NAME).click();
+    await recurring.confirmNoButton().click();
+    await expect(recurring.reminderModal()).toBeVisible();
+    await recurring.page.keyboard.press('Escape');
+    await expect(recurring.reminderModal()).toBeVisible();
+  });
+});
+
 test.describe('Recurring Expenses — delete confirmation modal', () => {
   let recurring!: RecurringPage;
 

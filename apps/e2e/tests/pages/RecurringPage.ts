@@ -95,4 +95,32 @@ export class RecurringPage extends BasePage {
     await this.deleteYesButton().click();
     await expect(this.deleteDialog()).toBeHidden();
   }
+
+  dueBadge(name: string): Locator {
+    return this.row(name).locator('.pill.over');
+  }
+
+  confirmPaymentButton(name: string): Locator {
+    return this.row(name).getByRole('button', { name: 'Confirm Payment' });
+  }
+
+  confirmModal(): Locator {
+    return this.page.getByRole('dialog').filter({ hasText: /already been paid/ });
+  }
+
+  confirmYesButton(): Locator {
+    return this.confirmModal().getByRole('button', { name: /Yes/ });
+  }
+
+  confirmNoButton(): Locator {
+    return this.confirmModal().getByRole('button', { name: /No/ });
+  }
+
+  reminderModal(): Locator {
+    return this.page.getByRole('dialog').filter({ hasText: /will not be added/ });
+  }
+
+  reminderOkButton(): Locator {
+    return this.reminderModal().getByRole('button', { name: 'OK' });
+  }
 }

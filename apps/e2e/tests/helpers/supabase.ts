@@ -87,7 +87,7 @@ export const E2E_BUDGET_LIMIT = 99999.99;
 export const E2E_BUDGET_LIMIT_EDITED = 88888.88;
 
 export const cleanup = {
-  expenses: () => del('expenses', `merchant=eq.${E2E_MERCHANT}`),
+  expenses: () => del('expenses', 'merchant=like.E2E*'),
   recurring: () => del('recurring_expenses', 'name=like.E2E*'),
   budget: () =>
     del('budgets', `category_id=is.null&monthly_limit=in.(${E2E_BUDGET_LIMIT},${E2E_BUDGET_LIMIT_EDITED})`),
