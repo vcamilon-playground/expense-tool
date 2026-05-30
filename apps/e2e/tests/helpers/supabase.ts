@@ -106,6 +106,22 @@ export const seed = {
       category_id: null,
       receipt_url: null,
     }),
+  pastExpense: () => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - 1);
+    return post('expenses', {
+      amount: 1,
+      currency: 'PHP',
+      occurred_at: d.toISOString().slice(0, 10),
+      source: 'manual',
+      merchant: E2E_MERCHANT,
+      description: 'E2E past-month lock test',
+      conversion_rate: null,
+      category_id: null,
+      receipt_url: null,
+    });
+  },
   recurring: () =>
     post('recurring_expenses', {
       name: E2E_RECURRING_NAME,

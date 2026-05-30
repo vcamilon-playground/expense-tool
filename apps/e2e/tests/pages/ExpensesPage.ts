@@ -101,6 +101,18 @@ export class ExpensesPage extends BasePage {
     await expect(this.deleteDialog()).toBeHidden();
   }
 
+  lockIcon(merchant: string): Locator {
+    return this.row(merchant).locator('[title*="edited or deleted"]');
+  }
+
+  editButton(merchant: string): Locator {
+    return this.row(merchant).getByRole('button', { name: 'Edit' });
+  }
+
+  deleteButton(merchant: string): Locator {
+    return this.row(merchant).getByRole('button', { name: 'Delete' });
+  }
+
   monthGroup(label: string): Locator {
     return this.page.locator('.date-group').filter({ hasText: label });
   }

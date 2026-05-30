@@ -161,25 +161,27 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete, al
                           </td>
                           <td data-label="">
                             {editable ? (
-                              <button className="ghost" style={{ width: 'auto' }} onClick={() => onEdit(e)}>
-                                Edit
-                              </button>
+                              <>
+                                <button className="ghost" style={{ width: 'auto' }} onClick={() => onEdit(e)}>
+                                  Edit
+                                </button>
+                                <button
+                                  className="danger"
+                                  style={{ width: 'auto' }}
+                                  onClick={() => setPendingDelete(e)}
+                                >
+                                  Delete
+                                </button>
+                              </>
                             ) : (
                               <span
                                 className="muted"
                                 style={{ fontSize: 12, padding: '0 6px' }}
-                                title="Only current-month expenses can be edited"
+                                title="Only current-month expenses can be edited or deleted"
                               >
                                 🔒
                               </span>
                             )}
-                            <button
-                              className="danger"
-                              style={{ width: 'auto' }}
-                              onClick={() => setPendingDelete(e)}
-                            >
-                              Delete
-                            </button>
                           </td>
                         </tr>
                       );
