@@ -48,7 +48,24 @@ BASE_URL=https://your-app.vercel.app npm run test:e2e
 npm run test:e2e:ui
 ```
 
-### View the last HTML report
+### View the test results dashboard
+
+After running any test command, generate and open the standalone HTML dashboard:
+
+```bash
+npm run test:dashboard
+```
+
+This reads `apps/e2e/test-results.json` (produced automatically by every test run) and writes `apps/e2e/test-dashboard.html`. Open that file in any browser — it works as a plain `file://` URL with no server needed.
+
+The dashboard shows:
+- Overall pass / fail / skip / duration summary
+- Per-file and per-suite test breakdown
+- Inline error messages for failed tests
+- Filter by status (All / Passed / Failed / Skipped) and search by test name
+- A "Full Report →" link that opens Playwright's own detailed HTML report (traces, screenshots)
+
+### View the full Playwright HTML report (with traces and screenshots)
 
 ```bash
 cd apps/e2e && npx playwright show-report

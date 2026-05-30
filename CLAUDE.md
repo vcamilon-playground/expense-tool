@@ -43,6 +43,7 @@ Single-user expense tracking tool. No authentication. All data belongs to one pe
 | `npm run test:unit` | Run Vitest unit tests (packages/shared logic, ~400 ms) |
 | `npm run test:e2e` | Run full Playwright smoke suite locally (auto-starts dev server) |
 | `npm run test:e2e:ui` | Open Playwright UI mode |
+| `npm run test:dashboard` | Generate `apps/e2e/test-dashboard.html` from the last test run — open in any browser |
 | `npm run install:browsers` | Download all Playwright browser binaries (run once after clone) |
 
 ---

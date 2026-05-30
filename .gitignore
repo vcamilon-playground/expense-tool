@@ -9,3 +9,5 @@ build
 .DS_Store
 .vercel
 .claude/settings.local.json
+apps/e2e/test-results.json
+apps/e2e/test-dashboard.html
