@@ -1,0 +1,105 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
+type Accent = 'default' | 'yellow' | 'green' | 'red' | 'orange' | 'violet';
+
+const accents: { value: Accent; label: string; color: string }[] = [
+  { value: 'default', label: 'Default', color: '#3b6fd4' },
+  { value: 'yellow',  label: 'Yellow',  color: '#d97706' },
+  { value: 'green',   label: 'Green',   color: '#16a34a' },
+  { value: 'red',     label: 'Red',     color: '#dc2626' },
+  { value: 'orange',  label: 'Orange',  color: '#ea580c' },
+  { value: 'violet',  label: 'Violet',  color: '#7c3aed' },
+];
+
+export default function SettingsPage() {
+  const [accent, setAccent] = useState<Accent>('default');
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('accent') as Accent | null;
+    if (saved) setAccent(saved);
+    setIsDark(document.documentElement.getAttribute('data-theme') === 'dark');
+
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.getAttribute('data-theme') === 'dark');
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
+
+  function applyAccent(value: Accent) {
+    setAccent(value);
+    localStorage.setItem('accent', value);
+    if (value === 'default') {
+      document.documentElement.removeAttribute('data-accent');
+    } else {
+      document.documentElement.setAttribute('data-accent', value);
+    }
+  }
+
+  return (
+    <div>
+      <h1 style={{ margin: 0, marginBottom: 8 }}>Settings</h1>
+      <p className="muted" style={{ marginBottom: 24 }}>Customize how the app looks.</p>
+
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>Theme Color</h2>
+
+        {isDark ? (
+          <div className="banner banner-warn" style={{ marginBottom: 16 }}>
+            Theme color settings apply to <strong>light mode only</strong>. Dark mode uses its own fixed color scheme and is not affected by this setting.
+          </div>
+        ) : (
+          <p className="muted" style={{ fontSize: 14, marginBottom: 20 }}>
+            Choose an accent color for buttons, links, and highlights. This setting applies to <strong>light mode only</strong> — dark mode is not affected.
+          </p>
+        )}
+
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          {accents.map(({ value, label, color }) => {
+            const selected = accent === value;
+            return (
+              <button
+                key={value}
+                className="ghost"
+                onClick={() => applyAccent(value)}
+                aria-label={`${label} theme${selected ? ' (selected)' : ''}`}
+                aria-pressed={selected}
+                style={{
+                  width: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '14px 18px',
+                  border: `2px solid ${selected ? color : 'var(--border)'}`,
+                  borderRadius: 10,
+                }}
+              >
+                <span
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    background: color,
+                    display: 'block',
+                    boxShadow: selected ? `0 0 0 3px var(--panel), 0 0 0 6px ${color}` : 'none',
+                    transition: 'box-shadow 0.15s',
+                  }}
+                />
+                <span style={{ fontSize: 13, color: 'var(--text)', fontWeight: selected ? 600 : 400 }}>
+                  {label}
+                </span>
+                {selected && (
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>Active</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -41,6 +41,10 @@ export class NavBar {
     return this.page.locator('nav.sidenav .nav-bottom button');
   }
 
+  settingsLink(): Locator {
+    return this.page.locator('nav.sidenav .nav-settings-link');
+  }
+
   footer(): Locator {
     return this.page.locator('footer.site-footer');
   }

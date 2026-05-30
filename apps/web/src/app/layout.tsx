@@ -12,7 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}` }} />
+        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);var a=localStorage.getItem('accent');if(a&&a!=='default')document.documentElement.setAttribute('data-accent',a);}catch(e){}` }} />
       </head>
       <body>
         <div className="app-layout">
