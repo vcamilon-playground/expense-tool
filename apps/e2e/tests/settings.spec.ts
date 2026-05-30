@@ -63,6 +63,49 @@ test.describe('Settings page', () => {
   });
 });
 
+test.describe('Settings — past expense editing toggle', () => {
+  let settings!: SettingsPage;
+
+  test.beforeEach(async ({ page }) => {
+    settings = new SettingsPage(page);
+    await settings.goto();
+    // Clear after first navigation (page has a valid origin), then reload for clean state
+    await page.evaluate(() => localStorage.removeItem('allow-past-edit'));
+    await settings.goto();
+  });
+
+  test('Expense Editing section is visible', async () => {
+    await expect(settings.page.getByRole('heading', { name: 'Expense Editing' })).toBeVisible();
+  });
+
+  test('toggle is visible and unchecked by default', async () => {
+    await expect(settings.pastEditToggle()).toBeVisible();
+    await expect(settings.pastEditToggle()).not.toBeChecked();
+  });
+
+  test('enabled note is hidden when toggle is off', async () => {
+    await expect(settings.pastEditEnabledNote()).toHaveCount(0);
+  });
+
+  test('checking the toggle shows the enabled note', async () => {
+    await settings.pastEditToggle().check();
+    await expect(settings.pastEditToggle()).toBeChecked();
+    await expect(settings.pastEditEnabledNote()).toBeVisible();
+  });
+
+  test('toggle persists across page reload', async () => {
+    await settings.pastEditToggle().check();
+    await settings.goto();
+    await expect(settings.pastEditToggle()).toBeChecked();
+  });
+
+  test('unchecking the toggle hides the enabled note', async () => {
+    await settings.pastEditToggle().check();
+    await settings.pastEditToggle().uncheck();
+    await expect(settings.pastEditEnabledNote()).toHaveCount(0);
+  });
+});
+
 test.describe('Settings — sidebar gear icon (desktop)', () => {
   test('settings gear icon is visible in sidebar', async ({ page }) => {
     const nav = new NavBar(page);

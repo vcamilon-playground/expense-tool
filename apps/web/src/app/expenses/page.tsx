@@ -23,6 +23,7 @@ export default function ExpensesPage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [allowPastEdit, setAllowPastEdit] = useState(false);
 
   async function reload() {
     const [c, e] = await Promise.all([listCategories(), listExpenses()]);
@@ -31,6 +32,7 @@ export default function ExpensesPage() {
   }
 
   useEffect(() => {
+    setAllowPastEdit(localStorage.getItem('allow-past-edit') === 'true');
     (async () => {
       try {
         await reload();
@@ -132,6 +134,7 @@ export default function ExpensesPage() {
             categories={categories}
             onEdit={(e) => setEditing(e)}
             onDelete={handleDelete}
+            allowPastEdit={allowPastEdit}
           />
         )}
       </div>

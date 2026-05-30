@@ -11,6 +11,7 @@ type Props = {
   categories: Category[];
   onEdit: (expense: Expense) => void;
   onDelete: (id: string) => void;
+  allowPastEdit?: boolean;
 };
 
 const currentMonth = new Date().toISOString().slice(0, 7);
@@ -22,7 +23,7 @@ function get6MonthCutoff(): string {
 }
 
 
-export default function ExpenseList({ expenses, categories, onEdit, onDelete }: Props) {
+export default function ExpenseList({ expenses, categories, onEdit, onDelete, allowPastEdit = false }: Props) {
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const [pendingDelete, setPendingDelete] = useState<Expense | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(() => {
@@ -132,7 +133,7 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete }: 
                   <tbody>
                     {items.map((e) => {
                       const cat = e.category_id ? catMap.get(e.category_id) : null;
-                      const editable = e.occurred_at.startsWith(currentMonth);
+                      const editable = allowPastEdit || e.occurred_at.startsWith(currentMonth);
                       return (
                         <tr key={e.id}>
                           <td data-label="Date">{formatDateShort(e.occurred_at)}</td>

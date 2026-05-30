@@ -30,4 +30,12 @@ export class SettingsPage extends BasePage {
   darkModeBanner(): Locator {
     return this.page.locator('.banner.banner-warn');
   }
+
+  pastEditToggle(): Locator {
+    return this.page.getByRole('checkbox', { name: /Allow editing of past expenses/i });
+  }
+
+  pastEditEnabledNote(): Locator {
+    return this.page.getByText(/All expenses are now editable/i);
+  }
 }

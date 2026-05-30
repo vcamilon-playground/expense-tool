@@ -16,11 +16,13 @@ const accents: { value: Accent; label: string; color: string }[] = [
 export default function SettingsPage() {
   const [accent, setAccent] = useState<Accent>('default');
   const [isDark, setIsDark] = useState(false);
+  const [allowPastEdit, setAllowPastEdit] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('accent') as Accent | null;
     if (saved) setAccent(saved);
     setIsDark(document.documentElement.getAttribute('data-theme') === 'dark');
+    setAllowPastEdit(localStorage.getItem('allow-past-edit') === 'true');
 
     const observer = new MutationObserver(() => {
       setIsDark(document.documentElement.getAttribute('data-theme') === 'dark');
@@ -28,6 +30,11 @@ export default function SettingsPage() {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => observer.disconnect();
   }, []);
+
+  function togglePastEdit(value: boolean) {
+    setAllowPastEdit(value);
+    localStorage.setItem('allow-past-edit', String(value));
+  }
 
   function applyAccent(value: Accent) {
     setAccent(value);
@@ -99,6 +106,27 @@ export default function SettingsPage() {
             );
           })}
         </div>
+      </div>
+
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>Expense Editing</h2>
+        <p className="muted" style={{ fontSize: 14, marginBottom: 20 }}>
+          By default only the current month&apos;s expenses can be edited. Enable this to allow editing expenses from any previous month. Planned for admin users in a future release.
+        </p>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={allowPastEdit}
+            onChange={(e) => togglePastEdit(e.target.checked)}
+            style={{ width: 'auto', height: 'auto', accentColor: 'var(--accent)', transform: 'scale(1.3)' }}
+          />
+          <span style={{ fontWeight: 500 }}>Allow editing of past expenses</span>
+        </label>
+        {allowPastEdit && (
+          <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>
+            All expenses are now editable regardless of date.
+          </p>
+        )}
       </div>
     </div>
   );
