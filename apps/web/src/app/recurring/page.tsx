@@ -158,6 +158,9 @@ export default function RecurringPage() {
 
   if (loading) return <p className="muted">Loading…</p>;
   const catMap = new Map(categories.map((c) => [c.id, c]));
+  const activeCategories = categories.filter(
+    (c) => c.active !== false || c.id === draft.category_id,
+  );
 
   return (
     <div>
@@ -219,7 +222,7 @@ export default function RecurringPage() {
                 onChange={(e) => setDraft({ ...draft, category_id: e.target.value || null })}
               >
                 <option value="">— Uncategorized —</option>
-                {categories.map((c) => (
+                {activeCategories.map((c) => (
                   <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
                 ))}
               </select>

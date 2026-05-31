@@ -60,7 +60,7 @@ describe('buildCategoryRows', () => {
 
 describe('buildExpenseRows', () => {
   const categories: Category[] = [
-    { id: 'cat1', name: 'Food', icon: '🍔' },
+    { id: 'cat1', name: 'Food', icon: '🍔', active: true },
   ];
 
   const expenses: Expense[] = [

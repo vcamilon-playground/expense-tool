@@ -74,6 +74,7 @@ export default function BudgetsPage() {
 
   if (loading) return <p className="muted">Loading…</p>;
   const catMap = new Map(categories.map((c) => [c.id, c]));
+  const activeCategories = categories.filter((c) => c.active !== false);
 
   return (
     <div>
@@ -101,7 +102,7 @@ export default function BudgetsPage() {
             <div className="muted">Category</div>
             <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} disabled={editing !== null}>
               <option value="">Overall (any category)</option>
-              {categories.map((c) => (
+              {activeCategories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.icon} {c.name}
                 </option>

@@ -1,6 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { Category } from '@expense/shared';
+import { createCategory, deleteCategory, listCategories } from '@/lib/db';
+import DeleteModal from '@/components/DeleteModal';
+
+const DEFAULT_ICON = '🏷️';
 
 type Accent = 'default' | 'yellow' | 'green' | 'red' | 'orange' | 'violet';
 
@@ -18,11 +23,23 @@ export default function SettingsPage() {
   const [isDark, setIsDark] = useState(false);
   const [allowPastEdit, setAllowPastEdit] = useState(false);
 
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatIcon, setNewCatIcon] = useState('');
+  const [catErr, setCatErr] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
+
+  async function reloadCategories() {
+    const cats = await listCategories();
+    setCategories(cats);
+  }
+
   useEffect(() => {
     const saved = localStorage.getItem('accent') as Accent | null;
     if (saved) setAccent(saved);
     setIsDark(document.documentElement.getAttribute('data-theme') === 'dark');
     setAllowPastEdit(localStorage.getItem('allow-past-edit') === 'true');
+    reloadCategories();
 
     const observer = new MutationObserver(() => {
       setIsDark(document.documentElement.getAttribute('data-theme') === 'dark');
@@ -30,6 +47,33 @@ export default function SettingsPage() {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => observer.disconnect();
   }, []);
+
+  async function handleAddCategory(e: React.FormEvent) {
+    e.preventDefault();
+    const name = newCatName.trim();
+    if (!name) return;
+    setCatErr(null);
+    try {
+      await createCategory({ name, icon: newCatIcon.trim() || DEFAULT_ICON });
+      setNewCatName('');
+      setNewCatIcon('');
+      await reloadCategories();
+    } catch (err) {
+      setCatErr(err instanceof Error ? err.message : 'Failed to add category');
+    }
+  }
+
+  async function handleDeleteCategory() {
+    if (!pendingDelete) return;
+    try {
+      await deleteCategory(pendingDelete.id);
+      await reloadCategories();
+    } catch (err) {
+      setCatErr(err instanceof Error ? err.message : 'Failed to delete category');
+    } finally {
+      setPendingDelete(null);
+    }
+  }
 
   function togglePastEdit(value: boolean) {
     setAllowPastEdit(value);
@@ -106,6 +150,76 @@ export default function SettingsPage() {
             );
           })}
         </div>
+      </div>
+
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>Categories</h2>
+        <p className="muted" style={{ fontSize: 14, marginBottom: 16 }}>
+          Add or remove expense categories. Default categories cannot be recovered once deleted.
+        </p>
+
+        <DeleteModal
+          open={pendingDelete !== null}
+          itemLabel="Category"
+          onConfirm={handleDeleteCategory}
+          onCancel={() => setPendingDelete(null)}
+        />
+
+        {catErr && (
+          <div className="banner banner-danger" style={{ marginBottom: 12 }} role="alert">
+            {catErr}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 20 }}>
+          {categories.filter((c) => c.active !== false).map((cat) => (
+            <div
+              key={cat.id}
+              className="row"
+              style={{ justifyContent: 'space-between', padding: '6px 8px', borderRadius: 6, background: 'var(--panel-2)' }}
+            >
+              <span style={{ fontSize: 15 }}>
+                <span style={{ marginRight: 8 }}>{cat.icon ?? '🏷️'}</span>
+                {cat.name}
+              </span>
+              <button
+                className="danger"
+                style={{ width: 'auto', padding: '2px 10px', fontSize: 13 }}
+                onClick={() => setPendingDelete(cat)}
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <form onSubmit={handleAddCategory}>
+          <div className="grid cols-3" style={{ gap: 8, alignItems: 'end' }}>
+            <label style={{ gridColumn: 'span 2' }}>
+              <div className="muted" style={{ fontSize: 13, marginBottom: 4 }}>Category name</div>
+              <input
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                placeholder="e.g. Hobbies"
+                required
+              />
+            </label>
+            <label>
+              <div className="muted" style={{ fontSize: 13, marginBottom: 4 }}>
+                Icon <span className="muted" style={{ fontSize: 11 }}>(optional)</span>
+              </div>
+              <input
+                value={newCatIcon}
+                onChange={(e) => setNewCatIcon(e.target.value)}
+                placeholder={DEFAULT_ICON}
+                maxLength={4}
+              />
+            </label>
+          </div>
+          <button type="submit" className="primary" style={{ width: 'auto', marginTop: 12 }}>
+            + Add Category
+          </button>
+        </form>
       </div>
 
       <div className="card">

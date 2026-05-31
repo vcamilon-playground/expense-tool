@@ -2,6 +2,7 @@ import type {
   Budget,
   BudgetInput,
   Category,
+  CategoryInput,
   Expense,
   ExpenseInput,
   RecurringExpense,
@@ -13,6 +14,17 @@ export async function listCategories(): Promise<Category[]> {
   const { data, error } = await supabase.from('categories').select('*').order('name');
   if (error) throw error;
   return data ?? [];
+}
+
+export async function createCategory(input: CategoryInput): Promise<Category> {
+  const { data, error } = await supabase.from('categories').insert(input).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  const { error } = await supabase.from('categories').update({ active: false }).eq('id', id);
+  if (error) throw error;
 }
 
 export async function listExpenses(): Promise<Expense[]> {

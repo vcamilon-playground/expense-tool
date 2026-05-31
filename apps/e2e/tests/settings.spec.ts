@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { SettingsPage } from './pages/SettingsPage';
 import { NavBar } from './pages/NavBar';
+import { cleanup } from './helpers/supabase';
 
 test.describe('Settings page', () => {
   let settings!: SettingsPage;
@@ -60,6 +61,47 @@ test.describe('Settings page', () => {
       localStorage.removeItem('theme');
       document.documentElement.removeAttribute('data-theme');
     });
+  });
+});
+
+test.describe('Settings — Categories section', () => {
+  let settings!: SettingsPage;
+
+  test.beforeEach(async ({ page }) => {
+    settings = new SettingsPage(page);
+    await settings.goto();
+  });
+
+  test('Categories heading is visible', async () => {
+    await expect(settings.categoriesHeading()).toBeVisible();
+  });
+
+  test('Add Category button is visible', async () => {
+    await expect(settings.addCategoryButton()).toBeVisible();
+  });
+
+  test('category name input is visible', async () => {
+    await expect(settings.addCategoryNameInput()).toBeVisible();
+  });
+
+  test('category icon input is visible', async () => {
+    await expect(settings.addCategoryIconInput()).toBeVisible();
+  });
+
+  test('submitting with empty name keeps the list unchanged', async () => {
+    const before = await settings.page.locator('.card').filter({ hasText: 'Categories' }).locator('.row').count();
+    await settings.addCategoryButton().click();
+    const after = await settings.page.locator('.card').filter({ hasText: 'Categories' }).locator('.row').count();
+    expect(after).toBe(before);
+  });
+
+  test('existing default categories are listed', async () => {
+    await expect(settings.categoryRow('Groceries')).toBeVisible();
+    await expect(settings.categoryRow('Dining')).toBeVisible();
+  });
+
+  test('each category row has a Delete button', async () => {
+    await expect(settings.categoryDeleteButton('Groceries')).toBeVisible();
   });
 });
 

@@ -61,6 +61,23 @@ async function patch(table: string, filter: string, data: Record<string, unknown
   if (!res.ok) console.error(`[patch] ${table}: HTTP ${res.status}`);
 }
 
+async function postReturn<T>(table: string, data: Record<string, unknown>): Promise<T> {
+  if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('[seed] SUPABASE_URL/SUPABASE_ANON_KEY not set');
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`[seed] ${table}: HTTP ${res.status}`);
+  const rows: T[] = await res.json();
+  return rows[0]!;
+}
+
 async function post(table: string, data: Record<string, unknown>): Promise<void> {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     console.warn(`[seed] skipped ${table} — SUPABASE_URL/SUPABASE_ANON_KEY not set`);
@@ -85,12 +102,14 @@ export const E2E_MERCHANT = 'E2E-TEST';
 export const E2E_RECURRING_NAME = 'E2E Test Subscription';
 export const E2E_BUDGET_LIMIT = 99999.99;
 export const E2E_BUDGET_LIMIT_EDITED = 88888.88;
+export const E2E_CATEGORY_NAME = 'E2E Test Category';
 
 export const cleanup = {
   expenses: () => del('expenses', 'merchant=like.E2E*'),
   recurring: () => del('recurring_expenses', 'name=like.E2E*'),
   budget: () =>
     del('budgets', `category_id=is.null&monthly_limit=in.(${E2E_BUDGET_LIMIT},${E2E_BUDGET_LIMIT_EDITED})`),
+  category: () => del('categories', `name=like.E2E*`),
 };
 
 export const seed = {
@@ -132,6 +151,24 @@ export const seed = {
       category_id: null,
     }),
   budget: () => post('budgets', { monthly_limit: E2E_BUDGET_LIMIT, category_id: null }),
+  categoryWithExpense: async () => {
+    const cat = await postReturn<{ id: string }>('categories', {
+      name: E2E_CATEGORY_NAME,
+      icon: '🧪',
+    });
+    await post('expenses', {
+      amount: 1,
+      currency: 'PHP',
+      occurred_at: new Date().toISOString().slice(0, 10),
+      source: 'manual',
+      merchant: E2E_MERCHANT,
+      description: 'E2E category deletion test',
+      conversion_rate: null,
+      category_id: cat.id,
+      receipt_url: null,
+    });
+    return cat.id;
+  },
 };
 
 export type OverallBudgetSnapshot = { id: string; monthly_limit: number } | null;

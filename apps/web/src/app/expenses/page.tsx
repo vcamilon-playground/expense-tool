@@ -84,12 +84,15 @@ export default function ExpensesPage() {
 
   const modalOpen = showAdd || editing !== null;
   const modalTitle = editing ? 'Edit Expense' : 'Add Expense';
+  const formCategories = categories.filter(
+    (c) => c.active !== false || c.id === editing?.category_id,
+  );
 
   return (
     <div>
       <FormModal open={modalOpen} title={modalTitle} onClose={closeModal}>
         <ExpenseForm
-          categories={categories}
+          categories={formCategories}
           initial={editing}
           onSubmit={editing ? handleUpdate : handleCreate}
           onCancel={closeModal}

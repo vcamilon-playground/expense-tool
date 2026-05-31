@@ -2,8 +2,11 @@ export type Category = {
   id: string;
   name: string;
   icon: string | null;
+  active: boolean;
   created_at?: string;
 };
+
+export type CategoryInput = Pick<Category, 'name' | 'icon'>;
 
 export type ExpenseSource = 'manual' | 'receipt' | 'recurring';
 

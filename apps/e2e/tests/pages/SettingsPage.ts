@@ -38,4 +38,32 @@ export class SettingsPage extends BasePage {
   pastEditEnabledNote(): Locator {
     return this.page.getByText(/All expenses are now editable/i);
   }
+
+  categoriesHeading(): Locator {
+    return this.page.getByRole('heading', { name: 'Categories' });
+  }
+
+  categoryRow(name: string): Locator {
+    return this.page.locator('.card').filter({ hasText: 'Categories' }).locator('.row').filter({ hasText: name });
+  }
+
+  categoryDeleteButton(name: string): Locator {
+    return this.categoryRow(name).getByRole('button', { name: 'Delete' });
+  }
+
+  addCategoryNameInput(): Locator {
+    return this.page.locator('.card').filter({ hasText: 'Categories' }).locator('input').first();
+  }
+
+  addCategoryIconInput(): Locator {
+    return this.page.locator('.card').filter({ hasText: 'Categories' }).locator('input').nth(1);
+  }
+
+  addCategoryButton(): Locator {
+    return this.page.getByRole('button', { name: '+ Add Category' });
+  }
+
+  categoryErrorBanner(): Locator {
+    return this.page.locator('.card').filter({ hasText: 'Categories' }).locator('.banner-danger');
+  }
 }
