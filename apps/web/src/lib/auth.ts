@@ -5,8 +5,20 @@ const ALG = 'HS256';
 
 function getSecret(): Uint8Array {
   const secret = process.env.AUTH_SECRET;
-  if (!secret) throw new Error('AUTH_SECRET env var is not set');
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('AUTH_SECRET env var is not set');
+    }
+    // Dev-only fallback — avoids crashing when .env.local is missing the var
+    return new TextEncoder().encode('dev-fallback-secret-set-AUTH_SECRET-in-env-local');
+  }
   return new TextEncoder().encode(secret);
+}
+
+export function checkAuthSecret(): void {
+  if (process.env.NODE_ENV === 'production' && !process.env.AUTH_SECRET) {
+    throw new Error('AUTH_SECRET env var is not set');
+  }
 }
 
 export type SessionPayload = {

@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabase } from '@/lib/supabase';
-import { signSession, SESSION_COOKIE } from '@/lib/auth';
+import { signSession, checkAuthSecret, SESSION_COOKIE } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
+    // Validate server config before any DB writes so we never create
+    // a user that cannot be issued a session token.
+    checkAuthSecret();
+
     const { username, password, first_name, last_name, birth_date, profile_picture_url } =
       await req.json();
 

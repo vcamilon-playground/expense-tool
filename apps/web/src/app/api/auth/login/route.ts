@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabase } from '@/lib/supabase';
-import { signSession, SESSION_COOKIE } from '@/lib/auth';
+import { signSession, checkAuthSecret, SESSION_COOKIE } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
+    checkAuthSecret();
     const { username, password } = await req.json();
     if (!username || !password) {
       return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
