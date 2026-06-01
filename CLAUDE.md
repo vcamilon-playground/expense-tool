@@ -268,10 +268,18 @@ Or run all regression specs at once:
 npm run test:e2e:regression
 ```
 
-If a test fails:
-1. Read the failure output.
-2. Decide: did the app change (fix the test) or did a bug regress (fix the code)?
-3. Re-run the failing spec. Only proceed to commit once it is green.
+If a test fails, follow this diagnosis order — **always check the app code first, then the test**:
+
+1. **Read the full failure output.** Note the locator, the expected value, and the actual value (or "element not found").
+2. **Check the app code first.** Ask: does the failure reflect a real problem in the application?
+   - The page renders the wrong text, a missing element, a broken flow, or a data error → **fix the app code**.
+   - Examples: a timing bug (page renders before auth resolves), a missing CSS rule, a broken DB query, a race condition.
+3. **Check the test second.** Only if the app is behaving correctly, ask: is the test wrong?
+   - A locator targets a renamed element, a label changed, a route moved → **fix the test / page object**.
+   - A locator is too broad and matches multiple elements → **tighten the selector**.
+   - The test asserts stale behaviour that was intentionally changed → **update the assertion**.
+4. **Never skip or weaken a test to make it pass.** If an assertion fails because the feature broke, fix the feature.
+5. **Re-run the failing spec.** Only proceed to commit once it is green.
 
 #### 6d — Review and update existing scenarios, then add missing ones (mandatory for every change)
 
