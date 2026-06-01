@@ -62,4 +62,16 @@ export class ReportsPage extends BasePage {
   async selectPeriod(value: string): Promise<void> {
     await this.periodSelect().selectOption(value);
   }
+
+  byCategoryTable(): Locator {
+    return this.page.locator('.card').filter({ hasText: 'By Category' }).locator('table');
+  }
+
+  sortableHeader(name: string): Locator {
+    return this.byCategoryTable().locator('th.sortable').filter({ hasText: new RegExp(name, 'i') });
+  }
+
+  activeSortIcon(): Locator {
+    return this.byCategoryTable().locator('th.sortable .sort-active');
+  }
 }

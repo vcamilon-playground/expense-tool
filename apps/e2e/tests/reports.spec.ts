@@ -93,3 +93,39 @@ test.describe('Reports page', () => {
     await expect(reports.dateRangeText()).toContainText('2026-01-31');
   });
 });
+
+test.describe('Reports — By Category column sorting', () => {
+  let reports!: ReportsPage;
+
+  test.beforeEach(async ({ page }) => {
+    reports = new ReportsPage(page);
+    await reports.goto();
+  });
+
+  test('Category, Count, Total and % headers are sortable', async ({ page }) => {
+    if (await reports.byCategoryTable().count() === 0) return;
+    for (const col of ['Category', 'Count', 'Total', '%']) {
+      await expect(reports.sortableHeader(col)).toBeVisible();
+    }
+  });
+
+  test('Total header has active sort indicator by default', async ({ page }) => {
+    if (await reports.byCategoryTable().count() === 0) return;
+    await expect(reports.sortableHeader('Total').locator('.sort-active')).toBeVisible();
+  });
+
+  test('clicking Category header activates sort indicator on Category', async ({ page }) => {
+    if (await reports.byCategoryTable().count() === 0) return;
+    await reports.sortableHeader('Category').click();
+    await expect(reports.sortableHeader('Category').locator('.sort-active')).toBeVisible();
+    await expect(reports.sortableHeader('Total').locator('.sort-active')).toHaveCount(0);
+  });
+
+  test('clicking Total twice toggles sort direction', async ({ page }) => {
+    if (await reports.byCategoryTable().count() === 0) return;
+    const first = await reports.sortableHeader('Total').locator('.sort-active').textContent();
+    await reports.sortableHeader('Total').click();
+    const second = await reports.sortableHeader('Total').locator('.sort-active').textContent();
+    expect(first).not.toBe(second);
+  });
+});

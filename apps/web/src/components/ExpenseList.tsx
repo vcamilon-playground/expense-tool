@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Category, Expense } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
 import { monthKey, monthLabel, formatDateShort } from '@/lib/expense-utils';
+import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 import DeleteModal from './DeleteModal';
 
 type Props = {
@@ -23,9 +24,12 @@ function get6MonthCutoff(): string {
 }
 
 
+type ExpenseSortCol = 'date' | 'category' | 'merchant' | 'amount';
+
 export default function ExpenseList({ expenses, categories, onEdit, onDelete, allowPastEdit = false }: Props) {
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const [pendingDelete, setPendingDelete] = useState<Expense | null>(null);
+  const { sortCol, sortDir, handleSort } = useSortState<ExpenseSortCol>('date', 'desc');
   const [collapsed, setCollapsed] = useState<Set<string>>(() => {
     const inactive = new Set(expenses.map((e) => monthKey(e.occurred_at)));
     inactive.delete(currentMonth);
@@ -90,7 +94,16 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete, al
       )}
 
       {months.map((key) => {
-        const items = grouped.get(key)!.sort((a, b) => b.occurred_at.localeCompare(a.occurred_at));
+        const items = sortRows(
+          grouped.get(key)!,
+          (e) => {
+            if (sortCol === 'category') return catMap.get(e.category_id ?? '')?.name ?? '';
+            if (sortCol === 'merchant') return e.merchant ?? '';
+            if (sortCol === 'amount') return e.conversion_rate ? e.amount * e.conversion_rate : e.amount;
+            return e.occurred_at;
+          },
+          sortDir,
+        );
         const isCollapsed = collapsed.has(key);
         const isArchived = key < monthKey(cutoff);
         const total = items.reduce(
@@ -122,11 +135,19 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete, al
                 <table className="expense-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Category</th>
-                      <th>Merchant</th>
+                      <th className="sortable" onClick={() => handleSort('date')}>
+                        Date <SortIcon col="date" sortCol={sortCol} sortDir={sortDir} />
+                      </th>
+                      <th className="sortable" onClick={() => handleSort('category')}>
+                        Category <SortIcon col="category" sortCol={sortCol} sortDir={sortDir} />
+                      </th>
+                      <th className="sortable" onClick={() => handleSort('merchant')}>
+                        Merchant <SortIcon col="merchant" sortCol={sortCol} sortDir={sortDir} />
+                      </th>
                       <th>Description</th>
-                      <th style={{ textAlign: 'right' }}>Amount</th>
+                      <th className="sortable" onClick={() => handleSort('amount')} style={{ textAlign: 'right' }}>
+                        Amount <SortIcon col="amount" sortCol={sortCol} sortDir={sortDir} />
+                      </th>
                       <th></th>
                     </tr>
                   </thead>

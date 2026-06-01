@@ -71,4 +71,12 @@ export class BudgetsPage extends BasePage {
     await this.deleteYesButton().click();
     await expect(this.deleteDialog()).toBeHidden();
   }
+
+  sortableHeader(name: string): Locator {
+    return this.page.locator('table th.sortable').filter({ hasText: new RegExp(name, 'i') });
+  }
+
+  activeSortIcon(): Locator {
+    return this.page.locator('table th.sortable .sort-active');
+  }
 }

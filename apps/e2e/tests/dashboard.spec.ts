@@ -67,3 +67,32 @@ test.describe('Dashboard', () => {
     }
   });
 });
+
+test.describe('Dashboard — Upcoming Charges column sorting', () => {
+  let dashboard!: DashboardPage;
+
+  test.beforeEach(async ({ page }) => {
+    dashboard = new DashboardPage(page);
+    await dashboard.goto();
+  });
+
+  test('Upcoming Charges table sortable headers are present when charges exist', async ({ page }) => {
+    const table = page.locator('.card').filter({ hasText: 'Upcoming Charges' }).locator('table');
+    const hasTable = await table.count();
+    if (hasTable === 0) return; // no upcoming charges — skip
+    for (const col of ['Name', 'Amount', 'Due Date', 'Cadence']) {
+      await expect(dashboard.sortableHeader(col)).toBeVisible();
+    }
+  });
+
+  test('clicking Due Date header toggles sort direction when charges exist', async ({ page }) => {
+    const table = page.locator('.card').filter({ hasText: 'Upcoming Charges' }).locator('table');
+    const hasTable = await table.count();
+    if (hasTable === 0) return;
+    await dashboard.sortableHeader('Due Date').click();
+    const first = await dashboard.sortableHeader('Due Date').locator('.sort-active').textContent();
+    await dashboard.sortableHeader('Due Date').click();
+    const second = await dashboard.sortableHeader('Due Date').locator('.sort-active').textContent();
+    expect(first).not.toBe(second);
+  });
+});

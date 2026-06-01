@@ -123,4 +123,12 @@ export class RecurringPage extends BasePage {
   reminderOkButton(): Locator {
     return this.reminderModal().getByRole('button', { name: 'OK' });
   }
+
+  sortableHeader(name: string): Locator {
+    return this.page.locator('.recurring-table th.sortable').filter({ hasText: new RegExp(name, 'i') });
+  }
+
+  activeSortIcon(): Locator {
+    return this.page.locator('.recurring-table th.sortable .sort-active');
+  }
 }

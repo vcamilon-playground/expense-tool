@@ -196,3 +196,34 @@ test.describe('Recurring Expenses — delete confirmation modal', () => {
     await expect(recurring.row(E2E_RECURRING_NAME)).toBeVisible();
   });
 });
+
+test.describe('Recurring Expenses — column sorting', () => {
+  let recurring!: RecurringPage;
+
+  test.beforeEach(async ({ page }) => {
+    recurring = new RecurringPage(page);
+    await recurring.goto();
+  });
+
+  test('Name, Category, Cadence, Next Charge, Amount, Active headers are sortable', async ({ page }) => {
+    if (await page.locator('.recurring-table').count() === 0) return;
+    for (const col of ['Name', 'Category', 'Cadence', 'Next Charge', 'Amount', 'Active']) {
+      await expect(recurring.sortableHeader(col)).toBeVisible();
+    }
+  });
+
+  test('clicking Name header activates sort indicator', async ({ page }) => {
+    if (await page.locator('.recurring-table').count() === 0) return;
+    await recurring.sortableHeader('Name').click();
+    await expect(recurring.sortableHeader('Name').locator('.sort-active')).toBeVisible();
+  });
+
+  test('clicking Name twice toggles sort direction', async ({ page }) => {
+    if (await page.locator('.recurring-table').count() === 0) return;
+    await recurring.sortableHeader('Name').click();
+    const first = await recurring.sortableHeader('Name').locator('.sort-active').textContent();
+    await recurring.sortableHeader('Name').click();
+    const second = await recurring.sortableHeader('Name').locator('.sort-active').textContent();
+    expect(first).not.toBe(second);
+  });
+});

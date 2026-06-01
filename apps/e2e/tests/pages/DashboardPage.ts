@@ -42,4 +42,12 @@ export class DashboardPage extends BasePage {
   banner(): Locator {
     return this.page.locator('.banner.banner-danger');
   }
+
+  upcomingTable(): Locator {
+    return this.page.locator('.card').filter({ hasText: 'Upcoming Charges' }).locator('table');
+  }
+
+  sortableHeader(name: string): Locator {
+    return this.upcomingTable().locator('th.sortable').filter({ hasText: new RegExp(name, 'i') });
+  }
 }

@@ -128,4 +128,12 @@ export class ExpensesPage extends BasePage {
   currentMonthLabel(): string {
     return new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
   }
+
+  sortableHeader(name: string): Locator {
+    return this.page.locator('th.sortable').filter({ hasText: new RegExp(name, 'i') });
+  }
+
+  activeSortIcon(): Locator {
+    return this.page.locator('th.sortable .sort-active');
+  }
 }

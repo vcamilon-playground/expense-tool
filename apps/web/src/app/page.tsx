@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   budgetStatus,
   formatMoney,
@@ -14,6 +14,7 @@ import {
 } from '@expense/shared';
 import { listBudgets, listCategories, listExpenses, listRecurring } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 import SummaryCards from '@/components/SummaryCards';
 import BudgetAlerts from '@/components/BudgetAlerts';
 import InsightCard from '@/components/InsightCard';
@@ -52,6 +53,25 @@ export default function DashboardPage() {
     })();
   }, [user]);
 
+  const { sortCol: upSortCol, sortDir: upSortDir, handleSort: upHandleSort } =
+    useSortState<'name' | 'amount' | 'due_date' | 'cadence'>('due_date', 'asc');
+
+  const today = new Date().toISOString().slice(0, 10);
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() + 30);
+  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  const upcoming = useMemo(() => {
+    const filtered = recurring.filter(
+      (r) => r.active && r.next_charge_date >= today && r.next_charge_date <= cutoffStr,
+    );
+    return sortRows(filtered, (r) => {
+      if (upSortCol === 'name') return r.name;
+      if (upSortCol === 'amount') return r.amount;
+      if (upSortCol === 'cadence') return r.cadence;
+      return r.next_charge_date;
+    }, upSortDir);
+  }, [recurring, today, cutoffStr, upSortCol, upSortDir]);
+
   if (!user || loading) return <p className="muted">Loading…</p>;
   if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
 
@@ -65,14 +85,6 @@ export default function DashboardPage() {
     name: c.category_name,
     total: c.total,
   }));
-
-  const today = new Date().toISOString().slice(0, 10);
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() + 30);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
-  const upcoming = recurring
-    .filter((r) => r.active && r.next_charge_date >= today && r.next_charge_date <= cutoffStr)
-    .sort((a, b) => a.next_charge_date.localeCompare(b.next_charge_date));
 
   return (
     <div>
@@ -92,10 +104,10 @@ export default function DashboardPage() {
             <table>
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th style={{ textAlign: 'right' }}>Amount</th>
-                  <th>Due Date</th>
-                  <th>Cadence</th>
+                  <th className="sortable" onClick={() => upHandleSort('name')}>Name <SortIcon col="name" sortCol={upSortCol} sortDir={upSortDir} /></th>
+                  <th className="sortable" onClick={() => upHandleSort('amount')} style={{ textAlign: 'right' }}>Amount <SortIcon col="amount" sortCol={upSortCol} sortDir={upSortDir} /></th>
+                  <th className="sortable" onClick={() => upHandleSort('due_date')}>Due Date <SortIcon col="due_date" sortCol={upSortCol} sortDir={upSortDir} /></th>
+                  <th className="sortable" onClick={() => upHandleSort('cadence')}>Cadence <SortIcon col="cadence" sortCol={upSortCol} sortDir={upSortDir} /></th>
                 </tr>
               </thead>
               <tbody>

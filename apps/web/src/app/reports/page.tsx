@@ -12,6 +12,7 @@ import {
 } from '@expense/shared';
 import { listCategories, listExpenses } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 
 type ViewMode = 'preset' | 'custom';
 
@@ -120,8 +121,18 @@ export default function ReportsPage() {
     return summarize(expenses, categories, period, prevRefDate(refDate, period), true);
   }, [compare, viewMode, expenses, categories, period, refDate, customFrom, customTo]);
 
+  const { sortCol: catSortCol, sortDir: catSortDir, handleSort: catHandleSort } =
+    useSortState<'category' | 'count' | 'total' | 'pct'>('total', 'desc');
+
   if (!user || loading) return <p className="muted">Loading…</p>;
   if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
+
+  const sortedByCategory = sortRows(summary.by_category, (c) => {
+    if (catSortCol === 'category') return c.category_name;
+    if (catSortCol === 'count') return c.count;
+    if (catSortCol === 'pct') return summary.total > 0 ? c.total / summary.total : 0;
+    return c.total;
+  }, catSortDir);
 
   return (
     <div>
@@ -279,14 +290,14 @@ export default function ReportsPage() {
             <table>
               <thead>
                 <tr>
-                  <th>Category</th>
-                  <th style={{ textAlign: 'right' }}>Count</th>
-                  <th style={{ textAlign: 'right' }}>Total</th>
-                  <th style={{ textAlign: 'right' }}>%</th>
+                  <th className="sortable" onClick={() => catHandleSort('category')}>Category <SortIcon col="category" sortCol={catSortCol} sortDir={catSortDir} /></th>
+                  <th className="sortable" onClick={() => catHandleSort('count')} style={{ textAlign: 'right' }}>Count <SortIcon col="count" sortCol={catSortCol} sortDir={catSortDir} /></th>
+                  <th className="sortable" onClick={() => catHandleSort('total')} style={{ textAlign: 'right' }}>Total <SortIcon col="total" sortCol={catSortCol} sortDir={catSortDir} /></th>
+                  <th className="sortable" onClick={() => catHandleSort('pct')} style={{ textAlign: 'right' }}>% <SortIcon col="pct" sortCol={catSortCol} sortDir={catSortDir} /></th>
                 </tr>
               </thead>
               <tbody>
-                {summary.by_category.map((c) => (
+                {sortedByCategory.map((c) => (
                   <tr key={c.category_id ?? 'none'}>
                     <td>{c.category_name}</td>
                     <td style={{ textAlign: 'right' }}>{c.count}</td>

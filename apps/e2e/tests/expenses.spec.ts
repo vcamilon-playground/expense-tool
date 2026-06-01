@@ -207,3 +207,43 @@ test.describe('Expenses — month group collapse behaviour', () => {
     await expect(expenses.monthGroupBody(label)).toBeHidden();
   });
 });
+
+test.describe('Expenses — column sorting', () => {
+  let expenses!: ExpensesPage;
+
+  test.beforeEach(async ({ page }) => {
+    expenses = new ExpensesPage(page);
+    await expenses.goto();
+  });
+
+  test('Date, Category, Merchant and Amount headers are sortable', async ({ page }) => {
+    if (await page.locator('.expense-table').count() === 0) return;
+    for (const col of ['Date', 'Category', 'Merchant', 'Amount']) {
+      await expect(expenses.sortableHeader(col)).toBeVisible();
+    }
+  });
+
+  test('clicking Amount header activates sort indicator', async ({ page }) => {
+    if (await page.locator('.expense-table').count() === 0) return;
+    await expenses.sortableHeader('Amount').click();
+    await expect(expenses.activeSortIcon()).toBeVisible();
+    await expect(expenses.sortableHeader('Amount').locator('.sort-active')).toBeVisible();
+  });
+
+  test('clicking Amount twice toggles sort direction', async ({ page }) => {
+    if (await page.locator('.expense-table').count() === 0) return;
+    await expenses.sortableHeader('Amount').click();
+    const first = await expenses.sortableHeader('Amount').locator('.sort-active').textContent();
+    await expenses.sortableHeader('Amount').click();
+    const second = await expenses.sortableHeader('Amount').locator('.sort-active').textContent();
+    expect(first).not.toBe(second);
+  });
+
+  test('clicking a different header moves the active indicator', async ({ page }) => {
+    if (await page.locator('.expense-table').count() === 0) return;
+    await expenses.sortableHeader('Amount').click();
+    await expenses.sortableHeader('Merchant').click();
+    await expect(expenses.sortableHeader('Merchant').locator('.sort-active')).toBeVisible();
+    await expect(expenses.sortableHeader('Amount').locator('.sort-active')).toHaveCount(0);
+  });
+});

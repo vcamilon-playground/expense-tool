@@ -5,6 +5,7 @@ import type { Budget, Category } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
 import { deleteBudget, listBudgets, listCategories, updateBudget, upsertBudget } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 import DeleteModal from '@/components/DeleteModal';
 
 export default function BudgetsPage() {
@@ -77,9 +78,16 @@ export default function BudgetsPage() {
     await reload();
   }
 
+  const { sortCol, sortDir, handleSort } = useSortState<'category' | 'limit'>('category', 'asc');
+
   if (!user || loading) return <p className="muted">Loading…</p>;
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const activeCategories = categories.filter((c) => c.active !== false);
+  const sortedBudgets = sortRows(budgets, (b) => {
+    if (sortCol === 'limit') return b.monthly_limit;
+    const cat = b.category_id ? catMap.get(b.category_id) : null;
+    return cat ? cat.name : '';
+  }, sortDir);
 
   return (
     <div>
@@ -148,13 +156,13 @@ export default function BudgetsPage() {
             <table>
               <thead>
                 <tr>
-                  <th>Category</th>
-                  <th style={{ textAlign: 'right' }}>Monthly Limit</th>
+                  <th className="sortable" onClick={() => handleSort('category')}>Category <SortIcon col="category" sortCol={sortCol} sortDir={sortDir} /></th>
+                  <th className="sortable" onClick={() => handleSort('limit')} style={{ textAlign: 'right' }}>Monthly Limit <SortIcon col="limit" sortCol={sortCol} sortDir={sortDir} /></th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {budgets.map((b) => {
+                {sortedBudgets.map((b) => {
                   const cat = b.category_id ? catMap.get(b.category_id) : null;
                   return (
                     <tr key={b.id}>

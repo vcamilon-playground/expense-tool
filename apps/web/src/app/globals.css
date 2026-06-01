@@ -338,6 +338,18 @@ th {
 table tbody tr { transition: background 0.12s; }
 table tbody tr:hover td { background: var(--panel-2); }
 
+/* Sortable column headers */
+th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+th.sortable:hover { color: var(--text); background: var(--border); }
+.sort-icon {
+  display: inline-block;
+  margin-left: 3px;
+  font-size: 10px;
+  opacity: 0.3;
+  vertical-align: middle;
+}
+.sort-active { opacity: 1; color: var(--accent); }
+
 /* ── Date groups (expense list) ── */
 .date-group {
   border: 1px solid var(--border);

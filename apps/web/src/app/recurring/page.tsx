@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { Category, RecurringCadence, RecurringExpense, RecurringInput } from '@expense/shared';
 import { advanceDate, formatMoney } from '@expense/shared';
+import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 import {
   createExpense,
   createRecurring,
@@ -164,11 +165,23 @@ export default function RecurringPage() {
     await reload();
   }
 
+  const { sortCol, sortDir, handleSort } = useSortState<'name' | 'category' | 'cadence' | 'next_charge' | 'amount' | 'active'>('next_charge', 'asc');
+
   if (!user || loading) return <p className="muted">Loading…</p>;
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const activeCategories = categories.filter(
     (c) => c.active !== false || c.id === draft.category_id,
   );
+
+  const cadenceOrder: Record<RecurringCadence, number> = { weekly: 0, monthly: 1, yearly: 2 };
+  const sortedItems = sortRows(items, (r) => {
+    if (sortCol === 'name') return r.name;
+    if (sortCol === 'category') return catMap.get(r.category_id ?? '')?.name ?? '';
+    if (sortCol === 'cadence') return cadenceOrder[r.cadence];
+    if (sortCol === 'amount') return r.amount;
+    if (sortCol === 'active') return r.active ? 1 : 0;
+    return r.next_charge_date;
+  }, sortDir);
 
   return (
     <div>
@@ -337,17 +350,17 @@ export default function RecurringPage() {
             <table className="recurring-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Category</th>
-                  <th>Cadence</th>
-                  <th>Next Charge</th>
-                  <th style={{ textAlign: 'right' }}>Amount</th>
-                  <th>Active</th>
+                  <th className="sortable" onClick={() => handleSort('name')}>Name <SortIcon col="name" sortCol={sortCol} sortDir={sortDir} /></th>
+                  <th className="sortable" onClick={() => handleSort('category')}>Category <SortIcon col="category" sortCol={sortCol} sortDir={sortDir} /></th>
+                  <th className="sortable" onClick={() => handleSort('cadence')}>Cadence <SortIcon col="cadence" sortCol={sortCol} sortDir={sortDir} /></th>
+                  <th className="sortable" onClick={() => handleSort('next_charge')}>Next Charge <SortIcon col="next_charge" sortCol={sortCol} sortDir={sortDir} /></th>
+                  <th className="sortable" onClick={() => handleSort('amount')} style={{ textAlign: 'right' }}>Amount <SortIcon col="amount" sortCol={sortCol} sortDir={sortDir} /></th>
+                  <th className="sortable" onClick={() => handleSort('active')}>Active <SortIcon col="active" sortCol={sortCol} sortDir={sortDir} /></th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {items.map((r) => {
+                {sortedItems.map((r) => {
                   const cat = r.category_id ? catMap.get(r.category_id) : null;
                   const due = isDue(r);
                   return (

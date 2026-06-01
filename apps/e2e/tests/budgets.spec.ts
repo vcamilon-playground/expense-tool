@@ -87,3 +87,33 @@ test.describe('Budgets page', () => {
     await expect(budgets.saveBudgetButton()).toBeVisible();
   });
 });
+
+test.describe('Budgets — column sorting', () => {
+  let budgets!: BudgetsPage;
+
+  test.beforeEach(async ({ page }) => {
+    budgets = new BudgetsPage(page);
+    await budgets.goto();
+  });
+
+  test('Category and Monthly Limit headers are sortable', async ({ page }) => {
+    if (await page.locator('table').count() === 0) return;
+    await expect(budgets.sortableHeader('Category')).toBeVisible();
+    await expect(budgets.sortableHeader('Monthly Limit')).toBeVisible();
+  });
+
+  test('clicking Monthly Limit header activates sort indicator', async ({ page }) => {
+    if (await page.locator('table').count() === 0) return;
+    await budgets.sortableHeader('Monthly Limit').click();
+    await expect(budgets.sortableHeader('Monthly Limit').locator('.sort-active')).toBeVisible();
+  });
+
+  test('clicking Monthly Limit twice toggles sort direction', async ({ page }) => {
+    if (await page.locator('table').count() === 0) return;
+    await budgets.sortableHeader('Monthly Limit').click();
+    const first = await budgets.sortableHeader('Monthly Limit').locator('.sort-active').textContent();
+    await budgets.sortableHeader('Monthly Limit').click();
+    const second = await budgets.sortableHeader('Monthly Limit').locator('.sort-active').textContent();
+    expect(first).not.toBe(second);
+  });
+});
