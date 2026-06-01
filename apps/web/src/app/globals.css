@@ -839,8 +839,9 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   overflow: hidden;
 }
 
-nav.sidenav .nav-profile-menu a,
-nav.sidenav .nav-profile-menu button {
+/* Profile popup — rendered outside <nav> so no nav.sidenav prefix */
+.nav-profile-menu a,
+.nav-profile-menu button {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -857,17 +858,17 @@ nav.sidenav .nav-profile-menu button {
   cursor: pointer;
   transition: background 0.12s;
   justify-content: flex-start;
+  box-sizing: border-box;
 }
 
-nav.sidenav .nav-profile-menu a:hover,
-nav.sidenav .nav-profile-menu button:hover:not(:disabled) {
+.nav-profile-menu a:hover,
+.nav-profile-menu button:hover:not(:disabled) {
   background: var(--panel-2);
   color: var(--text);
-  border-color: transparent;
 }
 
-nav.sidenav .nav-profile-menu .danger-item { color: var(--bad); }
-nav.sidenav .nav-profile-menu .danger-item:hover:not(:disabled) {
+.nav-profile-menu .danger-item { color: var(--bad); }
+.nav-profile-menu .danger-item:hover:not(:disabled) {
   background: rgba(192,57,43,0.08);
   color: var(--bad);
 }
