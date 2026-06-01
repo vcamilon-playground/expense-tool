@@ -38,12 +38,15 @@ test.describe('Settings — Session Expiry section', () => {
     await expect(settings.sessionTimeoutRadio('never')).not.toBeChecked();
   });
 
-  test('selected timeout persists across page reload', async ({ page }) => {
+  test('selected timeout persists across page reload after saving', async () => {
     await settings.sessionTimeoutRadio('30').check();
+    await settings.saveChangesButton().click();
+    await expect(settings.unsavedBar()).not.toBeVisible();
     await settings.goto();
     await expect(settings.sessionTimeoutRadio('30')).toBeChecked();
-    // clean up
-    await page.evaluate(() => localStorage.removeItem('session-timeout'));
+    // clean up: revert to never
+    await settings.sessionTimeoutRadio('never').check();
+    await settings.saveChangesButton().click();
   });
 
   test('switching back to Never unchecks all timed options', async ({ page }) => {
@@ -67,16 +70,94 @@ test.describe('Settings — Profile section', () => {
     await expect(settings.profileHeading()).toBeVisible();
   });
 
-  test('Save Profile button is visible', async () => {
-    await expect(settings.saveProfileButton()).toBeVisible();
-  });
-
   test('first name input is pre-filled from logged-in user', async () => {
     await expect(settings.firstNameInput()).toHaveValue('E2E');
   });
 
   test('last name input is pre-filled from logged-in user', async () => {
     await expect(settings.lastNameInput()).toHaveValue('Tester');
+  });
+});
+
+test.describe('Settings — global save / cancel', () => {
+  let settings!: SettingsPage;
+
+  test.beforeEach(async ({ page }) => {
+    settings = new SettingsPage(page);
+    await settings.goto();
+    // Ensure clean state: no unsaved changes on load
+    await expect(settings.unsavedBar()).not.toBeVisible();
+  });
+
+  test('unsaved changes bar is hidden on load', async () => {
+    await expect(settings.unsavedBar()).not.toBeVisible();
+  });
+
+  test('editing first name shows the unsaved changes bar', async () => {
+    await settings.firstNameInput().fill('Changed');
+    await expect(settings.unsavedBar()).toBeVisible();
+    await expect(settings.saveChangesButton()).toBeVisible();
+    await expect(settings.cancelChangesButton()).toBeVisible();
+  });
+
+  test('Cancel reverts the first name to its original value', async () => {
+    const original = await settings.firstNameInput().inputValue();
+    await settings.firstNameInput().fill('Changed');
+    await expect(settings.unsavedBar()).toBeVisible();
+    await settings.cancelChangesButton().click();
+    await expect(settings.unsavedBar()).not.toBeVisible();
+    await expect(settings.firstNameInput()).toHaveValue(original);
+  });
+
+  test('changing session timeout shows unsaved bar', async () => {
+    await settings.sessionTimeoutRadio('30').check();
+    await expect(settings.unsavedBar()).toBeVisible();
+    // Cancel to restore default
+    await settings.cancelChangesButton().click();
+    await expect(settings.sessionTimeoutRadio('never')).toBeChecked();
+  });
+
+  test('changing theme color shows unsaved bar', async () => {
+    await settings.colorSwatch('Green').click();
+    await expect(settings.unsavedBar()).toBeVisible();
+    await settings.cancelChangesButton().click();
+  });
+});
+
+test.describe('Settings — navigation guard', () => {
+  let settings!: SettingsPage;
+
+  test.beforeEach(async ({ page }) => {
+    settings = new SettingsPage(page);
+    await settings.goto();
+  });
+
+  test('navigating away with unsaved changes shows the guard modal', async ({ page }) => {
+    await settings.firstNameInput().fill('Changed');
+    await expect(settings.unsavedBar()).toBeVisible();
+    await page.locator('nav.sidenav').getByRole('link', { name: 'Expenses', exact: true }).click();
+    await expect(settings.navGuardModal()).toBeVisible();
+  });
+
+  test('"Stay on page" closes modal and keeps user on settings with changes intact', async ({ page }) => {
+    await settings.firstNameInput().fill('Changed');
+    await page.locator('nav.sidenav').getByRole('link', { name: 'Expenses', exact: true }).click();
+    await expect(settings.navGuardModal()).toBeVisible();
+    await settings.navGuardStayButton().click();
+    await expect(settings.navGuardModal()).not.toBeVisible();
+    await expect(page).toHaveURL(/\/settings/);
+    await expect(settings.unsavedBar()).toBeVisible();
+    // clean up: reload discards the in-memory draft
+    await settings.goto();
+    await expect(settings.firstNameInput()).toHaveValue('E2E');
+  });
+
+  test('"Leave without saving" navigates away and discards changes', async ({ page }) => {
+    await settings.firstNameInput().fill('Changed');
+    await page.locator('nav.sidenav').getByRole('link', { name: 'Expenses', exact: true }).click();
+    await expect(settings.navGuardModal()).toBeVisible();
+    await settings.navGuardLeaveButton().click();
+    await expect(page).toHaveURL(/\/expenses/);
   });
 });
 
@@ -238,10 +319,15 @@ test.describe('Settings — past expense editing toggle', () => {
     await expect(settings.pastEditEnabledNote()).toBeVisible();
   });
 
-  test('toggle persists across page reload', async () => {
+  test('toggle persists across page reload after saving', async () => {
     await settings.pastEditToggle().check();
+    await settings.saveChangesButton().click();
+    await expect(settings.unsavedBar()).not.toBeVisible();
     await settings.goto();
     await expect(settings.pastEditToggle()).toBeChecked();
+    // clean up
+    await settings.pastEditToggle().uncheck();
+    await settings.saveChangesButton().click();
   });
 
   test('unchecking the toggle hides the enabled note', async () => {

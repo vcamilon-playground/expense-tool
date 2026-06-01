@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { NavigationGuardProvider } from '@/contexts/NavigationGuardContext';
 import ConditionalLayout from '@/components/ConditionalLayout';
 
 export const metadata: Metadata = {
@@ -16,9 +17,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);var a=localStorage.getItem('accent');if(a&&a!=='default')document.documentElement.setAttribute('data-accent',a);}catch(e){}` }} />
       </head>
       <body>
-        <AuthProvider>
-          <ConditionalLayout>{children}</ConditionalLayout>
-        </AuthProvider>
+        <NavigationGuardProvider>
+          <AuthProvider>
+            <ConditionalLayout>{children}</ConditionalLayout>
+          </AuthProvider>
+        </NavigationGuardProvider>
       </body>
     </html>
   );

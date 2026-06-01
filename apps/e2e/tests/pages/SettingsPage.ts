@@ -20,16 +20,42 @@ export class SettingsPage extends BasePage {
     return this.page.getByRole('heading', { level: 2, name: 'Profile' });
   }
 
-  saveProfileButton(): Locator {
-    return this.page.getByRole('button', { name: /save profile/i });
-  }
-
   firstNameInput(): Locator {
     return this.page.locator('.card').filter({ hasText: 'Profile' }).getByRole('textbox').first();
   }
 
   lastNameInput(): Locator {
     return this.page.locator('.card').filter({ hasText: 'Profile' }).getByRole('textbox').nth(1);
+  }
+
+  // Global save / cancel (only visible when there are unsaved changes)
+  unsavedBar(): Locator {
+    return this.page.locator('.settings-save-bar');
+  }
+
+  saveChangesButton(): Locator {
+    return this.page.locator('.settings-save-bar').getByRole('button', { name: /save changes/i });
+  }
+
+  cancelChangesButton(): Locator {
+    return this.page.locator('.settings-save-bar').getByRole('button', { name: /^cancel$/i });
+  }
+
+  // Navigation guard modal
+  navGuardModal(): Locator {
+    return this.page.getByRole('dialog', { name: /unsaved changes/i });
+  }
+
+  navGuardLeaveButton(): Locator {
+    return this.navGuardModal().getByRole('button', { name: /leave without saving/i });
+  }
+
+  navGuardStayButton(): Locator {
+    return this.navGuardModal().getByRole('button', { name: /stay on page/i });
+  }
+
+  navGuardSaveLeaveButton(): Locator {
+    return this.navGuardModal().getByRole('button', { name: /save and leave/i });
   }
 
   // Session expiry section

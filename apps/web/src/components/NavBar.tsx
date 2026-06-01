@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigationGuard } from '@/contexts/NavigationGuardContext';
 
 const links = [
   {
@@ -85,9 +86,45 @@ export default function NavBar() {
   const [confirm, setConfirm] = useState<ConfirmModal>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [popupStyle, setPopupStyle] = useState<PopupStyle>({});
+  const [pendingNavHref, setPendingNavHref] = useState<string | null>(null);
+  const [navGuardSaving, setNavGuardSaving] = useState(false);
+  const [navGuardErr, setNavGuardErr] = useState<string | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
+  const { guard } = useNavigationGuard();
+  const router = useRouter();
+
+  function handleNavClick(href: string, e: React.MouseEvent) {
+    if (guard && !isActive(href)) {
+      e.preventDefault();
+      setOpen(false);
+      setProfileMenuOpen(false);
+      setPendingNavHref(href);
+      setNavGuardErr(null);
+    }
+  }
+
+  async function handleNavGuardSaveAndLeave() {
+    if (!pendingNavHref || !guard) return;
+    setNavGuardSaving(true);
+    setNavGuardErr(null);
+    try {
+      await guard.save();
+      router.push(pendingNavHref);
+      setPendingNavHref(null);
+    } catch {
+      setNavGuardErr('Failed to save settings. Please try again.');
+    } finally {
+      setNavGuardSaving(false);
+    }
+  }
+
+  function handleNavGuardLeave() {
+    if (!pendingNavHref) return;
+    router.push(pendingNavHref);
+    setPendingNavHref(null);
+  }
 
   useEffect(() => {
     if (localStorage.getItem('sidebar-collapsed') === 'true') setCollapsed(true);
@@ -143,7 +180,7 @@ export default function NavBar() {
 
         {/* Brand row: logo + collapse toggle (desktop only) */}
         <div className="brand-row">
-          <Link href="/" className="brand" aria-label="💸 Expenses" onClick={() => setOpen(false)}>
+          <Link href="/" className="brand" aria-label="💸 Expenses" onClick={(e) => { handleNavClick('/', e); setOpen(false); }}>
             <span>💸</span>
             <span className="brand-text"> Expenses</span>
           </Link>
@@ -175,7 +212,7 @@ export default function NavBar() {
               href={l.href}
               className={isActive(l.href) ? 'active' : ''}
               title={l.label}
-              onClick={() => setOpen(false)}
+              onClick={(e) => { handleNavClick(l.href, e); setOpen(false); }}
             >
               <span className="nav-icon">{l.icon}</span>
               <span className="nav-label">{l.label}</span>
@@ -234,7 +271,7 @@ export default function NavBar() {
             href="/settings"
             className="nav-profile-menu-item"
             role="menuitem"
-            onClick={() => { setProfileMenuOpen(false); setOpen(false); }}
+            onClick={(e) => { handleNavClick('/settings', e); setProfileMenuOpen(false); setOpen(false); }}
           >
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3"/>
@@ -267,6 +304,65 @@ export default function NavBar() {
             </svg>
             Log Out
           </button>
+        </div>
+      )}
+
+      {/* Unsaved settings changes modal */}
+      {pendingNavHref !== null && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Unsaved changes"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 16,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setPendingNavHref(null); }}
+        >
+          <div
+            style={{
+              background: 'var(--panel)',
+              border: '1px solid var(--border)',
+              borderRadius: 12,
+              padding: '28px 24px',
+              maxWidth: 380,
+              width: '100%',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
+            }}
+          >
+            <h2 style={{ margin: '0 0 10px', fontSize: 18 }}>Unsaved changes</h2>
+            <p className="muted" style={{ margin: '0 0 20px', fontSize: 14 }}>
+              Your settings changes have not been saved yet. What would you like to do?
+            </p>
+            {navGuardErr && (
+              <p style={{ color: 'var(--bad)', fontSize: 13, margin: '0 0 12px' }}>{navGuardErr}</p>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                className="primary"
+                onClick={handleNavGuardSaveAndLeave}
+                disabled={navGuardSaving}
+              >
+                {navGuardSaving ? 'Saving…' : 'Save and leave'}
+              </button>
+              <button
+                className="ghost"
+                onClick={handleNavGuardLeave}
+                disabled={navGuardSaving}
+              >
+                Leave without saving
+              </button>
+              <button
+                className="ghost"
+                onClick={() => { setPendingNavHref(null); setNavGuardErr(null); }}
+                disabled={navGuardSaving}
+              >
+                Stay on page
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
