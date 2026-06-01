@@ -63,18 +63,32 @@ test.describe('Navigation — logout/switch-user modals', () => {
     await expect(page.locator('nav.sidenav')).toBeVisible();
   });
 
-  test('logout button is visible in sidebar', async ({ page }) => {
+  test('profile menu opens when avatar is clicked', async ({ page }) => {
     const nav = new NavBar(page);
-    await expect(nav.logoutButton()).toBeVisible();
+    await expect(nav.profileMenu()).not.toBeVisible();
+    await nav.userInfo().click();
+    await expect(nav.profileMenu()).toBeVisible();
   });
 
-  test('switch user button is visible in sidebar', async ({ page }) => {
+  test('profile menu closes when clicking outside', async ({ page }) => {
     const nav = new NavBar(page);
+    await nav.userInfo().click();
+    await expect(nav.profileMenu()).toBeVisible();
+    await page.mouse.click(400, 400);
+    await expect(nav.profileMenu()).not.toBeVisible();
+  });
+
+  test('profile menu contains Settings, Switch User, Log Out', async ({ page }) => {
+    const nav = new NavBar(page);
+    await nav.openProfileMenu();
+    await expect(nav.settingsMenuItem()).toBeVisible();
     await expect(nav.switchUserButton()).toBeVisible();
+    await expect(nav.logoutButton()).toBeVisible();
   });
 
   test('logout button opens confirmation modal', async ({ page }) => {
     const nav = new NavBar(page);
+    await nav.openProfileMenu();
     await nav.logoutButton().click();
     await expect(nav.logoutModal()).toBeVisible();
     await expect(nav.logoutModal()).toContainText('Log out?');
@@ -82,6 +96,7 @@ test.describe('Navigation — logout/switch-user modals', () => {
 
   test('switch user button opens confirmation modal', async ({ page }) => {
     const nav = new NavBar(page);
+    await nav.openProfileMenu();
     await nav.switchUserButton().click();
     await expect(nav.switchUserModal()).toBeVisible();
     await expect(nav.switchUserModal()).toContainText('Switch user?');
@@ -89,6 +104,7 @@ test.describe('Navigation — logout/switch-user modals', () => {
 
   test('logout modal cancel button closes it without logging out', async ({ page }) => {
     const nav = new NavBar(page);
+    await nav.openProfileMenu();
     await nav.logoutButton().click();
     await expect(nav.logoutModal()).toBeVisible();
     await nav.logoutModal().getByRole('button', { name: /cancel/i }).click();
@@ -98,6 +114,7 @@ test.describe('Navigation — logout/switch-user modals', () => {
 
   test('switch user modal cancel button closes it', async ({ page }) => {
     const nav = new NavBar(page);
+    await nav.openProfileMenu();
     await nav.switchUserButton().click();
     await expect(nav.switchUserModal()).toBeVisible();
     await nav.switchUserModal().getByRole('button', { name: /cancel/i }).click();
@@ -106,6 +123,7 @@ test.describe('Navigation — logout/switch-user modals', () => {
 
   test('clicking overlay backdrop closes logout modal', async ({ page }) => {
     const nav = new NavBar(page);
+    await nav.openProfileMenu();
     await nav.logoutButton().click();
     await expect(nav.logoutModal()).toBeVisible();
     await page.mouse.click(10, 10);
@@ -244,17 +262,17 @@ test.describe('Navigation — mobile hamburger', () => {
     }
   });
 
-  test('logout button is visible in mobile menu', async ({ page }) => {
+  test('logout button is visible after opening profile menu on mobile', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');
-    await nav.toggle.click();
+    await nav.openProfileMenu();
     await expect(nav.logoutButton()).toBeVisible();
   });
 
-  test('switch user button is visible in mobile menu', async ({ page }) => {
+  test('switch user button is visible after opening profile menu on mobile', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');
-    await nav.toggle.click();
+    await nav.openProfileMenu();
     await expect(nav.switchUserButton()).toBeVisible();
   });
 });

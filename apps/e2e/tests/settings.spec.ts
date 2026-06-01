@@ -192,9 +192,9 @@ test.describe('Settings — Categories section', () => {
   });
 
   test('submitting with empty name keeps the list unchanged', async () => {
-    const before = await settings.page.locator('.card').filter({ hasText: 'Categories' }).locator('.row').count();
+    const before = await settings.page.locator('.card').filter({ hasText: 'Categories' }).locator('.cat-chip').count();
     await settings.addCategoryButton().click();
-    const after = await settings.page.locator('.card').filter({ hasText: 'Categories' }).locator('.row').count();
+    const after = await settings.page.locator('.card').filter({ hasText: 'Categories' }).locator('.cat-chip').count();
     expect(after).toBe(before);
   });
 
@@ -251,27 +251,29 @@ test.describe('Settings — past expense editing toggle', () => {
   });
 });
 
-test.describe('Settings — sidebar gear icon (desktop)', () => {
-  test('settings gear icon is visible in sidebar', async ({ page }) => {
+test.describe('Settings — profile menu access (desktop)', () => {
+  test('profile menu trigger (avatar) is visible in sidebar', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');
     await expect(nav.settingsLink()).toBeVisible();
   });
 
-  test('settings gear icon navigates to /settings', async ({ page }) => {
+  test('clicking avatar opens profile menu with Settings option', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');
-    await nav.settingsLink().click();
+    await nav.openProfileMenu();
+    await expect(nav.settingsMenuItem()).toBeVisible();
+  });
+
+  test('clicking Settings in profile menu navigates to /settings', async ({ page }) => {
+    const nav = new NavBar(page);
+    await page.goto('/');
+    await nav.openProfileMenu();
+    await nav.settingsMenuItem().click();
     await expect(page).toHaveURL(/\/settings/);
   });
 
-  test('settings link is active when on /settings', async ({ page }) => {
-    await page.goto('/settings');
-    const nav = new NavBar(page);
-    await expect(nav.settingsLink()).toHaveClass(/active/);
-  });
-
-  test('settings gear icon remains visible in collapsed sidebar', async ({ page }) => {
+  test('profile menu trigger remains visible in collapsed sidebar', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');
     await nav.collapseButton().click();
@@ -279,19 +281,20 @@ test.describe('Settings — sidebar gear icon (desktop)', () => {
   });
 });
 
-test.describe('Settings — sidebar gear icon (mobile)', () => {
+test.describe('Settings — profile menu access (mobile)', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('settings gear icon is visible in mobile top bar', async ({ page }) => {
+  test('profile menu trigger is visible in mobile top bar', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');
     await expect(nav.settingsLink()).toBeVisible();
   });
 
-  test('clicking settings gear on mobile navigates to /settings', async ({ page }) => {
+  test('clicking avatar on mobile opens profile menu and Settings navigates to /settings', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');
-    await nav.settingsLink().click();
+    await nav.openProfileMenu();
+    await nav.settingsMenuItem().click();
     await expect(page).toHaveURL(/\/settings/);
   });
 });

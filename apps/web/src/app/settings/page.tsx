@@ -481,25 +481,22 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 20 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
           {categories.filter((c) => c.active !== false).map((cat) => (
-            <div
+            <span
               key={cat.id}
-              className="row"
-              style={{ justifyContent: 'space-between', padding: '6px 8px', borderRadius: 6, background: 'var(--panel-2)' }}
+              className="cat-chip"
             >
-              <span style={{ fontSize: 15 }}>
-                <span style={{ marginRight: 8 }}>{cat.icon ?? '🏷️'}</span>
-                {cat.name}
-              </span>
+              <span>{cat.icon ?? '🏷️'}</span>
+              <span>{cat.name}</span>
               <button
-                className="danger"
-                style={{ width: 'auto', padding: '2px 10px', fontSize: 13 }}
                 onClick={() => setPendingDelete(cat)}
+                title="Delete"
+                aria-label="Delete"
               >
-                Delete
+                ×
               </button>
-            </div>
+            </span>
           ))}
         </div>
 

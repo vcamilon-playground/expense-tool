@@ -80,7 +80,7 @@ export class SettingsPage extends BasePage {
   }
 
   categoryRow(name: string): Locator {
-    return this.page.locator('.card').filter({ hasText: 'Categories' }).locator('.row').filter({ hasText: name });
+    return this.page.locator('.card').filter({ hasText: 'Categories' }).locator('.cat-chip').filter({ hasText: name });
   }
 
   categoryDeleteButton(name: string): Locator {

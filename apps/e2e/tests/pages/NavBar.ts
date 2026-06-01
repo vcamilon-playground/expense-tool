@@ -41,16 +41,25 @@ export class NavBar {
     return this.page.locator('nav.sidenav button[title*="Switch to"]');
   }
 
+  // Profile menu trigger (the clickable user avatar block)
   settingsLink(): Locator {
-    return this.page.locator('nav.sidenav .nav-settings-link');
+    return this.page.locator('nav.sidenav .nav-user');
+  }
+
+  profileMenu(): Locator {
+    return this.page.locator('.nav-profile-menu');
+  }
+
+  settingsMenuItem(): Locator {
+    return this.page.locator('.nav-profile-menu').getByRole('menuitem', { name: /settings/i });
   }
 
   logoutButton(): Locator {
-    return this.page.getByRole('button', { name: /log out/i });
+    return this.page.locator('.nav-profile-menu').getByRole('menuitem', { name: /log out/i });
   }
 
   switchUserButton(): Locator {
-    return this.page.getByRole('button', { name: /switch user/i });
+    return this.page.locator('.nav-profile-menu').getByRole('menuitem', { name: /switch user/i });
   }
 
   logoutModal(): Locator {
@@ -63,6 +72,11 @@ export class NavBar {
 
   userInfo(): Locator {
     return this.page.locator('.nav-user');
+  }
+
+  async openProfileMenu(): Promise<void> {
+    await this.userInfo().click();
+    await expect(this.profileMenu()).toBeVisible();
   }
 
   footer(): Locator {

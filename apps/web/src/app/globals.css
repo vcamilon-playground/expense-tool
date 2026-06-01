@@ -596,6 +596,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
     height: auto;
     position: sticky;
     top: 0;
+    z-index: 50;
     flex-direction: row;
     align-items: center;
     padding: 10px 16px;
@@ -636,6 +637,10 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   nav.sidenav .nav-bottom button { width: auto; height: 36px; padding: 0 10px; }
   .nav-settings-link { width: auto; height: 36px; padding: 0 10px; }
   .nav-settings-link.active { background: rgba(255,255,255,0.2); }
+
+  /* Profile menu trigger adjustments for mobile top bar */
+  .nav-user-wrapper { width: auto; }
+  .nav-user { margin-bottom: 0; padding: 6px 8px; }
 
   .nav-toggle { display: flex; order: 1; margin-left: 0; }
 
@@ -804,6 +809,11 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 }
 
 /* User menu in sidebar */
+.nav-user-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 .nav-user {
   display: flex;
   align-items: center;
@@ -811,8 +821,55 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   padding: 10px 12px;
   border-radius: 8px;
   background: rgba(255,255,255,0.08);
-  margin-bottom: 8px;
   overflow: hidden;
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: none;
+}
+
+.nav-user:hover { background: rgba(255,255,255,0.18); }
+
+/* Profile popup menu — position:fixed set via inline style in NavBar.tsx */
+.nav-profile-menu {
+  min-width: 180px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  overflow: hidden;
+}
+
+nav.sidenav .nav-profile-menu a,
+nav.sidenav .nav-profile-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  height: auto;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.12s;
+  justify-content: flex-start;
+}
+
+nav.sidenav .nav-profile-menu a:hover,
+nav.sidenav .nav-profile-menu button:hover:not(:disabled) {
+  background: var(--panel-2);
+  color: var(--text);
+  border-color: transparent;
+}
+
+nav.sidenav .nav-profile-menu .danger-item { color: var(--bad); }
+nav.sidenav .nav-profile-menu .danger-item:hover:not(:disabled) {
+  background: rgba(192,57,43,0.08);
+  color: var(--bad);
 }
 
 .nav-user-avatar {
@@ -854,3 +911,34 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 nav.sidenav.collapsed .nav-user-info { display: none; }
 nav.sidenav.collapsed .nav-user { padding: 10px; justify-content: center; }
+
+/* Category chips in Settings */
+.cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 6px 3px 10px;
+  font-size: 13px;
+}
+
+.cat-chip button {
+  padding: 0 3px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.cat-chip button:hover { background: var(--border); color: var(--bad); }

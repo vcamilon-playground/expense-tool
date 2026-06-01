@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
@@ -77,16 +77,46 @@ const ChevronRight = () => (
 );
 
 type ConfirmModal = 'logout' | 'switch' | null;
+type PopupStyle = { top?: number; bottom?: number; left?: number; right?: number };
 
 export default function NavBar() {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmModal>(null);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [popupStyle, setPopupStyle] = useState<PopupStyle>({});
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
 
   useEffect(() => {
     if (localStorage.getItem('sidebar-collapsed') === 'true') setCollapsed(true);
   }, []);
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    function handleOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      const inWrapper = wrapperRef.current?.contains(target);
+      const inPopup = popupRef.current?.contains(target);
+      if (!inWrapper && !inPopup) setProfileMenuOpen(false);
+    }
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [profileMenuOpen]);
+
+  function openProfileMenu() {
+    if (!wrapperRef.current) return;
+    const rect = wrapperRef.current.getBoundingClientRect();
+    const isMobile = window.innerWidth <= 640;
+    if (isMobile) {
+      setPopupStyle({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+    } else {
+      setPopupStyle({ bottom: window.innerHeight - rect.top + 6, left: rect.left });
+    }
+    setProfileMenuOpen(true);
+  }
+
   const pathname = usePathname();
 
   const isActive = (href: string) =>
@@ -130,7 +160,7 @@ export default function NavBar() {
         {/* Mobile hamburger toggle */}
         <button
           className="nav-toggle"
-          onClick={() => setOpen(!open)}
+          onClick={() => { setOpen(!open); setProfileMenuOpen(false); }}
           aria-label="Toggle navigation"
           aria-expanded={open}
         >
@@ -153,77 +183,92 @@ export default function NavBar() {
           ))}
         </div>
 
-        {/* Bottom: theme toggle + settings + user */}
+        {/* Bottom: theme toggle + user (profile menu) */}
         <div className="nav-bottom">
           <ThemeToggle />
-          <Link
-            href="/settings"
-            className={`nav-settings-link${isActive('/settings') ? ' active' : ''}`}
-            title="Settings"
-            onClick={() => setOpen(false)}
-          >
-            <span className="nav-icon">
-              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-              </svg>
-            </span>
-            <span className="settings-label">Settings</span>
-          </Link>
 
-          {/* User info block */}
           {user && (
-            <div className="nav-user" title={`${user.first_name} ${user.last_name}`}>
-              <div className="nav-user-avatar">
-                {user.profile_picture_url ? (
-                  <img src={user.profile_picture_url} alt={user.first_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <span>{initials}</span>
-                )}
-              </div>
-              <div className="nav-user-info">
-                <div className="nav-user-name">{user.first_name} {user.last_name}</div>
-                <div className="nav-user-handle">@{user.username}</div>
+            <div className="nav-user-wrapper" ref={wrapperRef}>
+              {/* Clickable user block */}
+              <div
+                className="nav-user"
+                role="button"
+                tabIndex={0}
+                onClick={() => profileMenuOpen ? setProfileMenuOpen(false) : openProfileMenu()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    profileMenuOpen ? setProfileMenuOpen(false) : openProfileMenu();
+                  }
+                }}
+                aria-label="Open profile menu"
+                aria-expanded={profileMenuOpen}
+                aria-haspopup="menu"
+              >
+                <div className="nav-user-avatar">
+                  {user.profile_picture_url ? (
+                    <img src={user.profile_picture_url} alt={user.first_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span>{initials}</span>
+                  )}
+                </div>
+                <div className="nav-user-info">
+                  <div className="nav-user-name">{user.first_name} {user.last_name}</div>
+                  <div className="nav-user-handle">@{user.username}</div>
+                </div>
               </div>
             </div>
           )}
-
-          {/* Switch User */}
-          <button
-            onClick={() => { setOpen(false); setConfirm('switch'); }}
-            title="Switch user"
-            aria-label="Switch user"
-            style={{ gap: 8 }}
-          >
-            <span className="nav-icon">
-              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-                <path d="M16 3.13a4 4 0 010 7.75"/>
-              </svg>
-            </span>
-            <span className="nav-label">Switch User</span>
-          </button>
-
-          {/* Logout */}
-          <button
-            onClick={() => { setOpen(false); setConfirm('logout'); }}
-            title="Log out"
-            aria-label="Log out"
-            style={{ gap: 8 }}
-          >
-            <span className="nav-icon">
-              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </span>
-            <span className="nav-label">Log Out</span>
-          </button>
         </div>
       </nav>
+
+      {/* Profile popup menu — rendered outside <nav> as fixed overlay to avoid stacking context issues */}
+      {profileMenuOpen && user && (
+        <div
+          className="nav-profile-menu"
+          role="menu"
+          ref={popupRef}
+          style={{ position: 'fixed', zIndex: 400, ...popupStyle }}
+        >
+          <Link
+            href="/settings"
+            className="nav-profile-menu-item"
+            role="menuitem"
+            onClick={() => { setProfileMenuOpen(false); setOpen(false); }}
+          >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+            Settings
+          </Link>
+          <button
+            className="nav-profile-menu-item"
+            role="menuitem"
+            onClick={() => { setProfileMenuOpen(false); setOpen(false); setConfirm('switch'); }}
+          >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+              <path d="M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            Switch User
+          </button>
+          <button
+            className="nav-profile-menu-item danger-item"
+            role="menuitem"
+            onClick={() => { setProfileMenuOpen(false); setOpen(false); setConfirm('logout'); }}
+          >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Log Out
+          </button>
+        </div>
+      )}
 
       {/* Logout / Switch User confirmation modal */}
       {confirm !== null && (
