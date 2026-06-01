@@ -50,6 +50,67 @@ test.describe('Navigation', () => {
     await expect(nav.footer()).toBeVisible();
     await expect(nav.footer()).toContainText('Vegil Camilon');
   });
+
+  test('user info block is visible in sidebar', async ({ page }) => {
+    const nav = new NavBar(page);
+    await expect(nav.userInfo()).toBeVisible();
+  });
+});
+
+test.describe('Navigation — logout/switch-user modals', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('nav.sidenav')).toBeVisible();
+  });
+
+  test('logout button is visible in sidebar', async ({ page }) => {
+    const nav = new NavBar(page);
+    await expect(nav.logoutButton()).toBeVisible();
+  });
+
+  test('switch user button is visible in sidebar', async ({ page }) => {
+    const nav = new NavBar(page);
+    await expect(nav.switchUserButton()).toBeVisible();
+  });
+
+  test('logout button opens confirmation modal', async ({ page }) => {
+    const nav = new NavBar(page);
+    await nav.logoutButton().click();
+    await expect(nav.logoutModal()).toBeVisible();
+    await expect(nav.logoutModal()).toContainText('Log out?');
+  });
+
+  test('switch user button opens confirmation modal', async ({ page }) => {
+    const nav = new NavBar(page);
+    await nav.switchUserButton().click();
+    await expect(nav.switchUserModal()).toBeVisible();
+    await expect(nav.switchUserModal()).toContainText('Switch user?');
+  });
+
+  test('logout modal cancel button closes it without logging out', async ({ page }) => {
+    const nav = new NavBar(page);
+    await nav.logoutButton().click();
+    await expect(nav.logoutModal()).toBeVisible();
+    await nav.logoutModal().getByRole('button', { name: /cancel/i }).click();
+    await expect(nav.logoutModal()).not.toBeVisible();
+    await expect(page).not.toHaveURL('/login');
+  });
+
+  test('switch user modal cancel button closes it', async ({ page }) => {
+    const nav = new NavBar(page);
+    await nav.switchUserButton().click();
+    await expect(nav.switchUserModal()).toBeVisible();
+    await nav.switchUserModal().getByRole('button', { name: /cancel/i }).click();
+    await expect(nav.switchUserModal()).not.toBeVisible();
+  });
+
+  test('clicking overlay backdrop closes logout modal', async ({ page }) => {
+    const nav = new NavBar(page);
+    await nav.logoutButton().click();
+    await expect(nav.logoutModal()).toBeVisible();
+    await page.mouse.click(10, 10);
+    await expect(nav.logoutModal()).not.toBeVisible();
+  });
 });
 
 test.describe('Navigation — sidebar collapse', () => {
@@ -181,5 +242,19 @@ test.describe('Navigation — mobile hamburger', () => {
     for (const label of ['Dashboard', 'Expenses', 'Reports', 'Budgets', 'Recurring']) {
       await expect(nav.navLinks.getByRole('link', { name: label, exact: true })).toBeVisible();
     }
+  });
+
+  test('logout button is visible in mobile menu', async ({ page }) => {
+    const nav = new NavBar(page);
+    await page.goto('/');
+    await nav.toggle.click();
+    await expect(nav.logoutButton()).toBeVisible();
+  });
+
+  test('switch user button is visible in mobile menu', async ({ page }) => {
+    const nav = new NavBar(page);
+    await page.goto('/');
+    await nav.toggle.click();
+    await expect(nav.switchUserButton()).toBeVisible();
   });
 });

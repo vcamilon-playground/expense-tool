@@ -11,6 +11,7 @@ import {
   listRecurring,
   updateRecurring,
 } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import DeleteModal from '@/components/DeleteModal';
 import FormModal from '@/components/FormModal';
 
@@ -31,6 +32,7 @@ const empty: RecurringInput = {
 };
 
 export default function RecurringPage() {
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<RecurringExpense[]>([]);
   const [draft, setDraft] = useState<RecurringInput>(empty);
@@ -50,12 +52,14 @@ export default function RecurringPage() {
   const isDue = (r: RecurringExpense) => r.active && r.next_charge_date <= today;
 
   async function reload() {
-    const [c, r] = await Promise.all([listCategories(), listRecurring()]);
+    if (!user) return;
+    const [c, r] = await Promise.all([listCategories(user.id), listRecurring(user.id)]);
     setCategories(c);
     setItems(r);
   }
 
   useEffect(() => {
+    if (!user) return;
     (async () => {
       try {
         await reload();
@@ -65,7 +69,7 @@ export default function RecurringPage() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [user]);
 
   function startEdit(r: RecurringExpense) {
     setEditingId(r.id);
@@ -99,7 +103,8 @@ export default function RecurringPage() {
     if (editingId) {
       await updateRecurring(editingId, draft);
     } else {
-      await createRecurring(draft);
+      if (!user) return;
+      await createRecurring(draft, user.id);
     }
     reset();
     await reload();
@@ -116,23 +121,26 @@ export default function RecurringPage() {
   }
 
   async function handleConfirmYes() {
-    if (!pendingItem) return;
+    if (!pendingItem || !user) return;
     setConfirmErr(null);
     const item = pendingItem;
     setPendingItem(null);
     setConfirmStep(null);
     try {
-      await createExpense({
-        amount: item.amount,
-        currency: 'PHP',
-        conversion_rate: null,
-        category_id: item.category_id,
-        merchant: item.name,
-        description: null,
-        occurred_at: item.next_charge_date,
-        receipt_url: null,
-        source: 'recurring',
-      });
+      await createExpense(
+        {
+          amount: item.amount,
+          currency: 'PHP',
+          conversion_rate: null,
+          category_id: item.category_id,
+          merchant: item.name,
+          description: null,
+          occurred_at: item.next_charge_date,
+          receipt_url: null,
+          source: 'recurring',
+        },
+        user.id,
+      );
       await updateRecurring(item.id, {
         next_charge_date: advanceDate(item.next_charge_date, item.cadence),
       });
@@ -156,7 +164,7 @@ export default function RecurringPage() {
     await reload();
   }
 
-  if (loading) return <p className="muted">Loading…</p>;
+  if (!user || loading) return <p className="muted">Loading…</p>;
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const activeCategories = categories.filter(
     (c) => c.active !== false || c.id === draft.category_id,

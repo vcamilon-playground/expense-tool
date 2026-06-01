@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import type { Budget, Category } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
 import { deleteBudget, listBudgets, listCategories, updateBudget, upsertBudget } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import DeleteModal from '@/components/DeleteModal';
 
 export default function BudgetsPage() {
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [categoryId, setCategoryId] = useState('');
@@ -17,12 +19,14 @@ export default function BudgetsPage() {
   const [editing, setEditing] = useState<Budget | null>(null);
 
   async function reload() {
-    const [c, b] = await Promise.all([listCategories(), listBudgets()]);
+    if (!user) return;
+    const [c, b] = await Promise.all([listCategories(user.id), listBudgets(user.id)]);
     setCategories(c);
     setBudgets(b);
   }
 
   useEffect(() => {
+    if (!user) return;
     (async () => {
       try {
         await reload();
@@ -32,7 +36,7 @@ export default function BudgetsPage() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [user]);
 
   function handleEdit(b: Budget) {
     setEditing(b);
@@ -60,7 +64,8 @@ export default function BudgetsPage() {
       await updateBudget(editing.id, parsed);
       setEditing(null);
     } else {
-      await upsertBudget({ category_id: categoryId || null, monthly_limit: parsed });
+      if (!user) return;
+      await upsertBudget({ category_id: categoryId || null, monthly_limit: parsed }, user.id);
     }
     setLimit('');
     setCategoryId('');
@@ -72,7 +77,7 @@ export default function BudgetsPage() {
     await reload();
   }
 
-  if (loading) return <p className="muted">Loading…</p>;
+  if (!user || loading) return <p className="muted">Loading…</p>;
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const activeCategories = categories.filter((c) => c.active !== false);
 

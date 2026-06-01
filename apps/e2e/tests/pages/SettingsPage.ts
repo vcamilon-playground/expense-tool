@@ -15,6 +15,33 @@ export class SettingsPage extends BasePage {
     return this.page.getByRole('heading', { level: 1, name: 'Settings' });
   }
 
+  // Profile section
+  profileHeading(): Locator {
+    return this.page.getByRole('heading', { level: 2, name: 'Profile' });
+  }
+
+  saveProfileButton(): Locator {
+    return this.page.getByRole('button', { name: /save profile/i });
+  }
+
+  firstNameInput(): Locator {
+    return this.page.locator('.card').filter({ hasText: 'Profile' }).getByRole('textbox').first();
+  }
+
+  lastNameInput(): Locator {
+    return this.page.locator('.card').filter({ hasText: 'Profile' }).getByRole('textbox').nth(1);
+  }
+
+  // Password change section
+  changePasswordHeading(): Locator {
+    return this.page.getByRole('heading', { level: 2, name: 'Change Password' });
+  }
+
+  updatePasswordButton(): Locator {
+    return this.page.getByRole('button', { name: /update password/i });
+  }
+
+  // Theme section
   themeColorHeading(): Locator {
     return this.page.getByRole('heading', { level: 2, name: 'Theme Color' });
   }

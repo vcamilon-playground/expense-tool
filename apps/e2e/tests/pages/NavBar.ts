@@ -38,11 +38,31 @@ export class NavBar {
   }
 
   themeToggle(): Locator {
-    return this.page.locator('nav.sidenav .nav-bottom button');
+    return this.page.getByRole('button', { name: /switch to .* mode/i });
   }
 
   settingsLink(): Locator {
     return this.page.locator('nav.sidenav .nav-settings-link');
+  }
+
+  logoutButton(): Locator {
+    return this.page.getByRole('button', { name: /log out/i });
+  }
+
+  switchUserButton(): Locator {
+    return this.page.getByRole('button', { name: /switch user/i });
+  }
+
+  logoutModal(): Locator {
+    return this.page.getByRole('dialog', { name: /confirm logout/i });
+  }
+
+  switchUserModal(): Locator {
+    return this.page.getByRole('dialog', { name: /confirm switch user/i });
+  }
+
+  userInfo(): Locator {
+    return this.page.locator('.nav-user');
   }
 
   footer(): Locator {

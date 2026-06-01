@@ -70,3 +70,13 @@ export type MonthlyInsight = {
   observations: string[];
   recommendations: string[];
 };
+
+export type User = {
+  id: string;
+  username: string;
+  first_name: string;
+  last_name: string;
+  profile_picture_url: string | null;
+  birth_date: string | null; // ISO date (YYYY-MM-DD)
+  created_at?: string;
+};

@@ -15,7 +15,7 @@ All TypeScript. Free-tier friendly (Supabase + Anthropic).
 | Web | Next.js 14 (App Router) |
 | Mobile | Expo + React Native |
 | Shared | `@expense/shared` TS package (types, categories, report math) |
-| DB / Storage | Supabase (Postgres + Storage) — free tier, no auth |
+| DB / Storage | Supabase (Postgres + Storage) — free tier, custom auth (no email) |
 | AI | **Google Gemini** (`gemini-2.0-flash`, free tier) — default. Anthropic Claude (`claude-opus-4-7`) optional via env switch. |
 | Mono | npm workspaces |
 
@@ -50,13 +50,14 @@ the mobile bundle.
 
 1. Go to <https://supabase.com> → new project (free tier).
 2. In **SQL Editor**, paste the contents of [`supabase/schema.sql`](supabase/schema.sql) and run it.
-3. **If upgrading an existing database**, also run any files in [`supabase/migrations/`](supabase/migrations/) that you haven't applied yet. Each file lists the feature it enables.
-4. In **Storage**, create a bucket named `receipts` and mark it **Public**.
-   Add a policy that lets `anon` `INSERT` and `SELECT` from this bucket.
-4. In **Project Settings → API**, copy the `Project URL` and the `anon` public key.
-
-> ⚠️ Because there's no auth, anyone who gets your URL + anon key can read /
-> write your data. Keep them private; treat this as a single-user setup.
+3. **If upgrading an existing (single-user) database**, follow the migration steps at the bottom of `schema.sql`.
+4. In **Storage**, create two buckets:
+   - `receipts` — mark it **Public** (for receipt images)
+   - `avatars` — mark it **Public** (for profile pictures)
+   
+   Add a policy on each bucket that lets `anon` `INSERT` and `SELECT`.
+5. In **Project Settings → API**, copy the `Project URL` and the `anon` public key.
+6. Generate an `AUTH_SECRET` (see env vars below) and add it to your Vercel environment variables.
 
 ## 2. Get an AI API key
 
@@ -86,6 +87,10 @@ npm install
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR-ANON-KEY
+
+# Auth secret for JWT session signing (min 32 chars)
+# Generate with: openssl rand -base64 32
+AUTH_SECRET=your-random-secret-here
 
 # Default: Gemini (free). Switch to "anthropic" only if you have Claude credits.
 AI_PROVIDER=gemini
@@ -118,6 +123,7 @@ npm run dev:mobile
 
 ## Features
 
+- **Multi-user auth** — register with first name, last name, username, password, profile picture (optional), birth date (optional). Login, logout, and switch-user from the sidebar. No email required. If a password is forgotten, reset it via Supabase SQL editor.
 - **Dashboard** — totals for today / this week / this month / this year,
   category breakdown, budget status bars, monthly AI insight (on demand).
 - **Expenses** — full CRUD. List, add, edit (tap on mobile), delete
@@ -132,6 +138,7 @@ npm run dev:mobile
   ≥ 80% and flags over-budget.
 - **Recurring** — track subscriptions (weekly / monthly / yearly) with
   the next charge date.
+- **Settings** — profile editing, password change, theme, category management.
 
 ## Typecheck everything
 
@@ -157,9 +164,9 @@ Restart `npm run dev:web` after changing. The API responses include a
   field; if it's `low` you'll see `null`s — fall back to manual entry.
 - The free Supabase tier gives 500 MB DB + 1 GB Storage, which is enough
   for years of personal expenses and thousands of receipt images.
-- No auth means RLS is off; do not expose your DB URL beyond your own use.
-  If you want a soft passcode layer later, add a `device_id` column +
-  `eq()` filters in `lib/db.ts`.
+- Auth uses a custom `users` table (not Supabase Auth). Passwords are bcrypt-hashed server-side. Sessions are JWT cookies (30-day expiry). RLS is still disabled — the anon key has full access, so keep your Supabase URL and key private.
+- Forgot-password flow: an admin must run `UPDATE users SET password_hash = '...' WHERE username = '...'` in Supabase SQL editor with a new bcrypt hash.
+- Each user's data (expenses, budgets, categories, recurring) is isolated by `user_id` filtered in every query.
 - Charts are not included to keep the deps minimal. The dashboard uses
   tables and progress bars; add `recharts` to the web app if you want
   graphs.

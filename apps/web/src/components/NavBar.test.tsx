@@ -5,6 +5,7 @@ import NavBar from './NavBar';
 
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn().mockReturnValue('/'),
+  useRouter: vi.fn().mockReturnValue({ push: vi.fn() }),
 }));
 
 vi.mock('next/link', () => ({
@@ -16,6 +17,13 @@ vi.mock('next/link', () => ({
   }) => (
     <a href={href} className={className} onClick={onClick}>{children}</a>
   ),
+}));
+
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: vi.fn().mockReturnValue({
+    user: { id: 'test-id', username: 'testuser', first_name: 'Test', last_name: 'User', profile_picture_url: null, birth_date: null },
+    logout: vi.fn(),
+  }),
 }));
 
 describe('NavBar', () => {

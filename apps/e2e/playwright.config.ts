@@ -1,11 +1,15 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
 
 const isRemote = !!process.env.BASE_URL;
 const fullBrowsers = !!process.env.FULL_BROWSERS;
 const smokeOnly = !!process.env.SMOKE_ONLY;
 
+const AUTH_STATE = path.join(__dirname, 'auth.json');
+
 export default defineConfig({
   testDir: './tests',
+  globalSetup: require.resolve('./tests/global-setup'),
   ...(smokeOnly && { testIgnore: '**/*.regression.spec.ts' }),
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
@@ -26,6 +30,7 @@ export default defineConfig({
     actionTimeout: 15_000,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    storageState: AUTH_STATE,
   },
 
   projects: [

@@ -11,6 +11,7 @@ import {
   type ReportPeriod,
 } from '@expense/shared';
 import { listCategories, listExpenses } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 
 type ViewMode = 'preset' | 'custom';
 
@@ -70,6 +71,7 @@ function changePct(current: number, prev: number): string {
 }
 
 export default function ReportsPage() {
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [period, setPeriod] = useState<ReportPeriod>('month');
@@ -82,9 +84,10 @@ export default function ReportsPage() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!user) return;
     (async () => {
       try {
-        const [c, e] = await Promise.all([listCategories(), listExpenses()]);
+        const [c, e] = await Promise.all([listCategories(user.id), listExpenses(user.id)]);
         setCategories(c);
         setExpenses(e);
       } catch (e) {
@@ -93,7 +96,7 @@ export default function ReportsPage() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [user]);
 
   const summary = useMemo(
     () =>
@@ -117,7 +120,7 @@ export default function ReportsPage() {
     return summarize(expenses, categories, period, prevRefDate(refDate, period), true);
   }, [compare, viewMode, expenses, categories, period, refDate, customFrom, customTo]);
 
-  if (loading) return <p className="muted">Loading…</p>;
+  if (!user || loading) return <p className="muted">Loading…</p>;
   if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
 
   return (

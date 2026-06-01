@@ -13,6 +13,7 @@ import {
   type RecurringExpense,
 } from '@expense/shared';
 import { listBudgets, listCategories, listExpenses, listRecurring } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import SummaryCards from '@/components/SummaryCards';
 import BudgetAlerts from '@/components/BudgetAlerts';
 import InsightCard from '@/components/InsightCard';
@@ -21,6 +22,7 @@ import CategoryChart from '@/components/CategoryChart';
 import MonthEndBanner from '@/components/MonthEndBanner';
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -29,13 +31,14 @@ export default function DashboardPage() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!user) return;
     (async () => {
       try {
         const [cats, exps, buds, recs] = await Promise.all([
-          listCategories(),
-          listExpenses(),
-          listBudgets(),
-          listRecurring(),
+          listCategories(user.id),
+          listExpenses(user.id),
+          listBudgets(user.id),
+          listRecurring(user.id),
         ]);
         setCategories(cats);
         setExpenses(exps);
@@ -47,9 +50,9 @@ export default function DashboardPage() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [user]);
 
-  if (loading) return <p className="muted">Loading…</p>;
+  if (!user || loading) return <p className="muted">Loading…</p>;
   if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
 
   const day: PeriodSummary = summarize(expenses, categories, 'day');

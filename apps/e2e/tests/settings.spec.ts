@@ -3,6 +3,57 @@ import { SettingsPage } from './pages/SettingsPage';
 import { NavBar } from './pages/NavBar';
 import { cleanup } from './helpers/supabase';
 
+test.describe('Settings — Profile section', () => {
+  let settings!: SettingsPage;
+
+  test.beforeEach(async ({ page }) => {
+    settings = new SettingsPage(page);
+    await settings.goto();
+  });
+
+  test('Profile section heading is visible', async () => {
+    await expect(settings.profileHeading()).toBeVisible();
+  });
+
+  test('Save Profile button is visible', async () => {
+    await expect(settings.saveProfileButton()).toBeVisible();
+  });
+
+  test('first name input is pre-filled from logged-in user', async () => {
+    await expect(settings.firstNameInput()).toHaveValue('E2E');
+  });
+
+  test('last name input is pre-filled from logged-in user', async () => {
+    await expect(settings.lastNameInput()).toHaveValue('Tester');
+  });
+});
+
+test.describe('Settings — Change Password section', () => {
+  let settings!: SettingsPage;
+
+  test.beforeEach(async ({ page }) => {
+    settings = new SettingsPage(page);
+    await settings.goto();
+  });
+
+  test('Change Password heading is visible', async () => {
+    await expect(settings.changePasswordHeading()).toBeVisible();
+  });
+
+  test('Update Password button is visible', async () => {
+    await expect(settings.updatePasswordButton()).toBeVisible();
+  });
+
+  test('submitting with wrong current password shows error', async ({ page }) => {
+    const pwCard = page.locator('.card').filter({ hasText: 'Change Password' });
+    await pwCard.locator('input[type="password"]').nth(0).fill('wrongpassword');
+    await pwCard.locator('input[type="password"]').nth(1).fill('newpassword123');
+    await pwCard.locator('input[type="password"]').nth(2).fill('newpassword123');
+    await settings.updatePasswordButton().click();
+    await expect(pwCard.locator('[role="alert"]')).toBeVisible();
+  });
+});
+
 test.describe('Settings page', () => {
   let settings!: SettingsPage;
 

@@ -77,7 +77,8 @@ cd apps/e2e && npx playwright show-report
 
 | File | What it covers |
 |---|---|
-| `tests/navigation.spec.ts` | Nav links, active state highlighting, brand link, mobile hamburger menu |
+| `tests/auth.spec.ts` | Login page UI, register page UI, redirect when unauthenticated, authenticated access |
+| `tests/navigation.spec.ts` | Nav links, active state highlighting, brand link, mobile hamburger, logout/switch-user modals |
 | `tests/dashboard.spec.ts` | Dashboard heading, KPI stat cards, Budget Status / Category Chart / Trend sections |
 | `tests/expenses.spec.ts` | Page load, Add Expense modal open/close, required fields, Escape key, backdrop dismiss |
 | `tests/recurring.spec.ts` | Page load, Add Recurring modal, required fields, cadence dropdown capitalization |
@@ -103,6 +104,30 @@ cd apps/e2e && npx playwright show-report
 
 **Local runs** use three browser projects: Chromium, Firefox, and Pixel 5 (mobile Chrome).  
 **CI runs** (`BASE_URL` set) use Chromium only — faster, sufficient for smoke testing.
+
+---
+
+## Authentication in Tests
+
+All tests (except `auth.spec.ts`) run as an authenticated user. A **global setup** step (`tests/global-setup.ts`) runs before any test:
+
+1. Attempts to log in as the E2E test user (`e2e_tester` by default).
+2. If the user doesn't exist yet, it registers the account automatically.
+3. Saves the session cookie to `apps/e2e/auth.json` and the user ID to `apps/e2e/e2e-user.json`.
+4. All subsequent test pages load with that session via `storageState` in `playwright.config.ts`.
+
+Seed/cleanup helpers in `tests/helpers/supabase.ts` read the `user_id` from `e2e-user.json` and scope all inserts and deletes to that user.
+
+**Required secrets for CI:**
+- `SUPABASE_URL` and `SUPABASE_ANON_KEY` — for seed/cleanup helpers (same values as Vercel)
+- `AUTH_SECRET` — must match the value set in Vercel for JWT validation
+
+**Custom E2E credentials (optional):**
+- `E2E_USERNAME` — defaults to `e2e_tester`
+- `E2E_PASSWORD` — defaults to `E2eTestPass123`
+- `E2E_USER_ID` — override if `e2e-user.json` is not present
+
+The `auth.spec.ts` tests explicitly clear `storageState` with `test.use({ storageState: { cookies: [], origins: [] } })` to test the unauthenticated paths.
 
 ---
 

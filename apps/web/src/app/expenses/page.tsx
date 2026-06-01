@@ -13,8 +13,10 @@ import ExpenseForm from '@/components/ExpenseForm';
 import ExpenseList from '@/components/ExpenseList';
 import FormModal from '@/components/FormModal';
 import MonthEndBanner from '@/components/MonthEndBanner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ExpensesPage() {
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [editing, setEditing] = useState<Expense | null>(null);
@@ -26,12 +28,14 @@ export default function ExpensesPage() {
   const [allowPastEdit, setAllowPastEdit] = useState(false);
 
   async function reload() {
-    const [c, e] = await Promise.all([listCategories(), listExpenses()]);
+    if (!user) return;
+    const [c, e] = await Promise.all([listCategories(user.id), listExpenses(user.id)]);
     setCategories(c);
     setExpenses(e);
   }
 
   useEffect(() => {
+    if (!user) return;
     setAllowPastEdit(localStorage.getItem('allow-past-edit') === 'true');
     (async () => {
       try {
@@ -42,7 +46,7 @@ export default function ExpensesPage() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [user]);
 
   function closeModal() {
     setShowAdd(false);
@@ -50,7 +54,8 @@ export default function ExpensesPage() {
   }
 
   async function handleCreate(input: ExpenseInput) {
-    await createExpense(input);
+    if (!user) return;
+    await createExpense(input, user.id);
     closeModal();
     await reload();
   }
@@ -79,7 +84,7 @@ export default function ExpensesPage() {
     });
   }, [expenses, search, categoryFilter]);
 
-  if (loading) return <p className="muted">Loading…</p>;
+  if (!user || loading) return <p className="muted">Loading…</p>;
   if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
 
   const modalOpen = showAdd || editing !== null;

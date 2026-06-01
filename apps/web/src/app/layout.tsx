@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import NavBar from '@/components/NavBar';
+import { AuthProvider } from '@/contexts/AuthContext';
+import ConditionalLayout from '@/components/ConditionalLayout';
 
 export const metadata: Metadata = {
   title: 'Expense Tool',
@@ -15,15 +16,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);var a=localStorage.getItem('accent');if(a&&a!=='default')document.documentElement.setAttribute('data-accent',a);}catch(e){}` }} />
       </head>
       <body>
-        <div className="app-layout">
-          <NavBar />
-          <div className="main-wrapper">
-            <main className="container">{children}</main>
-            <footer className="site-footer">
-              Created by Vegil Camilon &amp; Claude Code
-            </footer>
-          </div>
-        </div>
+        <AuthProvider>
+          <ConditionalLayout>{children}</ConditionalLayout>
+        </AuthProvider>
       </body>
     </html>
   );

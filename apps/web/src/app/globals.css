@@ -775,3 +775,80 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   nav.sidenav { padding: 10px 12px; }
   .stat .value { font-size: 20px; }
 }
+
+/* ── Auth pages (login / register) ── */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 24px 16px;
+}
+
+.auth-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+.auth-brand {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* User menu in sidebar */
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.nav-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #fff;
+  overflow: hidden;
+}
+
+.nav-user-info {
+  overflow: hidden;
+  flex: 1;
+}
+
+.nav-user-name {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-user-handle {
+  color: rgba(255,255,255,0.6);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+nav.sidenav.collapsed .nav-user-info { display: none; }
+nav.sidenav.collapsed .nav-user { padding: 10px; justify-content: center; }
