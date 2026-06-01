@@ -258,6 +258,7 @@ nav.sidenav button:active:not(:disabled) { transform: scale(0.97); }
 
 /* Theme label hidden in collapsed mode */
 nav.sidenav.collapsed .theme-label { display: none; }
+nav.sidenav.collapsed .nav-bottom .nav-label { display: none; }
 nav.sidenav.collapsed .nav-bottom button { justify-content: center; padding-left: 0; padding-right: 0; }
 
 /* Settings link in nav-bottom */
@@ -681,6 +682,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   nav.sidenav.collapsed .nav-links .nav-label { display: inline; }
   nav.sidenav.collapsed .brand-text { display: inline; }
   nav.sidenav.collapsed .theme-label { display: inline; }
+  nav.sidenav.collapsed .nav-bottom .nav-label { display: inline; }
   nav.sidenav.collapsed .settings-label { display: none; }
   nav.sidenav.collapsed .nav-bottom button { justify-content: flex-start; padding-left: 12px; padding-right: 12px; }
 
