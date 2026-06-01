@@ -32,6 +32,15 @@ export class SettingsPage extends BasePage {
     return this.page.locator('.card').filter({ hasText: 'Profile' }).getByRole('textbox').nth(1);
   }
 
+  // Session expiry section
+  sessionExpiryHeading(): Locator {
+    return this.page.getByRole('heading', { level: 2, name: 'Session Expiry' });
+  }
+
+  sessionTimeoutRadio(value: 'never' | '30' | '60' | '120'): Locator {
+    return this.page.locator(`input[name="session-timeout"][value="${value}"]`);
+  }
+
   // Password change section
   changePasswordHeading(): Locator {
     return this.page.getByRole('heading', { level: 2, name: 'Change Password' });

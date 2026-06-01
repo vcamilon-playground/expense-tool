@@ -3,6 +3,58 @@ import { SettingsPage } from './pages/SettingsPage';
 import { NavBar } from './pages/NavBar';
 import { cleanup } from './helpers/supabase';
 
+test.describe('Settings — Session Expiry section', () => {
+  let settings!: SettingsPage;
+
+  test.beforeEach(async ({ page }) => {
+    settings = new SettingsPage(page);
+    await settings.goto();
+    // Reset to default before each test
+    await page.evaluate(() => localStorage.removeItem('session-timeout'));
+    await settings.goto();
+  });
+
+  test('Session Expiry heading is visible', async () => {
+    await expect(settings.sessionExpiryHeading()).toBeVisible();
+  });
+
+  test('all four timeout options are present', async () => {
+    await expect(settings.sessionTimeoutRadio('never')).toBeVisible();
+    await expect(settings.sessionTimeoutRadio('30')).toBeVisible();
+    await expect(settings.sessionTimeoutRadio('60')).toBeVisible();
+    await expect(settings.sessionTimeoutRadio('120')).toBeVisible();
+  });
+
+  test('"Never" is selected by default', async () => {
+    await expect(settings.sessionTimeoutRadio('never')).toBeChecked();
+    await expect(settings.sessionTimeoutRadio('30')).not.toBeChecked();
+    await expect(settings.sessionTimeoutRadio('60')).not.toBeChecked();
+    await expect(settings.sessionTimeoutRadio('120')).not.toBeChecked();
+  });
+
+  test('selecting a timeout option checks it and unchecks the others', async () => {
+    await settings.sessionTimeoutRadio('60').check();
+    await expect(settings.sessionTimeoutRadio('60')).toBeChecked();
+    await expect(settings.sessionTimeoutRadio('never')).not.toBeChecked();
+  });
+
+  test('selected timeout persists across page reload', async ({ page }) => {
+    await settings.sessionTimeoutRadio('30').check();
+    await settings.goto();
+    await expect(settings.sessionTimeoutRadio('30')).toBeChecked();
+    // clean up
+    await page.evaluate(() => localStorage.removeItem('session-timeout'));
+  });
+
+  test('switching back to Never unchecks all timed options', async ({ page }) => {
+    await settings.sessionTimeoutRadio('120').check();
+    await settings.sessionTimeoutRadio('never').check();
+    await expect(settings.sessionTimeoutRadio('never')).toBeChecked();
+    await expect(settings.sessionTimeoutRadio('120')).not.toBeChecked();
+    await page.evaluate(() => localStorage.removeItem('session-timeout'));
+  });
+});
+
 test.describe('Settings — Profile section', () => {
   let settings!: SettingsPage;
 

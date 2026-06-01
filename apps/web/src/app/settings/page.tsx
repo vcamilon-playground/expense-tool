@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Category } from '@expense/shared';
 import { createCategory, deleteCategory, listCategories } from '@/lib/db';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, type SessionTimeout } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import DeleteModal from '@/components/DeleteModal';
 
@@ -21,7 +21,7 @@ const accents: { value: Accent; label: string; color: string }[] = [
 ];
 
 export default function SettingsPage() {
-  const { user, loading: authLoading, refresh } = useAuth();
+  const { user, loading: authLoading, refresh, sessionTimeout, setSessionTimeout } = useAuth();
 
   const [accent, setAccent] = useState<Accent>('default');
   const [isDark, setIsDark] = useState(false);
@@ -371,6 +371,36 @@ export default function SettingsPage() {
             {pwLoading ? 'Updating…' : 'Update Password'}
           </button>
         </form>
+      </div>
+
+      {/* Session Expiry */}
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>Session Expiry</h2>
+        <p className="muted" style={{ fontSize: 14, marginBottom: 16 }}>
+          Automatically log out after a period of inactivity. Resets on any mouse, keyboard, or touch activity.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {(
+            [
+              { value: 'never', label: 'Never (default)' },
+              { value: '30',    label: '30 minutes' },
+              { value: '60',    label: '1 hour' },
+              { value: '120',   label: '2 hours' },
+            ] as { value: SessionTimeout; label: string }[]
+          ).map(({ value, label }) => (
+            <label key={value} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+              <input
+                type="radio"
+                name="session-timeout"
+                value={value}
+                checked={sessionTimeout === value}
+                onChange={() => setSessionTimeout(value)}
+                style={{ width: 'auto', height: 'auto', accentColor: 'var(--accent)' }}
+              />
+              <span style={{ fontWeight: sessionTimeout === value ? 600 : 400 }}>{label}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       {/* Theme Color */}
