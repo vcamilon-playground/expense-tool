@@ -21,7 +21,7 @@ const accents: { value: Accent; label: string; color: string }[] = [
 ];
 
 export default function SettingsPage() {
-  const { user, refresh } = useAuth();
+  const { user, loading: authLoading, refresh } = useAuth();
 
   const [accent, setAccent] = useState<Accent>('default');
   const [isDark, setIsDark] = useState(false);
@@ -217,6 +217,8 @@ export default function SettingsPage() {
       setPwLoading(false);
     }
   }
+
+  if (authLoading || !user) return <p className="muted">Loading…</p>;
 
   return (
     <div>

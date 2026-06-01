@@ -38,7 +38,7 @@ export class NavBar {
   }
 
   themeToggle(): Locator {
-    return this.page.getByRole('button', { name: /switch to .* mode/i });
+    return this.page.locator('nav.sidenav button[title*="Switch to"]');
   }
 
   settingsLink(): Locator {
