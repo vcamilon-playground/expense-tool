@@ -41,9 +41,14 @@ export class NavBar {
     return this.page.locator('nav.sidenav button[title*="Switch to"]');
   }
 
-  // Profile menu trigger (the clickable user avatar block)
+  // Profile menu trigger — desktop sidebar
   settingsLink(): Locator {
     return this.page.locator('nav.sidenav .nav-user');
+  }
+
+  // Profile entry inside the mobile hamburger dropdown
+  mobileProfile(): Locator {
+    return this.page.locator('.nav-mobile-profile');
   }
 
   profileMenu(): Locator {
@@ -75,7 +80,16 @@ export class NavBar {
   }
 
   async openProfileMenu(): Promise<void> {
-    await this.userInfo().click();
+    if (await this.toggle.isVisible()) {
+      // Mobile: profile is inside the hamburger dropdown
+      if (!await this.navLinks.evaluate((el) => el.classList.contains('open'))) {
+        await this.toggle.click();
+        await expect(this.navLinks).toHaveClass(/open/);
+      }
+      await this.mobileProfile().click();
+    } else {
+      await this.userInfo().click();
+    }
     await expect(this.profileMenu()).toBeVisible();
   }
 

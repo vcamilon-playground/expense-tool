@@ -200,6 +200,9 @@ nav.sidenav.collapsed .brand-text { display: none; }
   gap: 2px;
 }
 
+/* Mobile profile entry — only shown inside the hamburger dropdown on mobile */
+.nav-mobile-profile { display: none; }
+
 nav.sidenav .nav-links a {
   display: flex;
   align-items: center;
@@ -650,9 +653,24 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   .nav-settings-link { width: auto; height: 36px; padding: 0 10px; }
   .nav-settings-link.active { background: rgba(255,255,255,0.2); }
 
-  /* Profile menu trigger adjustments for mobile top bar */
-  .nav-user-wrapper { width: auto; }
-  .nav-user { margin-bottom: 0; padding: 6px 8px; }
+  /* Hide profile avatar from top bar on mobile — it lives in the hamburger dropdown instead */
+  .nav-user-wrapper { display: none; }
+
+  /* Profile entry at the bottom of the hamburger dropdown */
+  .nav-mobile-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .nav-mobile-profile:hover { background: var(--panel-2); }
+  .nav-mobile-profile .nav-user-name { color: var(--text); }
+  .nav-mobile-profile .nav-user-handle { color: var(--muted); }
 
   .nav-toggle { display: flex; order: 1; margin-left: 0; }
 

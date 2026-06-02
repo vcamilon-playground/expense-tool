@@ -262,6 +262,27 @@ test.describe('Navigation — mobile hamburger', () => {
     }
   });
 
+  test('profile avatar is not visible in mobile top bar', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('.nav-user-wrapper')).not.toBeVisible();
+  });
+
+  test('profile entry is visible in hamburger dropdown', async ({ page }) => {
+    const nav = new NavBar(page);
+    await page.goto('/');
+    await nav.toggle.click();
+    await expect(nav.navLinks).toHaveClass(/open/);
+    await expect(nav.mobileProfile()).toBeVisible();
+  });
+
+  test('profile entry shows user name and handle in hamburger dropdown', async ({ page }) => {
+    const nav = new NavBar(page);
+    await page.goto('/');
+    await nav.toggle.click();
+    await expect(nav.mobileProfile().locator('.nav-user-name')).toBeVisible();
+    await expect(nav.mobileProfile().locator('.nav-user-handle')).toBeVisible();
+  });
+
   test('logout button is visible after opening profile menu on mobile', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');

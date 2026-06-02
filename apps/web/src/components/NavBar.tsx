@@ -90,6 +90,7 @@ export default function NavBar() {
   const [navGuardSaving, setNavGuardSaving] = useState(false);
   const [navGuardErr, setNavGuardErr] = useState<string | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const mobileProfileRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
   const { guard } = useNavigationGuard();
@@ -145,12 +146,14 @@ export default function NavBar() {
   function openProfileMenu() {
     if (!wrapperRef.current) return;
     const rect = wrapperRef.current.getBoundingClientRect();
-    const isMobile = window.innerWidth <= 640;
-    if (isMobile) {
-      setPopupStyle({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
-    } else {
-      setPopupStyle({ bottom: window.innerHeight - rect.top + 6, left: rect.left });
-    }
+    setPopupStyle({ bottom: window.innerHeight - rect.top + 6, left: rect.left });
+    setProfileMenuOpen(true);
+  }
+
+  function openProfileMenuFromMobile() {
+    const navEl = document.querySelector('nav.sidenav');
+    const navBottom = navEl ? navEl.getBoundingClientRect().bottom : 60;
+    setPopupStyle({ top: navBottom + 4, right: 8 });
     setProfileMenuOpen(true);
   }
 
@@ -218,6 +221,39 @@ export default function NavBar() {
               <span className="nav-label">{l.label}</span>
             </Link>
           ))}
+
+          {/* Mobile-only profile entry at bottom of hamburger menu */}
+          {user && (
+            <div
+              className="nav-mobile-profile"
+              ref={mobileProfileRef}
+              role="button"
+              tabIndex={0}
+              onClick={() => { openProfileMenuFromMobile(); setOpen(false); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  openProfileMenuFromMobile();
+                  setOpen(false);
+                }
+              }}
+              aria-label="Open profile menu"
+              aria-haspopup="menu"
+              aria-expanded={profileMenuOpen}
+            >
+              <div className="nav-user-avatar">
+                {user.profile_picture_url ? (
+                  <img src={user.profile_picture_url} alt={user.first_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span>{initials}</span>
+                )}
+              </div>
+              <div className="nav-user-info">
+                <div className="nav-user-name">{user.first_name} {user.last_name}</div>
+                <div className="nav-user-handle">@{user.username}</div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Bottom: theme toggle + user (profile menu) */}
