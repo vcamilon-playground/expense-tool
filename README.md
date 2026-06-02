@@ -12,7 +12,7 @@ All TypeScript. Free-tier friendly (Supabase + Anthropic).
 
 | Layer | Choice |
 |---|---|
-| Web | Next.js 14 (App Router) |
+| Web | Next.js 14 (App Router), Recharts |
 | Mobile | Expo + React Native |
 | Shared | `@expense/shared` TS package (types, categories, report math) |
 | DB / Storage | Supabase (Postgres + Storage) — free tier, custom auth (no email) |
@@ -140,11 +140,49 @@ npm run dev:mobile
   the next charge date.
 - **Settings** — profile editing, password change, theme, category management.
 
-## Typecheck everything
+## Development scripts
+
+| Command | What it does |
+|---|---|
+| `npm run dev:web` | Start Next.js dev server on http://localhost:3000 |
+| `npm run dev:mobile` | Start Expo (scan QR in Expo Go) |
+| `npm run typecheck` | Type-check all three workspaces |
+| `npm run build:shared` | Build the shared package |
+| `npm run test:unit` | Vitest unit tests for `packages/shared/` (~400 ms) |
+| `npm run test:e2e` | Full Playwright smoke suite (auto-starts dev server) |
+| `npm run test:e2e:ui` | Open Playwright UI mode |
+| `npm run install:browsers` | Download Playwright browser binaries (run once after clone) |
+
+## Architecture — where things live
+
+New to the codebase? Start here.
+
+| File | Role |
+|---|---|
+| `apps/web/src/lib/db.ts` | **Every Supabase query goes through here.** Add new DB calls here, never in components. |
+| `apps/web/src/lib/supabase.ts` | Supabase client initialisation (one instance, reused everywhere). |
+| `apps/web/src/contexts/AuthContext.tsx` | App-wide auth state from the JWT cookie. Pages read `const { user } = useAuth()` and return early if null. |
+| `apps/web/src/app/globals.css` | The entire design system — CSS variables, layout primitives, component styles. |
+| `packages/shared/src/types.ts` | Shared TypeScript types (`Expense`, `Budget`, `Category`, …). Import from `@expense/shared`, never by relative path. |
+| `packages/shared/src/` | `formatMoney`, report helpers, `advanceDate`. Pure functions with unit tests alongside them. |
+| `supabase/schema.sql` | Full DB schema. Run once in the Supabase SQL editor; re-run after adding tables. |
+| `apps/e2e/tests/pages/` | Playwright Page Object Model. All locators live here, never in spec files. |
+
+**Key design decisions:**
+
+- **No server components** — the web app is `'use client'` throughout. All Supabase calls happen in the browser via the anon key.
+- **Custom auth, not Supabase Auth** — a `users` table with bcrypt-hashed passwords and JWT cookies. RLS is disabled; every query filters by `user_id` in application code.
+- **Production DB in tests** — no mocking. E2E tests write real rows tagged `merchant = 'E2E-TEST'` and clean them up in `beforeAll`/`afterAll`. See `TESTS.md`.
+- **Shared package** — `packages/shared/` is a compiled TS package. After editing it, run `npm run build:shared` before the web app picks up the changes.
+
+## Testing
 
 ```sh
-npm run typecheck
+npm run test:unit          # fast unit tests for shared logic
+npm run test:e2e           # full Playwright suite against localhost
 ```
+
+See [`TESTS.md`](TESTS.md) for the full test suite breakdown, CI/CD setup, and troubleshooting guide.
 
 ## Switching AI providers
 
@@ -167,6 +205,4 @@ Restart `npm run dev:web` after changing. The API responses include a
 - Auth uses a custom `users` table (not Supabase Auth). Passwords are bcrypt-hashed server-side. Sessions are JWT cookies (30-day expiry). RLS is still disabled — the anon key has full access, so keep your Supabase URL and key private.
 - Forgot-password flow: an admin must run `UPDATE users SET password_hash = '...' WHERE username = '...'` in Supabase SQL editor with a new bcrypt hash.
 - Each user's data (expenses, budgets, categories, recurring) is isolated by `user_id` filtered in every query.
-- Charts are not included to keep the deps minimal. The dashboard uses
-  tables and progress bars; add `recharts` to the web app if you want
-  graphs.
+- The dashboard uses Recharts for the category breakdown chart and trend charts.
