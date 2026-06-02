@@ -24,7 +24,8 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel, e
   const [description, setDescription] = useState(initial?.description ?? '');
   const [occurredAt, setOccurredAt] = useState(initial?.occurred_at ?? today());
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ amount?: string; date?: string }>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const isOverseas = currency.toUpperCase() !== 'PHP';
   const parsedAmount = parseFloat(amount) || 0;
@@ -33,14 +34,30 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel, e
     ? parsedAmount * parsedRate
     : null;
 
+  function clearFieldError(field: keyof typeof fieldErrors) {
+    setFieldErrors((p) => { const n = { ...p }; delete n[field]; return n; });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
+    setSubmitError(null);
+
+    const newErrors: { amount?: string; date?: string } = {};
     const parsed = parseFloat(amount);
-    if (!Number.isFinite(parsed) || parsed < 0) {
-      setError('Enter a valid amount');
+    if (!amount) {
+      newErrors.amount = 'Amount is required';
+    } else if (!Number.isFinite(parsed) || parsed < 0) {
+      newErrors.amount = 'Enter a valid positive amount';
+    }
+    if (!occurredAt) {
+      newErrors.date = 'Date is required';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFieldErrors(newErrors);
       return;
     }
+    setFieldErrors({});
     setSubmitting(true);
     try {
       const rate = parseFloat(conversionRate);
@@ -56,14 +73,14 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel, e
         source: initial?.source ?? 'manual',
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Save failed');
+      setSubmitError(err instanceof Error ? err.message : 'Save failed');
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className={embedded ? undefined : 'card'}>
+    <form onSubmit={handleSubmit} noValidate className={embedded ? undefined : 'card'}>
       <div className="grid cols-3">
         <label>
           <div className="muted">Amount</div>
@@ -73,9 +90,11 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel, e
             min="0"
             placeholder="0.00"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => { setAmount(e.target.value); clearFieldError('amount'); }}
+            aria-invalid={!!fieldErrors.amount}
             required
           />
+          {fieldErrors.amount && <p className="field-error">{fieldErrors.amount}</p>}
         </label>
         <label>
           <div className="muted">Currency</div>
@@ -104,9 +123,11 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel, e
           <input
             type="date"
             value={occurredAt}
-            onChange={(e) => setOccurredAt(e.target.value)}
+            onChange={(e) => { setOccurredAt(e.target.value); clearFieldError('date'); }}
+            aria-invalid={!!fieldErrors.date}
             required
           />
+          {fieldErrors.date && <p className="field-error">{fieldErrors.date}</p>}
         </label>
         <label>
           <div className="muted">Category</div>
@@ -132,7 +153,7 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel, e
           />
         </label>
       </div>
-      {error && <p style={{ color: 'var(--bad)', marginTop: 8 }}>{error}</p>}
+      {submitError && <p style={{ color: 'var(--bad)', marginTop: 8 }}>{submitError}</p>}
       <div className="row" style={{ marginTop: 12 }}>
         <button type="submit" className="primary" style={{ width: 'auto' }} disabled={submitting}>
           {submitting ? 'Saving…' : initial ? 'Update' : 'Add Expense'}

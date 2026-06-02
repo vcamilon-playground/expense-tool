@@ -58,21 +58,23 @@ test.describe('Recurring Expenses page', () => {
     }
   });
 
-  test('submitting without amount keeps modal open', async () => {
+  test('submitting without name keeps modal open and shows inline error', async () => {
     await recurring.addButton().click();
     const dialog = recurring.dialog();
-    await dialog.locator('label').filter({ hasText: 'Name' }).locator('input').fill('Test Name');
+    await dialog.locator('input[type="number"]').fill('10');
     await dialog.getByRole('button', { name: 'Add Recurring' }).click();
     await expect(dialog).toBeVisible();
+    await expect(dialog.locator('label').filter({ hasText: 'Name' }).locator('.field-error')).toBeVisible();
   });
 
-  test('submitting with zero amount shows validation error', async () => {
+  test('submitting with zero amount shows inline error below amount field', async () => {
     await recurring.addButton().click();
     const dialog = recurring.dialog();
     await dialog.locator('label').filter({ hasText: 'Name' }).locator('input').fill('Test Name');
     await dialog.locator('input[type="number"]').fill('0');
     await dialog.getByRole('button', { name: 'Add Recurring' }).click();
-    await expect(dialog.getByText('Name and a positive amount required')).toBeVisible();
+    await expect(dialog.locator('label').filter({ hasText: 'Amount' }).locator('.field-error')).toBeVisible();
+    await expect(dialog.locator('label').filter({ hasText: 'Amount' }).locator('.field-error')).toContainText('positive');
   });
 });
 

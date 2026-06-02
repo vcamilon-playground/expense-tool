@@ -42,6 +42,7 @@ export default function RecurringPage() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<{ name?: string; amount?: string; date?: string }>({});
   const [pendingDelete, setPendingDelete] = useState<RecurringExpense | null>(null);
 
   // Confirmation flow state
@@ -92,15 +93,21 @@ export default function RecurringPage() {
     setAmountInput('');
     setShowForm(false);
     setErr(null);
+    setFormErrors({});
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!draft.name || draft.amount <= 0) {
-      setErr('Name and a positive amount required');
+    const newErrors: { name?: string; amount?: string; date?: string } = {};
+    if (!draft.name.trim()) newErrors.name = 'Name is required';
+    if (!amountInput) newErrors.amount = 'Amount is required';
+    else if (draft.amount <= 0) newErrors.amount = 'Enter a positive amount';
+    if (!draft.next_charge_date) newErrors.date = 'Date is required';
+    if (Object.keys(newErrors).length > 0) {
+      setFormErrors(newErrors);
       return;
     }
-    setErr(null);
+    setFormErrors({});
     if (editingId) {
       await updateRecurring(editingId, draft);
     } else {
@@ -185,6 +192,7 @@ export default function RecurringPage() {
 
   return (
     <div>
+      {err && <p style={{ color: 'var(--bad)', marginBottom: 12 }}>{err}</p>}
       <DeleteModal
         open={pendingDelete !== null}
         itemLabel="Recurring Expense"
@@ -200,15 +208,17 @@ export default function RecurringPage() {
         title={editingId ? 'Edit Recurring Expense' : 'Add Recurring Expense'}
         onClose={reset}
       >
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="grid cols-3">
             <label>
               <div className="muted">Name</div>
               <input
                 value={draft.name}
-                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                onChange={(e) => { setDraft({ ...draft, name: e.target.value }); setFormErrors((p) => ({ ...p, name: undefined })); }}
+                aria-invalid={!!formErrors.name}
                 required
               />
+              {formErrors.name && <p className="field-error">{formErrors.name}</p>}
             </label>
             <label>
               <div className="muted">Amount</div>
@@ -221,9 +231,12 @@ export default function RecurringPage() {
                 onChange={(e) => {
                   setAmountInput(e.target.value);
                   setDraft({ ...draft, amount: parseFloat(e.target.value) || 0 });
+                  setFormErrors((p) => ({ ...p, amount: undefined }));
                 }}
+                aria-invalid={!!formErrors.amount}
                 required
               />
+              {formErrors.amount && <p className="field-error">{formErrors.amount}</p>}
             </label>
             <label>
               <div className="muted">Cadence</div>
@@ -253,9 +266,11 @@ export default function RecurringPage() {
               <input
                 type="date"
                 value={draft.next_charge_date}
-                onChange={(e) => setDraft({ ...draft, next_charge_date: e.target.value })}
+                onChange={(e) => { setDraft({ ...draft, next_charge_date: e.target.value }); setFormErrors((p) => ({ ...p, date: undefined })); }}
+                aria-invalid={!!formErrors.date}
                 required
               />
+              {formErrors.date && <p className="field-error">{formErrors.date}</p>}
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 20 }}>
               <input
@@ -266,7 +281,6 @@ export default function RecurringPage() {
               <span>Active</span>
             </label>
           </div>
-          {err && <p style={{ color: 'var(--bad)', marginTop: 8 }}>{err}</p>}
           <div className="row" style={{ marginTop: 16 }}>
             <button type="submit" className="primary" style={{ width: 'auto' }}>
               {editingId ? 'Update' : 'Add Recurring'}

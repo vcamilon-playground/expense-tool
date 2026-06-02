@@ -52,20 +52,22 @@ test.describe('Expenses page', () => {
     await expect(expenses.dialog()).toBeHidden();
   });
 
-  test('submitting empty form keeps modal open', async () => {
+  test('submitting empty form keeps modal open and shows inline errors', async () => {
     await expenses.openAddModal();
     const dialog = expenses.dialog();
     await dialog.locator('input[type="number"]').fill('');
     await dialog.getByRole('button', { name: 'Add Expense' }).click();
     await expect(dialog).toBeVisible();
+    await expect(dialog.locator('label').filter({ hasText: 'Amount' }).locator('.field-error')).toBeVisible();
   });
 
-  test('submitting with negative amount keeps modal open', async () => {
+  test('submitting with negative amount keeps modal open and shows inline error', async () => {
     await expenses.openAddModal();
     const dialog = expenses.dialog();
     await dialog.locator('input[type="number"]').fill('-1');
     await dialog.getByRole('button', { name: 'Add Expense' }).click();
     await expect(dialog).toBeVisible();
+    await expect(dialog.locator('label').filter({ hasText: 'Amount' }).locator('.field-error')).toBeVisible();
   });
 
   test('search input is visible', async () => {

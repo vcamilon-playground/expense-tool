@@ -17,7 +17,8 @@ export default function RegisterPage() {
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -25,13 +26,19 @@ export default function RegisterPage() {
 
   function set(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      if (field === 'password') delete next['confirm_password'];
+      return next;
+    });
   }
 
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      setError('Profile picture must be under 2 MB');
+      setApiError('Profile picture must be under 2 MB');
       return;
     }
     setAvatarFile(file);
@@ -53,20 +60,25 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
+    setApiError(null);
 
-    if (form.password !== form.confirm_password) {
-      setError('Passwords do not match');
+    const newErrors: Record<string, string> = {};
+    if (!form.first_name.trim()) newErrors.first_name = 'First name is required';
+    if (!form.last_name.trim()) newErrors.last_name = 'Last name is required';
+    if (!form.username.trim()) newErrors.username = 'Username is required';
+    if (!form.password) newErrors.password = 'Password is required';
+    else if (form.password.length < 8) newErrors.password = 'Must be at least 8 characters';
+    if (!form.confirm_password) newErrors.confirm_password = 'Please confirm your password';
+    else if (form.password !== form.confirm_password) newErrors.confirm_password = 'Passwords do not match';
+
+    if (Object.keys(newErrors).length > 0) {
+      setFieldErrors(newErrors);
       return;
     }
-    if (form.password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
+    setFieldErrors({});
 
     setLoading(true);
     try {
-      // Register without avatar first to get user id
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -80,11 +92,10 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? 'Registration failed');
+        setApiError(data.error ?? 'Registration failed');
         return;
       }
 
-      // Upload avatar if provided, then update profile
       if (avatarFile && data.user?.id) {
         const avatarUrl = await uploadAvatar(data.user.id);
         if (avatarUrl) {
@@ -99,7 +110,7 @@ export default function RegisterPage() {
       await refresh();
       router.push('/');
     } catch {
-      setError('Registration failed. Please try again.');
+      setApiError('Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -114,13 +125,13 @@ export default function RegisterPage() {
           <p className="muted" style={{ margin: 0, fontSize: 14 }}>Join the Expense Tool</p>
         </div>
 
-        {error && (
+        {apiError && (
           <div className="banner banner-danger" role="alert" style={{ marginBottom: 16 }}>
-            {error}
+            {apiError}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Avatar upload */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             <div
@@ -171,8 +182,10 @@ export default function RegisterPage() {
                 value={form.first_name}
                 onChange={(e) => set('first_name', e.target.value)}
                 placeholder="Jane"
+                aria-invalid={!!fieldErrors.first_name}
                 required
               />
+              {fieldErrors.first_name && <p className="field-error">{fieldErrors.first_name}</p>}
             </label>
             <label>
               <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Last Name</div>
@@ -182,8 +195,10 @@ export default function RegisterPage() {
                 value={form.last_name}
                 onChange={(e) => set('last_name', e.target.value)}
                 placeholder="Doe"
+                aria-invalid={!!fieldErrors.last_name}
                 required
               />
+              {fieldErrors.last_name && <p className="field-error">{fieldErrors.last_name}</p>}
             </label>
           </div>
 
@@ -195,8 +210,10 @@ export default function RegisterPage() {
               value={form.username}
               onChange={(e) => set('username', e.target.value)}
               placeholder="jane_doe (letters, numbers, _)"
+              aria-invalid={!!fieldErrors.username}
               required
             />
+            {fieldErrors.username && <p className="field-error">{fieldErrors.username}</p>}
           </label>
 
           <label>
@@ -219,8 +236,10 @@ export default function RegisterPage() {
               value={form.password}
               onChange={(e) => set('password', e.target.value)}
               placeholder="At least 8 characters"
+              aria-invalid={!!fieldErrors.password}
               required
             />
+            {fieldErrors.password && <p className="field-error">{fieldErrors.password}</p>}
           </label>
 
           <label>
@@ -231,8 +250,10 @@ export default function RegisterPage() {
               value={form.confirm_password}
               onChange={(e) => set('confirm_password', e.target.value)}
               placeholder="Re-enter your password"
+              aria-invalid={!!fieldErrors.confirm_password}
               required
             />
+            {fieldErrors.confirm_password && <p className="field-error">{fieldErrors.confirm_password}</p>}
           </label>
 
           <button
