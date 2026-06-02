@@ -15,7 +15,8 @@ export default function BudgetsPage() {
   const [categoryId, setCategoryId] = useState('');
   const [limit, setLimit] = useState('');
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [limitError, setLimitError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Budget | null>(null);
   const [editing, setEditing] = useState<Budget | null>(null);
 
@@ -32,7 +33,7 @@ export default function BudgetsPage() {
       try {
         await reload();
       } catch (e) {
-        setErr(e instanceof Error ? e.message : 'Failed to load');
+        setLoadError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
         setLoading(false);
       }
@@ -43,24 +44,28 @@ export default function BudgetsPage() {
     setEditing(b);
     setCategoryId(b.category_id ?? '');
     setLimit(String(b.monthly_limit));
-    setErr(null);
+    setLimitError(null);
   }
 
   function handleCancelEdit() {
     setEditing(null);
     setCategoryId('');
     setLimit('');
-    setErr(null);
+    setLimitError(null);
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     const parsed = parseFloat(limit);
-    if (!Number.isFinite(parsed) || parsed < 0) {
-      setErr('Enter a valid limit');
+    if (!limit) {
+      setLimitError('Monthly limit is required');
       return;
     }
-    setErr(null);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      setLimitError('Enter a valid positive amount');
+      return;
+    }
+    setLimitError(null);
     if (editing) {
       await updateBudget(editing.id, parsed);
       setEditing(null);
@@ -104,7 +109,8 @@ export default function BudgetsPage() {
       <h1>Budgets</h1>
       <p className="muted">Set a monthly limit overall or per category. Dashboard will warn at 80% and flag overspend.</p>
 
-      <form onSubmit={handleSave} className="card">
+      {loadError && <p style={{ color: 'var(--bad)', marginBottom: 12 }}>{loadError}</p>}
+      <form onSubmit={handleSave} noValidate className="card">
         {editing && (
           <p className="muted" style={{ marginTop: 0 }}>
             Editing budget for <strong>{editing.category_id ? (catMap.get(editing.category_id)?.name ?? 'Unknown') : 'Overall'}</strong>
@@ -129,9 +135,11 @@ export default function BudgetsPage() {
               step="0.01"
               min="0"
               value={limit}
-              onChange={(e) => setLimit(e.target.value)}
+              onChange={(e) => { setLimit(e.target.value); setLimitError(null); }}
+              aria-invalid={!!limitError}
               required
             />
+            {limitError && <p className="field-error">{limitError}</p>}
           </label>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
             <button type="submit" className="primary" style={{ flex: 1 }}>
@@ -144,7 +152,6 @@ export default function BudgetsPage() {
             )}
           </div>
         </div>
-        {err && <p style={{ color: 'var(--bad)' }}>{err}</p>}
       </form>
 
       <div className="card">

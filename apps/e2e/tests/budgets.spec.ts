@@ -75,16 +75,18 @@ test.describe('Budgets page', () => {
     await expect(budgets.page.locator('select')).toBeEnabled();
   });
 
-  test('submitting empty Monthly Limit keeps Save Budget button visible', async () => {
+  test('submitting empty Monthly Limit shows inline error', async ({ page }) => {
     await budgets.monthlyLimitInput().fill('');
     await budgets.saveBudgetButton().click();
     await expect(budgets.saveBudgetButton()).toBeVisible();
+    await expect(page.locator('label').filter({ hasText: 'Monthly Limit' }).locator('.field-error')).toBeVisible();
   });
 
-  test('submitting negative Monthly Limit keeps Save Budget button visible', async () => {
+  test('submitting negative Monthly Limit shows inline error', async ({ page }) => {
     await budgets.monthlyLimitInput().fill('-1');
     await budgets.saveBudgetButton().click();
     await expect(budgets.saveBudgetButton()).toBeVisible();
+    await expect(page.locator('label').filter({ hasText: 'Monthly Limit' }).locator('.field-error')).toBeVisible();
   });
 });
 

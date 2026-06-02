@@ -370,10 +370,11 @@ test.describe('Settings — profile menu access (desktop)', () => {
 test.describe('Settings — profile menu access (mobile)', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('profile menu trigger is visible in mobile top bar', async ({ page }) => {
+  test('profile menu trigger is visible in hamburger dropdown on mobile', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');
-    await expect(nav.settingsLink()).toBeVisible();
+    await nav.toggle.click();
+    await expect(nav.mobileProfile()).toBeVisible();
   });
 
   test('clicking avatar on mobile opens profile menu and Settings navigates to /settings', async ({ page }) => {
