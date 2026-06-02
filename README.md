@@ -184,6 +184,10 @@ npm run test:e2e           # full Playwright suite against localhost
 
 See [`TESTS.md`](TESTS.md) for the full test suite breakdown, CI/CD setup, and troubleshooting guide.
 
+## Coding standards
+
+See [`CODING_STANDARDS.md`](CODING_STANDARDS.md) for TypeScript rules, data access conventions, form patterns, CSS variable usage, and test standards (Page Object Model, smoke vs regression, cleanup, cross-viewport coverage).
+
 ## Switching AI providers
 
 In `apps/web/.env.local`:
