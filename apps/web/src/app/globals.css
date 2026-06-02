@@ -747,7 +747,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   .expense-table thead { display: none; }
   .expense-table tbody tr {
     display: block;
-    padding: 10px 0;
+    padding: 10px 16px;
     border-bottom: 1px solid var(--border);
   }
   .expense-table tbody tr:last-child { border-bottom: none; }
@@ -777,7 +777,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   .recurring-table thead { display: none; }
   .recurring-table tbody tr {
     display: block;
-    padding: 10px 0;
+    padding: 10px 16px;
     border-bottom: 1px solid var(--border);
   }
   .recurring-table tbody tr:last-child { border-bottom: none; }
