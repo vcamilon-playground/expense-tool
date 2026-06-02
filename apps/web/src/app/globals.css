@@ -490,7 +490,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 /* ── Utilities ── */
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .muted { color: var(--muted); }
-.field-error { color: var(--bad); font-size: 12px; font-weight: 500; margin: 4px 0 0; }
+.field-error { color: var(--bad) !important; font-size: 12px; font-weight: 500; margin: 4px 0 0; }
 
 /* ── Budget bars ── */
 .bar { background: var(--panel-2); height: 8px; border-radius: 4px; overflow: hidden; }
