@@ -10,20 +10,20 @@ test.describe('Expenses page', () => {
     await expenses.goto();
   });
 
-  test('page heading shows "Expenses"', async () => {
-    await expect(expenses.heading()).toBeVisible();
+  test('page renders with heading and add button', async () => {
     await expect(expenses.heading()).toHaveText('Expenses');
+    await expect(expenses.addButton()).toHaveText('+ Add Expense');
   });
 
-  test('Add Expense button is visible with correct label', async () => {
-    await expect(expenses.addButton()).toBeVisible();
-    await expect(expenses.addButton()).toHaveText('+ Add Expense');
+  test('search and filter controls are present', async () => {
+    await expect(expenses.searchInput()).toBeVisible();
+    await expect(expenses.categoryFilterSelect()).toBeVisible();
+    await expect(expenses.categoryFilterSelect()).toHaveValue('');
   });
 
   test('clicking Add Expense opens the modal with correct heading', async () => {
     await expenses.openAddModal();
     const heading = expenses.dialog().getByRole('heading', { name: 'Add Expense' });
-    await expect(heading).toBeVisible();
     await expect(heading).toHaveText('Add Expense');
   });
 
@@ -34,19 +34,15 @@ test.describe('Expenses page', () => {
     await expect(dialog.locator('input[type="date"][required]')).toBeAttached();
   });
 
-  test('modal closes on Cancel', async () => {
+  test('modal closes on Cancel, Escape, and backdrop click', async () => {
     await expenses.openAddModal();
     await expenses.cancel();
     await expect(expenses.dialog()).toBeHidden();
-  });
 
-  test('modal closes on Escape key', async () => {
     await expenses.openAddModal();
     await expenses.page.keyboard.press('Escape');
     await expect(expenses.dialog()).toBeHidden();
-  });
 
-  test('modal closes when clicking the backdrop', async () => {
     await expenses.openAddModal();
     await expenses.modalOverlay().click({ position: { x: 5, y: 5 } });
     await expect(expenses.dialog()).toBeHidden();
@@ -68,15 +64,6 @@ test.describe('Expenses page', () => {
     await dialog.getByRole('button', { name: 'Add Expense' }).click();
     await expect(dialog).toBeVisible();
     await expect(dialog.locator('label').filter({ hasText: 'Amount' }).locator('.field-error')).toBeVisible();
-  });
-
-  test('search input is visible', async () => {
-    await expect(expenses.searchInput()).toBeVisible();
-  });
-
-  test('category filter select is visible with All Categories default', async () => {
-    await expect(expenses.categoryFilterSelect()).toBeVisible();
-    await expect(expenses.categoryFilterSelect()).toHaveValue('');
   });
 
   test('typing in search filters to no results message when nothing matches', async () => {
@@ -108,22 +95,14 @@ test.describe('Expenses — delete confirmation modal', () => {
     await expenses.goto();
   });
 
-  test('delete confirmation heading and message are visible', async () => {
+  test('delete modal renders with correct content and buttons', async () => {
     await expenses.openDeleteModal(E2E_MERCHANT);
     const dialog = expenses.deleteDialog();
     await expect(dialog.getByRole('heading')).toContainText('Remove');
     await expect(dialog).toContainText('Are you really sure you want to remove the record?');
     await expect(dialog).toContainText('This will not be retrieved anymore');
-  });
-
-  test('Yes, remove and No, keep it buttons are present', async () => {
-    await expenses.openDeleteModal(E2E_MERCHANT);
     await expect(expenses.deleteYesButton()).toBeVisible();
     await expect(expenses.deleteNoButton()).toBeVisible();
-  });
-
-  test('X button is present in the upper right', async () => {
-    await expenses.openDeleteModal(E2E_MERCHANT);
     await expect(expenses.deleteXButton()).toBeVisible();
   });
 
@@ -160,9 +139,7 @@ test.describe('Expenses — month group collapse behaviour', () => {
   test('current month group is expanded by default', async () => {
     const label = expenses.currentMonthLabel();
     const group = expenses.monthGroup(label);
-    // Only run assertion if the current month group exists in the list
-    const count = await group.count();
-    if (count === 0) return;
+    if (await group.count() === 0) return;
     await expect(expenses.monthGroupHeader(label)).toHaveAttribute('aria-expanded', 'true');
     await expect(expenses.monthGroupBody(label)).toBeVisible();
   });
@@ -195,14 +172,13 @@ test.describe('Expenses — month group collapse behaviour', () => {
       tested = true;
       break;
     }
-    if (!tested) test.skip(); // no past months in the DB
+    if (!tested) test.skip();
   });
 
   test('clicking an expanded month header collapses it', async () => {
     const label = expenses.currentMonthLabel();
     const group = expenses.monthGroup(label);
-    const count = await group.count();
-    if (count === 0) return;
+    if (await group.count() === 0) return;
     const header = expenses.monthGroupHeader(label);
     await header.click();
     await expect(header).toHaveAttribute('aria-expanded', 'false');
@@ -225,16 +201,10 @@ test.describe('Expenses — column sorting', () => {
     }
   });
 
-  test('clicking Amount header activates sort indicator', async ({ page }) => {
+  test('Amount sort activates and toggles direction', async ({ page }) => {
     if (await page.locator('.expense-table').count() === 0) return;
     await expenses.sortableHeader('Amount').click();
-    await expect(expenses.activeSortIcon()).toBeVisible();
     await expect(expenses.sortableHeader('Amount').locator('.sort-active')).toBeVisible();
-  });
-
-  test('clicking Amount twice toggles sort direction', async ({ page }) => {
-    if (await page.locator('.expense-table').count() === 0) return;
-    await expenses.sortableHeader('Amount').click();
     const first = await expenses.sortableHeader('Amount').locator('.sort-active').textContent();
     await expenses.sortableHeader('Amount').click();
     const second = await expenses.sortableHeader('Amount').locator('.sort-active').textContent();

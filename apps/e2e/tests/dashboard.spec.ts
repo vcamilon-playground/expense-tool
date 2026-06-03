@@ -13,36 +13,16 @@ test.describe('Dashboard', () => {
     await expect(page).toHaveTitle(/Expense Tool/i);
   });
 
-  test('h1 heading shows "Dashboard"', async () => {
-    await expect(dashboard.heading()).toBeVisible();
+  test('all page sections render correctly', async () => {
     await expect(dashboard.heading()).toHaveText('Dashboard');
-  });
-
-  test('four KPI stat cards are visible with correct labels', async () => {
     await expect(dashboard.stats()).toHaveCount(4);
     await expect(dashboard.statLabel('Today')).toBeVisible();
     await expect(dashboard.statLabel('This Week')).toBeVisible();
     await expect(dashboard.statLabel('This Month')).toBeVisible();
     await expect(dashboard.statLabel('This Year')).toBeVisible();
-  });
-
-  test('budget status section heading is correct', async () => {
-    await expect(dashboard.budgetStatusSection()).toBeVisible();
     await expect(dashboard.budgetStatusSection()).toHaveText('Budget Status');
-  });
-
-  test('category chart section heading is correct', async () => {
-    await expect(dashboard.categoryChartSection()).toBeVisible();
     await expect(dashboard.categoryChartSection()).toHaveText('This Month by Category');
-  });
-
-  test('6-month trend chart section heading is correct', async () => {
-    await expect(dashboard.trendSection()).toBeVisible();
     await expect(dashboard.trendSection()).toHaveText('6-Month Trend');
-  });
-
-  test('upcoming charges section heading is correct', async () => {
-    await expect(dashboard.upcomingChargesSection()).toBeVisible();
     await expect(dashboard.upcomingChargesSection()).toHaveText('Upcoming Charges');
   });
 
@@ -76,19 +56,12 @@ test.describe('Dashboard — Upcoming Charges column sorting', () => {
     await dashboard.goto();
   });
 
-  test('Upcoming Charges table sortable headers are present when charges exist', async ({ page }) => {
+  test('sortable headers present and Due Date toggles direction', async ({ page }) => {
     const table = page.locator('.card').filter({ hasText: 'Upcoming Charges' }).locator('table');
-    const hasTable = await table.count();
-    if (hasTable === 0) return; // no upcoming charges — skip
+    if (await table.count() === 0) return;
     for (const col of ['Name', 'Amount', 'Due Date', 'Cadence']) {
       await expect(dashboard.sortableHeader(col)).toBeVisible();
     }
-  });
-
-  test('clicking Due Date header toggles sort direction when charges exist', async ({ page }) => {
-    const table = page.locator('.card').filter({ hasText: 'Upcoming Charges' }).locator('table');
-    const hasTable = await table.count();
-    if (hasTable === 0) return;
     await dashboard.sortableHeader('Due Date').click();
     const first = await dashboard.sortableHeader('Due Date').locator('.sort-active').textContent();
     await dashboard.sortableHeader('Due Date').click();

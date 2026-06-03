@@ -9,39 +9,18 @@ test.describe('Reports page', () => {
     await reports.goto();
   });
 
-  test('page heading shows "Reports"', async () => {
-    await expect(reports.heading()).toBeVisible();
+  test('page renders with all required controls and sections', async () => {
     await expect(reports.heading()).toHaveText('Reports');
-  });
-
-  test('Period select is visible', async () => {
     await expect(reports.periodSelect()).toBeVisible();
-  });
-
-  test('Reference Date input is visible in preset mode', async () => {
     await expect(reports.dateInput()).toBeVisible();
-  });
-
-  test('summary stat cards show correct labels', async () => {
     await expect(reports.statLabel('Total')).toBeVisible();
     await expect(reports.statLabel('Expenses')).toBeVisible();
     await expect(reports.statLabel('Average')).toBeVisible();
-  });
-
-  test('by category section heading is correct', async () => {
-    await expect(reports.byCategoryHeading()).toBeVisible();
     await expect(reports.byCategoryHeading()).toHaveText('By Category');
-  });
-
-  test('date range text is shown', async () => {
     await expect(reports.dateRangeText()).toBeVisible();
-  });
-
-  test('changing period updates the date range text', async () => {
-    const before = await reports.dateRangeText().textContent();
-    await reports.selectPeriod('year');
-    const after = await reports.dateRangeText().textContent();
-    expect(before).not.toBe(after);
+    await expect(reports.presetPeriodButton()).toBeVisible();
+    await expect(reports.dateRangeButton()).toBeVisible();
+    await expect(reports.compareCheckbox()).toBeVisible();
   });
 
   test('period select options are capitalized', async () => {
@@ -51,36 +30,28 @@ test.describe('Reports page', () => {
     }
   });
 
-  test('Preset Period and Date Range mode buttons are visible', async () => {
-    await expect(reports.presetPeriodButton()).toBeVisible();
-    await expect(reports.dateRangeButton()).toBeVisible();
+  test('changing period updates the date range text', async () => {
+    const before = await reports.dateRangeText().textContent();
+    await reports.selectPeriod('year');
+    const after = await reports.dateRangeText().textContent();
+    expect(before).not.toBe(after);
   });
 
-  test('switching to Date Range shows From and To inputs', async () => {
+  test('Date Range toggle shows custom inputs and Preset restores select', async () => {
     await reports.dateRangeButton().click();
     await expect(reports.customFromInput()).toBeVisible();
     await expect(reports.customToInput()).toBeVisible();
     await expect(reports.periodSelect()).not.toBeVisible();
-  });
 
-  test('switching back to Preset Period restores period select', async () => {
-    await reports.dateRangeButton().click();
     await reports.presetPeriodButton().click();
     await expect(reports.periodSelect()).toBeVisible();
     await expect(reports.customFromInput()).not.toBeVisible();
   });
 
-  test('compare with previous period checkbox is visible', async () => {
-    await expect(reports.compareCheckbox()).toBeVisible();
-  });
-
-  test('checking compare shows the Period Comparison heading', async () => {
+  test('compare checkbox shows and hides Period Comparison section', async () => {
     await reports.compareCheckbox().check();
     await expect(reports.comparisonHeading()).toBeVisible();
-  });
 
-  test('unchecking compare hides the Period Comparison section', async () => {
-    await reports.compareCheckbox().check();
     await reports.compareCheckbox().uncheck();
     await expect(reports.comparisonHeading()).not.toBeVisible();
   });
@@ -109,13 +80,9 @@ test.describe('Reports — By Category column sorting', () => {
     }
   });
 
-  test('Total header has active sort indicator by default', async ({ page }) => {
+  test('Total is active by default and clicking Category moves the indicator', async ({ page }) => {
     if (await reports.byCategoryTable().count() === 0) return;
     await expect(reports.sortableHeader('Total').locator('.sort-active')).toBeVisible();
-  });
-
-  test('clicking Category header activates sort indicator on Category', async ({ page }) => {
-    if (await reports.byCategoryTable().count() === 0) return;
     await reports.sortableHeader('Category').click();
     await expect(reports.sortableHeader('Category').locator('.sort-active')).toBeVisible();
     await expect(reports.sortableHeader('Total').locator('.sort-active')).toHaveCount(0);

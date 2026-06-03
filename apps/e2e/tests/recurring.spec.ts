@@ -10,52 +10,33 @@ test.describe('Recurring Expenses page', () => {
     await recurring.goto();
   });
 
-  test('page heading shows "Recurring Expenses"', async () => {
-    await expect(recurring.heading()).toBeVisible();
+  test('page renders with heading, description and add button', async () => {
     await expect(recurring.heading()).toHaveText('Recurring Expenses');
-  });
-
-  test('description text contains correct content', async () => {
-    await expect(recurring.descriptionText()).toBeVisible();
     await expect(recurring.descriptionText()).toContainText('Track subscriptions');
-  });
-
-  test('Add Recurring button is visible with correct label', async () => {
-    await expect(recurring.addButton()).toBeVisible();
     await expect(recurring.addButton()).toHaveText('+ Add Recurring');
   });
 
-  test('clicking Add Recurring opens the modal with correct heading', async () => {
-    await recurring.openAddModal();
-    await expect(recurring.dialog().getByRole('heading', { name: 'Add Recurring Expense' })).toBeVisible();
-    await expect(recurring.dialog().getByRole('heading', { name: 'Add Recurring Expense' })).toHaveText('Add Recurring Expense');
-  });
-
-  test('form has required fields with required attribute', async () => {
+  test('modal form has required fields and capitalized cadence options', async () => {
     await recurring.addButton().click();
-    await expect(recurring.dialog().locator('input[required]').first()).toBeAttached();
-  });
-
-  test('modal closes on Cancel', async () => {
-    await recurring.addButton().click();
-    await expect(recurring.dialog()).toBeVisible();
-    await recurring.cancel();
-    await expect(recurring.dialog()).toBeHidden();
-  });
-
-  test('modal closes on Escape key', async () => {
-    await recurring.addButton().click();
-    await expect(recurring.dialog()).toBeVisible();
-    await recurring.page.keyboard.press('Escape');
-    await expect(recurring.dialog()).toBeHidden();
-  });
-
-  test('cadence dropdown has capitalized options', async () => {
-    await recurring.addButton().click();
+    const dialog = recurring.dialog();
+    await expect(dialog.getByRole('heading', { name: 'Add Recurring Expense' })).toHaveText('Add Recurring Expense');
+    await expect(dialog.locator('input[required]').first()).toBeAttached();
     const options = await recurring.cadenceSelect().locator('option').allTextContents();
     for (const opt of options) {
       expect(opt[0]).toBe(opt[0]?.toUpperCase());
     }
+  });
+
+  test('modal closes on Cancel and Escape key', async () => {
+    await recurring.addButton().click();
+    await expect(recurring.dialog()).toBeVisible();
+    await recurring.cancel();
+    await expect(recurring.dialog()).toBeHidden();
+
+    await recurring.addButton().click();
+    await expect(recurring.dialog()).toBeVisible();
+    await recurring.page.keyboard.press('Escape');
+    await expect(recurring.dialog()).toBeHidden();
   });
 
   test('submitting without name keeps modal open and shows inline error', async () => {
@@ -83,7 +64,7 @@ test.describe('Recurring Expenses — payment confirmation flow', () => {
 
   test.beforeAll(async () => {
     await cleanup.recurring();
-    await seed.recurring(); // next_charge_date = today → item is due
+    await seed.recurring();
   });
 
   test.afterAll(async () => {
@@ -165,22 +146,14 @@ test.describe('Recurring Expenses — delete confirmation modal', () => {
     await recurring.goto();
   });
 
-  test('delete confirmation heading and message are visible', async () => {
+  test('delete modal renders with correct content and buttons', async () => {
     await recurring.openDeleteModal(E2E_RECURRING_NAME);
     const dialog = recurring.deleteDialog();
     await expect(dialog.getByRole('heading')).toContainText('Remove');
     await expect(dialog).toContainText('Are you really sure you want to remove the record?');
     await expect(dialog).toContainText('This will not be retrieved anymore');
-  });
-
-  test('Yes, remove and No, keep it buttons are present', async () => {
-    await recurring.openDeleteModal(E2E_RECURRING_NAME);
     await expect(recurring.deleteYesButton()).toBeVisible();
     await expect(recurring.deleteNoButton()).toBeVisible();
-  });
-
-  test('X button is present in the upper right', async () => {
-    await recurring.openDeleteModal(E2E_RECURRING_NAME);
     await expect(recurring.deleteXButton()).toBeVisible();
   });
 
@@ -214,15 +187,10 @@ test.describe('Recurring Expenses — column sorting', () => {
     }
   });
 
-  test('clicking Name header activates sort indicator', async ({ page }) => {
+  test('Name sort activates and toggles direction', async ({ page }) => {
     if (await page.locator('.recurring-table').count() === 0) return;
     await recurring.sortableHeader('Name').click();
     await expect(recurring.sortableHeader('Name').locator('.sort-active')).toBeVisible();
-  });
-
-  test('clicking Name twice toggles sort direction', async ({ page }) => {
-    if (await page.locator('.recurring-table').count() === 0) return;
-    await recurring.sortableHeader('Name').click();
     const first = await recurring.sortableHeader('Name').locator('.sort-active').textContent();
     await recurring.sortableHeader('Name').click();
     const second = await recurring.sortableHeader('Name').locator('.sort-active').textContent();

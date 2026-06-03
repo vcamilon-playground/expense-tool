@@ -9,33 +9,31 @@ test.describe('Settings — Session Expiry section', () => {
   test.beforeEach(async ({ page }) => {
     settings = new SettingsPage(page);
     await settings.goto();
-    // Reset to default before each test
     await page.evaluate(() => localStorage.removeItem('session-timeout'));
     await settings.goto();
   });
 
-  test('Session Expiry heading is visible', async () => {
+  test('all timeout options are present and Never is selected by default', async () => {
     await expect(settings.sessionExpiryHeading()).toBeVisible();
-  });
-
-  test('all four timeout options are present', async () => {
     await expect(settings.sessionTimeoutRadio('never')).toBeVisible();
     await expect(settings.sessionTimeoutRadio('30')).toBeVisible();
     await expect(settings.sessionTimeoutRadio('60')).toBeVisible();
     await expect(settings.sessionTimeoutRadio('120')).toBeVisible();
-  });
-
-  test('"Never" is selected by default', async () => {
     await expect(settings.sessionTimeoutRadio('never')).toBeChecked();
     await expect(settings.sessionTimeoutRadio('30')).not.toBeChecked();
     await expect(settings.sessionTimeoutRadio('60')).not.toBeChecked();
     await expect(settings.sessionTimeoutRadio('120')).not.toBeChecked();
   });
 
-  test('selecting a timeout option checks it and unchecks the others', async () => {
+  test('selecting an option checks it and switching back to Never unchecks it', async ({ page }) => {
     await settings.sessionTimeoutRadio('60').check();
     await expect(settings.sessionTimeoutRadio('60')).toBeChecked();
     await expect(settings.sessionTimeoutRadio('never')).not.toBeChecked();
+
+    await settings.sessionTimeoutRadio('never').check();
+    await expect(settings.sessionTimeoutRadio('never')).toBeChecked();
+    await expect(settings.sessionTimeoutRadio('60')).not.toBeChecked();
+    await page.evaluate(() => localStorage.removeItem('session-timeout'));
   });
 
   test('selected timeout persists across page reload after saving', async () => {
@@ -44,17 +42,8 @@ test.describe('Settings — Session Expiry section', () => {
     await expect(settings.unsavedBar()).not.toBeVisible();
     await settings.goto();
     await expect(settings.sessionTimeoutRadio('30')).toBeChecked();
-    // clean up: revert to never
     await settings.sessionTimeoutRadio('never').check();
     await settings.saveChangesButton().click();
-  });
-
-  test('switching back to Never unchecks all timed options', async ({ page }) => {
-    await settings.sessionTimeoutRadio('120').check();
-    await settings.sessionTimeoutRadio('never').check();
-    await expect(settings.sessionTimeoutRadio('never')).toBeChecked();
-    await expect(settings.sessionTimeoutRadio('120')).not.toBeChecked();
-    await page.evaluate(() => localStorage.removeItem('session-timeout'));
   });
 });
 
@@ -66,15 +55,9 @@ test.describe('Settings — Profile section', () => {
     await settings.goto();
   });
 
-  test('Profile section heading is visible', async () => {
+  test('profile section renders with heading and pre-filled name inputs', async () => {
     await expect(settings.profileHeading()).toBeVisible();
-  });
-
-  test('first name input is pre-filled from logged-in user', async () => {
     await expect(settings.firstNameInput()).toHaveValue('E2E');
-  });
-
-  test('last name input is pre-filled from logged-in user', async () => {
     await expect(settings.lastNameInput()).toHaveValue('Tester');
   });
 });
@@ -85,7 +68,6 @@ test.describe('Settings — global save / cancel', () => {
   test.beforeEach(async ({ page }) => {
     settings = new SettingsPage(page);
     await settings.goto();
-    // Ensure clean state: no unsaved changes on load
     await expect(settings.unsavedBar()).not.toBeVisible();
   });
 
@@ -103,7 +85,6 @@ test.describe('Settings — global save / cancel', () => {
   test('Cancel reverts the first name to its original value', async () => {
     const original = await settings.firstNameInput().inputValue();
     await settings.firstNameInput().fill('Changed');
-    await expect(settings.unsavedBar()).toBeVisible();
     await settings.cancelChangesButton().click();
     await expect(settings.unsavedBar()).not.toBeVisible();
     await expect(settings.firstNameInput()).toHaveValue(original);
@@ -112,7 +93,6 @@ test.describe('Settings — global save / cancel', () => {
   test('changing session timeout shows unsaved bar', async () => {
     await settings.sessionTimeoutRadio('30').check();
     await expect(settings.unsavedBar()).toBeVisible();
-    // Cancel to restore default
     await settings.cancelChangesButton().click();
     await expect(settings.sessionTimeoutRadio('never')).toBeChecked();
   });
@@ -134,7 +114,6 @@ test.describe('Settings — navigation guard', () => {
 
   test('navigating away with unsaved changes shows the guard modal', async ({ page }) => {
     await settings.firstNameInput().fill('Changed');
-    await expect(settings.unsavedBar()).toBeVisible();
     await page.locator('nav.sidenav').getByRole('link', { name: 'Expenses', exact: true }).click();
     await expect(settings.navGuardModal()).toBeVisible();
   });
@@ -142,12 +121,10 @@ test.describe('Settings — navigation guard', () => {
   test('"Stay on page" closes modal and keeps user on settings with changes intact', async ({ page }) => {
     await settings.firstNameInput().fill('Changed');
     await page.locator('nav.sidenav').getByRole('link', { name: 'Expenses', exact: true }).click();
-    await expect(settings.navGuardModal()).toBeVisible();
     await settings.navGuardStayButton().click();
     await expect(settings.navGuardModal()).not.toBeVisible();
     await expect(page).toHaveURL(/\/settings/);
     await expect(settings.unsavedBar()).toBeVisible();
-    // clean up: reload discards the in-memory draft
     await settings.goto();
     await expect(settings.firstNameInput()).toHaveValue('E2E');
   });
@@ -155,7 +132,6 @@ test.describe('Settings — navigation guard', () => {
   test('"Leave without saving" navigates away and discards changes', async ({ page }) => {
     await settings.firstNameInput().fill('Changed');
     await page.locator('nav.sidenav').getByRole('link', { name: 'Expenses', exact: true }).click();
-    await expect(settings.navGuardModal()).toBeVisible();
     await settings.navGuardLeaveButton().click();
     await expect(page).toHaveURL(/\/expenses/);
   });
@@ -169,11 +145,8 @@ test.describe('Settings — Change Password section', () => {
     await settings.goto();
   });
 
-  test('Change Password heading is visible', async () => {
+  test('change password section renders with heading and button', async () => {
     await expect(settings.changePasswordHeading()).toBeVisible();
-  });
-
-  test('Update Password button is visible', async () => {
     await expect(settings.updatePasswordButton()).toBeVisible();
   });
 
@@ -195,19 +168,14 @@ test.describe('Settings page', () => {
     await settings.goto();
   });
 
-  test('page heading shows "Settings"', async () => {
-    await expect(settings.heading()).toBeVisible();
+  test('page renders with heading, theme section, swatches, and light mode note', async () => {
     await expect(settings.heading()).toHaveText('Settings');
-  });
-
-  test('Theme Color section heading is visible', async () => {
     await expect(settings.themeColorHeading()).toBeVisible();
-  });
-
-  test('all six color swatches are visible', async () => {
     for (const label of ['Default', 'Yellow', 'Green', 'Red', 'Orange', 'Violet']) {
       await expect(settings.colorSwatch(label)).toBeVisible();
     }
+    await expect(settings.lightModeNote()).toBeVisible();
+    await expect(settings.darkModeBanner()).toHaveCount(0);
   });
 
   test('Default swatch is active on first visit', async ({ page }) => {
@@ -216,19 +184,10 @@ test.describe('Settings page', () => {
     await expect(settings.colorSwatch('Default')).toHaveAttribute('aria-pressed', 'true');
   });
 
-  test('light mode note is visible', async () => {
-    await expect(settings.lightModeNote()).toBeVisible();
-  });
-
-  test('dark mode banner is not shown in light mode', async () => {
-    await expect(settings.darkModeBanner()).toHaveCount(0);
-  });
-
   test('clicking a color swatch marks it as active', async ({ page }) => {
     await settings.colorSwatch('Green').click();
     await expect(settings.colorSwatch('Green')).toHaveAttribute('aria-pressed', 'true');
     await expect(settings.colorSwatch('Default')).toHaveAttribute('aria-pressed', 'false');
-    // clean up
     await page.evaluate(() => localStorage.removeItem('accent'));
     await page.evaluate(() => document.documentElement.removeAttribute('data-accent'));
   });
@@ -240,7 +199,6 @@ test.describe('Settings page', () => {
     });
     await settings.goto();
     await expect(settings.darkModeBanner()).toBeVisible();
-    // clean up
     await page.evaluate(() => {
       localStorage.removeItem('theme');
       document.documentElement.removeAttribute('data-theme');
@@ -256,20 +214,14 @@ test.describe('Settings — Categories section', () => {
     await settings.goto();
   });
 
-  test('Categories heading is visible', async () => {
+  test('categories section renders with form inputs and existing entries', async () => {
     await expect(settings.categoriesHeading()).toBeVisible();
-  });
-
-  test('Add Category button is visible', async () => {
     await expect(settings.addCategoryButton()).toBeVisible();
-  });
-
-  test('category name input is visible', async () => {
     await expect(settings.addCategoryNameInput()).toBeVisible();
-  });
-
-  test('category icon input is visible', async () => {
     await expect(settings.addCategoryIconInput()).toBeVisible();
+    await expect(settings.categoryRow('Groceries')).toBeVisible();
+    await expect(settings.categoryRow('Dining')).toBeVisible();
+    await expect(settings.categoryDeleteButton('Groceries')).toBeVisible();
   });
 
   test('submitting with empty name keeps the list unchanged', async () => {
@@ -277,15 +229,6 @@ test.describe('Settings — Categories section', () => {
     await settings.addCategoryButton().click();
     const after = await settings.page.locator('.card').filter({ hasText: 'Categories' }).locator('.cat-chip').count();
     expect(after).toBe(before);
-  });
-
-  test('existing default categories are listed', async () => {
-    await expect(settings.categoryRow('Groceries')).toBeVisible();
-    await expect(settings.categoryRow('Dining')).toBeVisible();
-  });
-
-  test('each category row has a Delete button', async () => {
-    await expect(settings.categoryDeleteButton('Groceries')).toBeVisible();
   });
 });
 
@@ -295,28 +238,24 @@ test.describe('Settings — past expense editing toggle', () => {
   test.beforeEach(async ({ page }) => {
     settings = new SettingsPage(page);
     await settings.goto();
-    // Clear after first navigation (page has a valid origin), then reload for clean state
     await page.evaluate(() => localStorage.removeItem('allow-past-edit'));
     await settings.goto();
   });
 
-  test('Expense Editing section is visible', async () => {
+  test('expense editing section renders with toggle off and note hidden', async () => {
     await expect(settings.page.getByRole('heading', { name: 'Expense Editing' })).toBeVisible();
-  });
-
-  test('toggle is visible and unchecked by default', async () => {
     await expect(settings.pastEditToggle()).toBeVisible();
     await expect(settings.pastEditToggle()).not.toBeChecked();
-  });
-
-  test('enabled note is hidden when toggle is off', async () => {
     await expect(settings.pastEditEnabledNote()).toHaveCount(0);
   });
 
-  test('checking the toggle shows the enabled note', async () => {
+  test('checking the toggle shows the enabled note and unchecking hides it', async () => {
     await settings.pastEditToggle().check();
     await expect(settings.pastEditToggle()).toBeChecked();
     await expect(settings.pastEditEnabledNote()).toBeVisible();
+
+    await settings.pastEditToggle().uncheck();
+    await expect(settings.pastEditEnabledNote()).toHaveCount(0);
   });
 
   test('toggle persists across page reload after saving', async () => {
@@ -325,36 +264,18 @@ test.describe('Settings — past expense editing toggle', () => {
     await expect(settings.unsavedBar()).not.toBeVisible();
     await settings.goto();
     await expect(settings.pastEditToggle()).toBeChecked();
-    // clean up
     await settings.pastEditToggle().uncheck();
     await settings.saveChangesButton().click();
-  });
-
-  test('unchecking the toggle hides the enabled note', async () => {
-    await settings.pastEditToggle().check();
-    await settings.pastEditToggle().uncheck();
-    await expect(settings.pastEditEnabledNote()).toHaveCount(0);
   });
 });
 
 test.describe('Settings — profile menu access (desktop)', () => {
-  test('profile menu trigger (avatar) is visible in sidebar', async ({ page }) => {
+  test('avatar is visible in sidebar and opens profile menu with Settings link', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');
     await expect(nav.settingsLink()).toBeVisible();
-  });
-
-  test('clicking avatar opens profile menu with Settings option', async ({ page }) => {
-    const nav = new NavBar(page);
-    await page.goto('/');
     await nav.openProfileMenu();
     await expect(nav.settingsMenuItem()).toBeVisible();
-  });
-
-  test('clicking Settings in profile menu navigates to /settings', async ({ page }) => {
-    const nav = new NavBar(page);
-    await page.goto('/');
-    await nav.openProfileMenu();
     await nav.settingsMenuItem().click();
     await expect(page).toHaveURL(/\/settings/);
   });

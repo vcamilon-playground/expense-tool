@@ -99,17 +99,11 @@ cd apps/e2e && npx playwright show-report
 
 **Login page**
 - redirects to /login when not authenticated
-- login page heading is visible
-- username and password inputs are present
-- sign in button is present
-- link to register page is present
+- login page renders all required elements *(heading, username, password, sign-in button, register link)*
 - invalid credentials show an error
 
 **Register page**
-- register page heading is visible
-- all required fields are present
-- create account button is present
-- link to login page is present
+- register page renders all required elements *(heading, first/last name, username, create account button, sign-in link)*
 
 **Auth — authenticated access**
 - dashboard is accessible when logged in
@@ -167,41 +161,29 @@ cd apps/e2e && npx playwright show-report
 
 **Dashboard**
 - page title is correct
-- h1 heading shows "Dashboard"
-- four KPI stat cards are visible with correct labels
-- budget status section heading is correct
-- category chart section heading is correct
-- 6-month trend chart section heading is correct
-- upcoming charges section heading is correct
+- all page sections render correctly *(h1, 4 KPI cards, Budget Status, Category Chart, 6-Month Trend, Upcoming Charges)*
 - month-end reminder banner is conditional on days remaining in month
 
 **Dashboard — Upcoming Charges column sorting**
-- Upcoming Charges table sortable headers are present when charges exist
-- clicking Due Date header toggles sort direction when charges exist
+- sortable headers present and Due Date toggles direction
 
 ---
 
 ### `expenses.spec.ts` — Expenses
 
 **Expenses page**
-- page heading shows "Expenses"
-- Add Expense button is visible with correct label
+- page renders with heading and add button
+- search and filter controls are present
 - clicking Add Expense opens the modal with correct heading
 - required fields have required attribute in modal
-- modal closes on Cancel
-- modal closes on Escape key
-- modal closes when clicking the backdrop
+- modal closes on Cancel, Escape, and backdrop click
 - submitting empty form keeps modal open and shows inline errors
 - submitting with negative amount keeps modal open and shows inline error
-- search input is visible
-- category filter select is visible with All Categories default
 - typing in search filters to no results message when nothing matches
 - clearing search restores the expense list
 
 **Expenses — delete confirmation modal**
-- delete confirmation heading and message are visible
-- Yes, remove and No, keep it buttons are present
-- X button is present in the upper right
+- delete modal renders with correct content and buttons *(heading, message, Yes/No/X buttons)*
 - X button closes the modal without deleting the record
 - No, keep it button closes the modal without deleting the record
 - clicking the backdrop closes the modal without deleting the record
@@ -214,8 +196,7 @@ cd apps/e2e && npx playwright show-report
 
 **Expenses — column sorting**
 - Date, Category, Merchant and Amount headers are sortable
-- clicking Amount header activates sort indicator
-- clicking Amount twice toggles sort direction
+- Amount sort activates and toggles direction
 - clicking a different header moves the active indicator
 
 ---
@@ -223,14 +204,9 @@ cd apps/e2e && npx playwright show-report
 ### `recurring.spec.ts` — Recurring Expenses
 
 **Recurring Expenses page**
-- page heading shows "Recurring Expenses"
-- description text contains correct content
-- Add Recurring button is visible with correct label
-- clicking Add Recurring opens the modal with correct heading
-- form has required fields with required attribute
-- modal closes on Cancel
-- modal closes on Escape key
-- cadence dropdown has capitalized options
+- page renders with heading, description and add button
+- modal form has required fields and capitalized cadence options
+- modal closes on Cancel and Escape key
 - submitting without name keeps modal open and shows inline error
 - submitting with zero amount shows inline error below amount field
 
@@ -244,42 +220,29 @@ cd apps/e2e && npx playwright show-report
 - reminder modal does not close on Escape key
 
 **Recurring Expenses — delete confirmation modal**
-- delete confirmation heading and message are visible
-- Yes, remove and No, keep it buttons are present
-- X button is present in the upper right
+- delete modal renders with correct content and buttons *(heading, message, Yes/No/X buttons)*
 - X button closes the modal without deleting the record
 - No, keep it button closes the modal without deleting the record
 
 **Recurring Expenses — column sorting**
 - Name, Category, Cadence, Next Charge, Amount, Active headers are sortable
-- clicking Name header activates sort indicator
-- clicking Name twice toggles sort direction
+- Name sort activates and toggles direction
 
 ---
 
 ### `reports.spec.ts` — Reports
 
 **Reports page**
-- page heading shows "Reports"
-- Period select is visible
-- Reference Date input is visible in preset mode
-- summary stat cards show correct labels
-- by category section heading is correct
-- date range text is shown
-- changing period updates the date range text
+- page renders with all required controls and sections *(heading, period select, date input, stat cards, By Category, date range, mode buttons, compare checkbox)*
 - period select options are capitalized
-- Preset Period and Date Range mode buttons are visible
-- switching to Date Range shows From and To inputs
-- switching back to Preset Period restores period select
-- compare with previous period checkbox is visible
-- checking compare shows the Period Comparison heading
-- unchecking compare hides the Period Comparison section
+- changing period updates the date range text
+- Date Range toggle shows custom inputs and Preset restores select
+- compare checkbox shows and hides Period Comparison section
 - custom date range updates the Showing text
 
 **Reports — By Category column sorting**
 - Category, Count, Total and % headers are sortable
-- Total header has active sort indicator by default
-- clicking Category header activates sort indicator on Category
+- Total is active by default and clicking Category moves the indicator
 - clicking Total twice toggles sort direction
 
 ---
@@ -287,39 +250,26 @@ cd apps/e2e && npx playwright show-report
 ### `budgets.spec.ts` — Budgets
 
 **Budgets page**
-- page heading shows "Budgets"
-- page description text is present
-- budget form has Category and Monthly Limit labels with Save Budget button
-- Monthly Limit input is visible
-- Current Budgets section heading is correct
+- page renders with heading, form, and budget sections *(description, Category label, Monthly Limit input, Save Budget button, Current Budgets heading)*
 - each budget row has Edit and Delete buttons
-- clicking Edit populates the form and shows Update Budget and Cancel
-- Cancel edit restores Save Budget and hides Update Budget
-- category select is disabled while editing
-- submitting empty Monthly Limit shows inline error
-- submitting negative Monthly Limit shows inline error
+- edit mode populates form, disables category, and Cancel restores default state
+- invalid Monthly Limit values show inline error *(empty and negative)*
 
 **Budgets — column sorting**
 - Category and Monthly Limit headers are sortable
-- clicking Monthly Limit header activates sort indicator
-- clicking Monthly Limit twice toggles sort direction
+- Monthly Limit sort activates and toggles direction
 
 ---
 
 ### `settings.spec.ts` — Settings
 
 **Settings — Session Expiry section**
-- Session Expiry heading is visible
-- all four timeout options are present
-- "Never" is selected by default
-- selecting a timeout option checks it and unchecks the others
+- all timeout options are present and Never is selected by default
+- selecting an option checks it and switching back to Never unchecks it
 - selected timeout persists across page reload after saving
-- switching back to Never unchecks all timed options
 
 **Settings — Profile section**
-- Profile section heading is visible
-- first name input is pre-filled from logged-in user
-- last name input is pre-filled from logged-in user
+- profile section renders with heading and pre-filled name inputs
 
 **Settings — global save / cancel**
 - unsaved changes bar is hidden on load
@@ -334,41 +284,26 @@ cd apps/e2e && npx playwright show-report
 - "Leave without saving" navigates away and discards changes
 
 **Settings — Change Password section**
-- Change Password heading is visible
-- Update Password button is visible
+- change password section renders with heading and button
 - submitting with wrong current password shows error
 
 **Settings page**
-- page heading shows "Settings"
-- Theme Color section heading is visible
-- all six color swatches are visible
+- page renders with heading, theme section, swatches, and light mode note *(all 6 swatches, no dark mode banner)*
 - Default swatch is active on first visit
-- light mode note is visible
-- dark mode banner is not shown in light mode
 - clicking a color swatch marks it as active
 - dark mode shows warning banner instead of note
 
 **Settings — Categories section**
-- Categories heading is visible
-- Add Category button is visible
-- category name input is visible
-- category icon input is visible
+- categories section renders with form inputs and existing entries *(heading, Add button, name/icon inputs, Groceries, Dining, Delete button)*
 - submitting with empty name keeps the list unchanged
-- existing default categories are listed
-- each category row has a Delete button
 
 **Settings — past expense editing toggle**
-- Expense Editing section is visible
-- toggle is visible and unchecked by default
-- enabled note is hidden when toggle is off
-- checking the toggle shows the enabled note
+- expense editing section renders with toggle off and note hidden
+- checking the toggle shows the enabled note and unchecking hides it
 - toggle persists across page reload after saving
-- unchecking the toggle hides the enabled note
 
 **Settings — profile menu access (desktop)**
-- profile menu trigger (avatar) is visible in sidebar
-- clicking avatar opens profile menu with Settings option
-- clicking Settings in profile menu navigates to /settings
+- avatar is visible in sidebar and opens profile menu with Settings link
 - profile menu trigger remains visible in collapsed sidebar
 
 **Settings — profile menu access (mobile)**
