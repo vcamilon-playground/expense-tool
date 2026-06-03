@@ -238,34 +238,42 @@ Before committing, review every changed file against these rules. For the full s
 - Follows existing code conventions (no comments unless WHY is non-obvious, no new paid services).
 - If a page object or E2E test is affected, verify locators still match the UI.
 
-### 4 — Update documentation
+### 4 — Review and update all documentation files
 
-After every change, ask: does this affect something a developer or user would need to know?
+**This step is mandatory after every change.** Read each file below and decide whether it needs updating. Do not rely on memory — open the file and check its current content against what was just changed.
 
-**Update `README.md` when:**
+```
+README.md
+TESTS.md
+CODING_STANDARDS.md
+CLAUDE.md   ← this file
+```
+
+For each file, ask: "Does anything in this file contradict, omit, or misrepresent what was just changed?" If yes, update it before committing. If no, leave it alone — do not pad files with trivial changes.
+
+**`README.md` — update when:**
 - A new feature is added or an existing one is removed/renamed.
 - The stack changes (new dependency, new AI provider, new service).
 - Setup steps change (new env vars, new scripts, new one-time commands).
 - A behaviour or limitation worth noting changes (e.g. auth, storage, free-tier limits).
 
-**Update `TESTS.md` when:**
+**`TESTS.md` — update when:**
 - A new test file is added or removed.
 - The CI/CD pipeline changes (triggers, jobs, artifact behaviour).
 - Playwright configuration changes (timeouts, browsers, retry policy).
 - A new troubleshooting case is discovered.
 
-**Update `CODING_STANDARDS.md` when:**
+**`CODING_STANDARDS.md` — update when:**
 - A new code pattern is established that all developers should follow.
 - An existing rule is revised or found to be wrong.
 - A new naming convention is decided.
 
-**Update `CLAUDE.md` (this file) when:**
+**`CLAUDE.md` (this file) — update when:**
 - The database schema changes (new table, new column, changed behaviour).
 - New environment variables are required.
 - A new page object is added or an existing one gains significant new methods.
 - A page or feature changes behaviour in a way that affects how Claude should approach it.
-
-If none of these files need updating, skip this step — do not pad them with trivial changes.
+- Any of the other three files is updated — check whether the corresponding section here is still accurate.
 
 ### 5 — Type-check
 
