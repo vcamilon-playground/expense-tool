@@ -198,9 +198,14 @@ Failure to answer both questions is what allows a feature that works on desktop 
 
 - Trigger: `deployment_status` event — Vercel fires this after every successful deployment.
 - Condition: `github.event.deployment_status.state == 'success'`
-- Runs Chromium only in CI. Local runs add Firefox and Pixel 5 (mobile Chrome).
-- Test report uploaded as a GitHub Actions artifact (retained 14 days).
+- Two jobs run **in parallel** on every deployment:
+  - `e2e-smoke` — smoke specs only (`SMOKE_ONLY=1`), 15-minute timeout.
+  - `e2e-regression` — all `*.regression.spec.ts` files, 20-minute timeout.
+- Both jobs run Chromium only. Local runs add Firefox and Pixel 5 (mobile Chrome).
+- Reports uploaded as separate artifacts (`playwright-report-smoke-*`, `playwright-report-regression-*`), retained 14 days.
+- There is no automated autoheal job. When tests fail, use the `playwright-test-healer` agent (shipped with the Playwright MCP package) to diagnose and fix failures interactively.
 - Vercel Authentication must be **disabled** in project settings (Settings → Deployment Protection → Vercel Authentication → Off) so the CI runner can reach the app without logging in.
+- Required GitHub secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `E2E_USERNAME`, `E2E_PASSWORD`. Note: `AUTH_SECRET` is a Vercel server secret — the test runner does not need it.
 
 ---
 
@@ -509,29 +514,20 @@ When adding tests for a new feature:
 
 ---
 
-## Auto-Healing Workflow
+## Fixing Failing Tests
 
-When Playwright tests fail in CI, follow these steps to diagnose, fix, and push a resolution.
+When CI reports a failure, use the `playwright-test-healer` Playwright agent to diagnose and fix it. The agent runs tests, pauses on failures, inspects the live page, edits the broken locator or assertion, and re-runs until green.
 
 ### 1 — Find the failed run
 
 ```bash
 gh run list --workflow=e2e.yml --limit=5
-```
-
-Note the run ID of the most recent failed run (status `failure`).
-
-### 2 — Read the failure logs
-
-```bash
 gh run view <run-id> --log-failed
 ```
 
-This prints only the steps and test output that failed. Read the full error message for each failing test.
+Read the full error for each failing test before touching any code.
 
-### 3 — Diagnose the root cause
-
-Match the error to one of these categories:
+### 2 — Diagnose the root cause
 
 | Error pattern | Root cause | Where to fix |
 |---|---|---|
@@ -542,30 +538,21 @@ Match the error to one of these categories:
 | `TypeError: Cannot read …` | Page object method broken by refactor | Page object in `tests/pages/` |
 | `Cannot navigate to invalid URL` | Tests run from wrong directory (must be `apps/e2e/`) or `baseURL` not set | Run `cd apps/e2e` before `npx playwright test` |
 
-**Rule:** fix page objects (`tests/pages/`) when the app UI changed. Fix spec files only when the test logic itself is wrong.
+**Rule:** fix page objects (`tests/pages/`) when the app UI changed. Fix spec files only when the test logic itself is wrong. Never skip or weaken a test to make it pass.
 
-### 4 — Apply the fix
-
-- Open the failing spec file to understand which page object method is called.
-- Open the relevant page object (`tests/pages/<Page>.ts`) and update the locator/selector.
-- If a button label changed in the app, update the string in the page object — do **not** change the app to match old tests.
-- If a route changed, update `goto()` in the page object and the `toHaveURL()` assertion in the spec.
-
-### 5 — Verify locally
+### 3 — Verify the fix locally
 
 ```bash
 cd apps/e2e && SMOKE_ONLY=1 npx playwright test tests/<affected>.spec.ts
 ```
 
-All tests must pass (green) before pushing. If you cannot start the dev server (e.g., missing `.env.local`), run against the live Vercel URL:
+If the dev server is unavailable, run against the live Vercel URL:
 
 ```bash
 cd apps/e2e && BASE_URL=https://<your-vercel-url> npx playwright test tests/<affected>.spec.ts
 ```
 
-### 6 — Commit and push
-
-Write a commit message that names the test that broke and what changed:
+### 4 — Commit and push
 
 ```bash
 git add apps/e2e/tests/pages/<ChangedPage>.ts
@@ -573,4 +560,4 @@ git commit -m "fix(e2e): update <MethodName> locator — <what changed in the ap
 git push origin main
 ```
 
-Pushing to main triggers a new Vercel deployment, which triggers a new CI run automatically.
+Pushing to main triggers a new Vercel deployment, which re-runs both CI jobs automatically.

@@ -4,8 +4,8 @@ on:
   deployment_status:
 
 jobs:
-  e2e:
-    name: Playwright smoke tests
+  e2e-smoke:
+    name: Playwright — smoke tests
     if: github.event.deployment_status.state == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -33,113 +33,89 @@ jobs:
         run: npx playwright install chromium --with-deps
         working-directory: apps/e2e
 
-      - name: Run E2E tests against deployed URL
+      - name: Run smoke tests against deployed URL
         id: run-tests
         continue-on-error: true
         shell: bash
-        run: npx playwright test --project=chromium 2>&1 | tee /tmp/failure-logs.txt
+        run: npx playwright test --project=chromium
         working-directory: apps/e2e
         env:
           BASE_URL: ${{ github.event.deployment_status.target_url }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
           E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          SMOKE_ONLY: '1'
           CI: true
 
-      - name: Upload test report
+      - name: Upload smoke test report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-${{ github.run_id }}
+          name: playwright-report-smoke-${{ github.run_id }}
           path: apps/e2e/playwright-report/
           retention-days: 14
-
-      - name: Upload failure logs for autoheal
-        uses: actions/upload-artifact@v4
-        if: steps.run-tests.outcome == 'failure'
-        with:
-          name: failure-logs-${{ github.run_id }}
-          path: /tmp/failure-logs.txt
-          retention-days: 1
 
       - name: Fail job if tests failed
         if: steps.run-tests.outcome == 'failure'
         run: exit 1
 
-  autoheal:
-    name: Auto-heal failing tests
-    needs: e2e
-    if: failure() && !cancelled()
+  e2e-regression:
+    name: Playwright — regression tests
+    if: github.event.deployment_status.state == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    concurrency:
-      group: autoheal
-      cancel-in-progress: true
-    permissions:
-      contents: write
-      actions: read
+    timeout-minutes: 20
 
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GH_PAT || github.token }}
-          ref: main
-          fetch-depth: 2
-
-      - name: Skip if last commit is already an autoheal fix
-        id: guard
+      - name: Print deployment info
         run: |
-          LAST_MSG=$(git log -1 --format="%s")
-          echo "Last commit: $LAST_MSG"
-          if echo "$LAST_MSG" | grep -q "\[autoheal\]"; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "Last commit is already an autoheal fix — stopping to prevent loop."
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
+          echo "environment: ${{ github.event.deployment.environment }}"
+          echo "ref:         ${{ github.event.deployment.ref }}"
+          echo "target_url:  ${{ github.event.deployment_status.target_url }}"
 
-      - name: Download failure logs
-        if: steps.guard.outputs.skip == 'false'
-        uses: actions/download-artifact@v4
-        with:
-          name: failure-logs-${{ github.run_id }}
-          path: /tmp
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Node
-        if: steps.guard.outputs.skip == 'false'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      - name: Configure git as repo owner
-        if: steps.guard.outputs.skip == 'false'
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+        working-directory: apps/e2e
+
+      - name: Run regression tests against deployed URL
+        id: run-tests
+        continue-on-error: true
+        shell: bash
+        run: >
+          npx playwright test --project=chromium
+          tests/budgets.regression.spec.ts
+          tests/expenses.regression.spec.ts
+          tests/recurring.regression.spec.ts
+          tests/settings.regression.spec.ts
+        working-directory: apps/e2e
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          USERNAME=$(gh api /user --jq .login)
-          EMAIL=$(gh api /user --jq '.email // empty')
-          if [ -z "$EMAIL" ]; then
-            USER_ID=$(gh api /user --jq .id)
-            EMAIL="${USER_ID}+${USERNAME}@users.noreply.github.com"
-          fi
-          git config user.name "$USERNAME"
-          git config user.email "$EMAIL"
+          BASE_URL: ${{ github.event.deployment_status.target_url }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          CI: true
 
-      - name: Run autoheal script
-        if: steps.guard.outputs.skip == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: node scripts/autoheal.mjs /tmp/failure-logs.txt
+      - name: Upload regression test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-regression-${{ github.run_id }}
+          path: apps/e2e/playwright-report/
+          retention-days: 14
 
-      - name: Commit and push fix
-        if: steps.guard.outputs.skip == 'false'
-        run: |
-          git diff --quiet && echo "No changes — nothing to push." && exit 0
-          git add apps/e2e/tests/pages/
-          CHANGED=$(git diff --cached --name-only | tr '\n' ' ')
-          git commit -m "fix(e2e): auto-heal failing tests — ${CHANGED}[autoheal]"
-          git push origin main
-          echo "Fix pushed. New Vercel deployment will re-trigger this workflow."
+      - name: Fail job if tests failed
+        if: steps.run-tests.outcome == 'failure'
+        run: exit 1
