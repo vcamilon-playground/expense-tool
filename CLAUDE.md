@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Single-user expense tracking tool. No authentication. All data belongs to one person.
+Multi-user expense tracking tool with custom authentication. Each user's data is fully isolated. No Supabase Auth — a custom `users` table with bcrypt-hashed passwords and JWT session cookies is used instead.
 
 **Stack:**
 - **Web app** — Next.js 14 App Router, TypeScript, Recharts, deployed on Vercel
@@ -19,6 +19,11 @@ Single-user expense tracking tool. No authentication. All data belongs to one pe
 /
 ├── apps/
 │   ├── web/          @expense/web     — Next.js app
+│   │   └── src/
+│   │       ├── app/                  — Next.js pages (one directory per route)
+│   │       ├── components/           — Shared UI components
+│   │       ├── contexts/             — React context providers (AuthContext, NavigationGuardContext)
+│   │       └── lib/                  — DB access, auth helpers, AI providers, utilities
 │   ├── mobile/       @expense/mobile  — Expo app
 │   └── e2e/          @expense/e2e     — Playwright test suite
 ├── packages/
@@ -27,8 +32,9 @@ Single-user expense tracking tool. No authentication. All data belongs to one pe
 │   └── schema.sql    — Full DB schema with grants (run once in Supabase SQL editor)
 ├── .github/
 │   └── workflows/e2e.yml  — CI: runs Playwright after every successful Vercel deploy
-├── CLAUDE.md         — This file
-└── TESTS.md          — E2E test suite documentation
+├── CLAUDE.md             — This file
+├── CODING_STANDARDS.md   — Naming, TypeScript, form, CSS, and test conventions
+└── TESTS.md              — E2E test suite documentation
 ```
 
 ---
@@ -50,37 +56,84 @@ Single-user expense tracking tool. No authentication. All data belongs to one pe
 
 ## Database Schema
 
-Four tables in Supabase Postgres:
+Five tables in Supabase Postgres:
 
 | Table | Key columns |
 |---|---|
-| `categories` | `id`, `name`, `icon` |
-| `expenses` | `id`, `amount`, `currency`, `conversion_rate`, `category_id`, `merchant`, `description`, `occurred_at`, `receipt_url`, `source` |
-| `budgets` | `id`, `category_id` (null = overall), `monthly_limit` |
-| `recurring_expenses` | `id`, `name`, `amount`, `category_id`, `cadence` (weekly/monthly/yearly), `next_charge_date`, `active` |
+| `users` | `id`, `username`, `first_name`, `last_name`, `password_hash`, `avatar_url`, `birth_date` |
+| `categories` | `id`, `user_id`, `name`, `icon`, `active` |
+| `expenses` | `id`, `user_id`, `amount`, `currency`, `conversion_rate`, `category_id`, `merchant`, `description`, `occurred_at`, `receipt_url`, `source` |
+| `budgets` | `id`, `user_id`, `category_id` (null = overall), `monthly_limit` |
+| `recurring_expenses` | `id`, `user_id`, `name`, `amount`, `category_id`, `cadence` (weekly/monthly/yearly), `next_charge_date`, `active` |
 
+- Every table except `users` has a `user_id` FK. All DB functions in `lib/db.ts` accept `userId: string` and filter by it — RLS is disabled, isolation is enforced in application code.
 - Currency defaults to `PHP`. Overseas expenses store `conversion_rate` (rate to PHP).
 - `source` is `'manual'`, `'receipt'` (AI-extracted from photo), or `'recurring'` (auto-created by the daily cron).
-- Edit button on expenses is only shown for current-month rows (`occurred_at.startsWith(currentMonth)`).
+- Edit button on expenses is shown for current-month rows by default. If the user enables "Allow past expense editing" in Settings (`localStorage` key `allow-past-edit`), edit is shown on all rows.
 - `budgets.category_id` is nullable — a null category_id means "overall" budget.
 
-**Environment variables required (set in Vercel and `.env.local`):**
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+**Environment variables required (set in Vercel and `apps/web/.env.local`):**
+
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+AUTH_SECRET=            # JWT signing secret — min 32 chars, generate with: openssl rand -base64 32
+AI_PROVIDER=gemini      # or "anthropic"
+GOOGLE_API_KEY=         # required when AI_PROVIDER=gemini (free tier)
+ANTHROPIC_API_KEY=      # required when AI_PROVIDER=anthropic (paid)
+```
 
 ---
 
 ## Code Conventions
 
-- **TypeScript strict mode** across all workspaces.
-- **No comments** unless the WHY is non-obvious.
-- **No auth** — single-user, anon key is used directly in the browser.
+> **Full coding standards are documented in [`CODING_STANDARDS.md`](CODING_STANDARDS.md).** This section summarises the most critical rules. When in doubt, read CODING_STANDARDS.md first.
+
+- **TypeScript strict mode** across all workspaces — no `any`, no `!` assertions, no `as T` casts without justification.
+- **No comments** unless the WHY is non-obvious. Never describe what the code does.
+- **Custom auth** — `AuthContext` provides `user` to all pages. Every page reads `const { user } = useAuth()` and returns early if null. Passwords are bcrypt-hashed server-side; sessions are JWT cookies (30-day expiry).
 - **No mocking** — tests run against the real Supabase production database.
 - **Freeware-first** — stick to free tiers. Do not introduce paid services.
-- Shared types live in `packages/shared/src/types.ts`. Import from `@expense/shared`.
-- DB functions live in `apps/web/src/lib/db.ts`. All Supabase calls go through here.
+- Shared types live in `packages/shared/src/types.ts`. Import from `@expense/shared`, never by relative path.
+- DB functions live in `apps/web/src/lib/db.ts`. Every function accepts `userId: string`. All Supabase calls go through here — never call `supabase` directly in components or pages.
 - `formatMoney(amount, currency?)` from `@expense/shared` formats with `Intl.NumberFormat`.
-- The web app is `'use client'` throughout — no server components fetch data yet.
+- The web app is `'use client'` throughout — no server components fetch data.
+
+### Form pattern (mandatory)
+
+Every form with custom JS validation must follow this pattern:
+
+```tsx
+// 1. noValidate disables browser tooltips so JS validation always fires
+<form onSubmit={handleSubmit} noValidate>
+
+// 2. Per-field error state object (not a single string)
+const [fieldErrors, setFieldErrors] = useState<{ amount?: string; date?: string }>({});
+
+// 3. Clear field error on change
+onChange={(e) => { setValue(e.target.value); setFieldErrors((p) => ({ ...p, amount: undefined })); }}
+
+// 4. Show error inline below the input using the .field-error class
+{fieldErrors.amount && <p className="field-error">{fieldErrors.amount}</p>}
+```
+
+- Load/fetch errors → `loadError` / `setLoadError` state, rendered as a page-level banner.
+- API/submit errors → `submitError` / `setSubmitError` state, rendered below the submit button.
+- Never use abbreviated state names (`err`, `val`, `res`). See naming rules in CODING_STANDARDS.md.
+
+### CSS convention
+
+Never hardcode color values in JSX `style` props. Always use CSS variables:
+
+```tsx
+// correct
+<p className="field-error">{error}</p>
+
+// wrong
+<p style={{ color: '#c0392b' }}>{error}</p>
+```
+
+Key variables: `var(--bad)` for errors, `var(--muted)` for secondary text, `var(--text)` for primary, `var(--accent)` for themed actions.
 
 ---
 
@@ -93,12 +146,14 @@ All locators and actions are centralised in `apps/e2e/tests/pages/`:
 | File | Covers |
 |---|---|
 | `BasePage.ts` | `page: Page`, `waitForLoad()` |
-| `NavBar.ts` | `toggle`, `navLinks`, `openIfMobile()`, `clickLink()`, `brandLink()` |
+| `NavBar.ts` | `toggle`, `navLinks`, `openIfMobile()`, `mobileProfile()`, `openProfileMenu()`, `settingsLink()`, `profileMenu()`, `settingsMenuItem()` |
+| `LoginPage.ts` | `goto()`, `usernameInput()`, `passwordInput()`, `submitButton()` |
 | `DashboardPage.ts` | `goto()`, `heading()`, `statLabel()`, section headings |
 | `ExpensesPage.ts` | `goto()`, `openAddModal()`, `fillForm()`, `submitAdd()`, `editRow()`, `deleteRow()` |
 | `RecurringPage.ts` | `goto()`, `openAddModal()`, `fillForm()`, `fillAmount()`, `editRow()`, `deleteRow()` |
 | `ReportsPage.ts` | `goto()`, `periodSelect()`, `exportCsvButton()`, `selectPeriod()` |
 | `BudgetsPage.ts` | `goto()`, `saveBudgetButton()`, `monthlyLimitInput()` |
+| `SettingsPage.ts` | `goto()`, `heading()`, `firstNameInput()`, `saveChangesButton()`, `cancelChangesButton()`, `unsavedBar()`, `sessionTimeoutRadio()`, `colorSwatch()`, `pastEditToggle()`, `changePasswordHeading()`, `updatePasswordButton()`, `navGuardModal()` |
 
 **Rules for writing tests:**
 - Import and instantiate the relevant page object at the top of the test or in `beforeEach`.
@@ -127,7 +182,7 @@ Regression specs write real rows to the production database. Cleanup rules:
 
 ### Mobile viewport handling
 
-`nav.sidenav` converts to a top bar on mobile and hides links behind a hamburger. Before interacting with nav links, call `nav.openIfMobile()`. This is a no-op on desktop (toggle button is not visible).
+`nav.sidenav` converts to a top bar on mobile and hides nav links behind a hamburger. The profile avatar moves inside the hamburger dropdown (`.nav-mobile-profile`), not the top bar. Before interacting with nav links or the profile entry, call `nav.openIfMobile()` (no-op on desktop).
 
 **Cross-viewport coverage rule:** Whenever a navbar or sidebar element is added, removed, or restyled, tests must cover **both** viewports:
 - Desktop tests live in the `Navigation — sidebar collapse` describe block (no `test.use` override → default 1280px).
@@ -171,12 +226,16 @@ Implement the feature, fix, or update as requested.
 
 ### 3 — Code review
 
-Before committing, review every changed file:
+Before committing, review every changed file against these rules. For the full standards, read `CODING_STANDARDS.md`.
 
 - No unused imports, variables, or dead code.
 - No hardcoded values that belong in constants or config.
-- TypeScript strict mode — no `any`, no non-null assertions without justification.
-- Follows existing code conventions (no comments unless WHY is non-obvious, no new paid services, no auth).
+- No hardcoded color values — use CSS variables (`var(--bad)`, `var(--muted)`, etc.).
+- TypeScript strict mode — no `any`, no `!` non-null assertions, no `as T` casts without justification.
+- State variables follow naming conventions: `loadError`, `submitError`, `fieldErrors` — never `err`, `val`, `res`.
+- Forms with JS validation have `noValidate`. Validation errors use `<p className="field-error">` inline below the input.
+- All Supabase calls go through `lib/db.ts`. Every DB function takes `userId: string`.
+- Follows existing code conventions (no comments unless WHY is non-obvious, no new paid services).
 - If a page object or E2E test is affected, verify locators still match the UI.
 
 ### 4 — Update documentation
@@ -195,7 +254,18 @@ After every change, ask: does this affect something a developer or user would ne
 - Playwright configuration changes (timeouts, browsers, retry policy).
 - A new troubleshooting case is discovered.
 
-If neither file needs updating, skip this step — do not pad them with trivial changes.
+**Update `CODING_STANDARDS.md` when:**
+- A new code pattern is established that all developers should follow.
+- An existing rule is revised or found to be wrong.
+- A new naming convention is decided.
+
+**Update `CLAUDE.md` (this file) when:**
+- The database schema changes (new table, new column, changed behaviour).
+- New environment variables are required.
+- A new page object is added or an existing one gains significant new methods.
+- A page or feature changes behaviour in a way that affects how Claude should approach it.
+
+If none of these files need updating, skip this step — do not pad them with trivial changes.
 
 ### 5 — Type-check
 
@@ -234,11 +304,15 @@ Do NOT run the full smoke suite locally. Run only the spec file(s) whose page or
 | `apps/web/src/app/budgets/` or `BudgetsPage.ts` | `tests/budgets.spec.ts` |
 | `apps/web/src/app/reports/` or `ReportsPage.ts` | `tests/reports.spec.ts` |
 | `apps/web/src/app/` (dashboard) or `DashboardPage.ts` | `tests/dashboard.spec.ts` |
+| `apps/web/src/app/settings/` or `SettingsPage.ts` | `tests/settings.spec.ts` |
+| `apps/web/src/app/login/` or `apps/web/src/app/register/` or `LoginPage.ts` | `tests/auth.spec.ts` |
 | `apps/web/src/components/NavBar.tsx` or `NavBar.ts` | `tests/navigation.spec.ts` |
 | Shared component used across multiple pages | all spec files that use it |
 | `packages/shared/` logic only | unit tests only — no smoke needed |
 | API routes, DB lib, cron, config | no smoke needed |
 | Docs, styles only | skip |
+
+**Important:** Playwright tests must be run from the `apps/e2e/` directory, not from the repo root:
 
 ```bash
 cd apps/e2e && SMOKE_ONLY=1 npx playwright test tests/<feature>.spec.ts
@@ -255,6 +329,7 @@ Regression tests hit the real database and are slow. Only run the spec(s) whose 
 | `apps/web/src/app/expenses/` or `ExpensesPage.ts` | `tests/expenses.regression.spec.ts` |
 | `apps/web/src/app/budgets/` or `BudgetsPage.ts` | `tests/budgets.regression.spec.ts` |
 | `apps/web/src/app/recurring/` or `RecurringPage.ts` | `tests/recurring.regression.spec.ts` |
+| `apps/web/src/app/settings/` or `SettingsPage.ts` | `tests/settings.regression.spec.ts` |
 | Shared component used across pages | all regression specs |
 | Docs, styles, or config only | skip regression |
 
@@ -353,8 +428,8 @@ git push origin main
 ## Adding a New Feature
 
 1. Add or update types in `packages/shared/src/types.ts`.
-2. Add DB functions in `apps/web/src/lib/db.ts`.
-3. Build the page in `apps/web/src/app/<route>/page.tsx`.
+2. Add DB functions in `apps/web/src/lib/db.ts`. Each function must accept `userId: string`.
+3. Build the page in `apps/web/src/app/<route>/page.tsx`. Read `const { user } = useAuth()` at the top; return early if null.
 4. Update the relevant page object in `apps/e2e/tests/pages/` if selectors change.
 5. Add smoke tests to the existing `<feature>.spec.ts`.
 6. Add CRUD regression tests to `<feature>.regression.spec.ts` if the feature writes data, following the cleanup pattern in `tests/helpers/supabase.ts`.
@@ -391,9 +466,9 @@ Scenarios to cover:
 Verify that invalid inputs are rejected and error feedback is shown.
 
 Scenarios to cover:
-- Submitting an empty form shows a validation error or the form is not submitted (check `required` attribute or visible error message).
-- Entering a negative or zero amount where only positive values are valid.
-- Entering a value that exceeds a stated limit (e.g., amount > 999 999 if there is one).
+- Submitting an empty required field shows a `.field-error` paragraph inline below the input.
+- Entering a negative or zero amount where only positive values are valid shows a `.field-error`.
+- Entering a value that exceeds a stated limit shows the appropriate error.
 - Cancelling a modal/dialog (Cancel button and Escape key) closes it without saving.
 - If a field has enum/select options, verify that an empty/placeholder value cannot be submitted.
 
@@ -416,10 +491,13 @@ When adding tests for a new feature:
 | `.stat` count is wrong | Use `.stat .label` with `.filter({ hasText: '...' })` — MonthEndBanner also renders `.stat` |
 | `getByLabel('Period')` doesn't find select | Label uses implicit association. Use `locator('label').filter({ hasText: 'Period' }).locator('select')` |
 | Nav links not found on mobile | Call `nav.openIfMobile()` before interacting with links |
+| Profile avatar not found on mobile | Avatar is inside the hamburger dropdown (`.nav-mobile-profile`), not the top bar — open hamburger first |
 | Element is invisible due to matching fg/bg color but `toBeVisible()` passes | Use `evaluate(el => getComputedStyle(el).color)` to assert the computed color is not the same as the background |
+| `.field-error` shows in wrong color inside a modal | `.modal p` has higher specificity — `.field-error` uses `color: var(--bad) !important` to override |
 | Sidebar control works on desktop but missing on mobile (or vice versa) | Each sidebar control needs a test in both the desktop describe block and the mobile hamburger describe block — see cross-viewport coverage rule |
 | Tests hang in CI | Vercel Authentication is enabled — disable it in Vercel project settings |
 | Cleanup skipped in CI | Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as GitHub repository secrets |
+| `page.goto` fails with "Cannot navigate to invalid URL" | Playwright must be run from `apps/e2e/` directory — `baseURL` is only set when the config file is loaded |
 
 ---
 
@@ -454,6 +532,7 @@ Match the error to one of these categories:
 | `expect(page).toHaveURL(…)` mismatch | Route renamed | Page object `goto()` and spec file |
 | `TimeoutError` waiting for element | Supabase cold start, slow network, or Vercel Authentication re-enabled | Add retry/increased timeout in `playwright.config.ts`, or re-disable Vercel Auth |
 | `TypeError: Cannot read …` | Page object method broken by refactor | Page object in `tests/pages/` |
+| `Cannot navigate to invalid URL` | Tests run from wrong directory (must be `apps/e2e/`) or `baseURL` not set | Run `cd apps/e2e` before `npx playwright test` |
 
 **Rule:** fix page objects (`tests/pages/`) when the app UI changed. Fix spec files only when the test logic itself is wrong.
 
@@ -467,13 +546,13 @@ Match the error to one of these categories:
 ### 5 — Verify locally
 
 ```bash
-npm run test:e2e
+cd apps/e2e && SMOKE_ONLY=1 npx playwright test tests/<affected>.spec.ts
 ```
 
 All tests must pass (green) before pushing. If you cannot start the dev server (e.g., missing `.env.local`), run against the live Vercel URL:
 
 ```bash
-BASE_URL=https://<your-vercel-url> npm run test:e2e
+cd apps/e2e && BASE_URL=https://<your-vercel-url> npx playwright test tests/<affected>.spec.ts
 ```
 
 ### 6 — Commit and push
