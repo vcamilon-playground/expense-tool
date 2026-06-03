@@ -45,10 +45,14 @@ export default function RecurringPage() {
   const [formErrors, setFormErrors] = useState<{ name?: string; amount?: string; date?: string }>({});
   const [pendingDelete, setPendingDelete] = useState<RecurringExpense | null>(null);
 
-  // Confirmation flow state
+  // Confirmation flow state (due items)
   const [pendingItem, setPendingItem] = useState<RecurringExpense | null>(null);
   const [confirmStep, setConfirmStep] = useState<'confirm' | 'reminder' | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+
+  // Early payment flow state (not-yet-due items)
+  const [pendingEarlyItem, setPendingEarlyItem] = useState<RecurringExpense | null>(null);
+  const [earlyPayError, setEarlyPayError] = useState<string | null>(null);
 
   const today = new Date().toISOString().slice(0, 10);
   const isDue = (r: RecurringExpense) => r.active && r.next_charge_date <= today;
@@ -160,6 +164,35 @@ export default function RecurringPage() {
 
   function handleConfirmNo() {
     setConfirmStep('reminder');
+  }
+
+  async function handleEarlyPayConfirm() {
+    if (!pendingEarlyItem || !user) return;
+    setEarlyPayError(null);
+    const item = pendingEarlyItem;
+    setPendingEarlyItem(null);
+    try {
+      await createExpense(
+        {
+          amount: item.amount,
+          currency: 'PHP',
+          conversion_rate: null,
+          category_id: item.category_id,
+          merchant: item.name,
+          description: null,
+          occurred_at: today,
+          receipt_url: null,
+          source: 'recurring',
+        },
+        user.id,
+      );
+      await updateRecurring(item.id, {
+        next_charge_date: advanceDate(item.next_charge_date, item.cadence),
+      });
+    } catch (e) {
+      setEarlyPayError(e instanceof Error ? e.message : 'Failed to record payment. Please try again.');
+    }
+    await reload();
   }
 
   async function handleReminderOk() {
@@ -335,9 +368,40 @@ export default function RecurringPage() {
         </div>
       )}
 
+      {/* Early payment modal — for not-yet-due items */}
+      {pendingEarlyItem && (
+        <div className="modal-overlay" onClick={() => setPendingEarlyItem(null)}>
+          <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <h3 style={{ margin: 0 }}>Record Early Payment</h3>
+              <button className="ghost close-btn" onClick={() => setPendingEarlyItem(null)} aria-label="Close">✕</button>
+            </div>
+            <p style={{ marginBottom: 20 }}>
+              Record an early payment for <strong>{pendingEarlyItem.name}</strong> ({formatMoney(pendingEarlyItem.amount)})?
+              The next charge date will advance from <strong>{pendingEarlyItem.next_charge_date}</strong> to{' '}
+              <strong>{advanceDate(pendingEarlyItem.next_charge_date, pendingEarlyItem.cadence)}</strong>.
+            </p>
+            <div className="row" style={{ justifyContent: 'flex-end', gap: 10 }}>
+              <button className="primary" style={{ width: 'auto' }} onClick={handleEarlyPayConfirm}>
+                Yes, record it
+              </button>
+              <button className="ghost" style={{ width: 'auto' }} onClick={() => setPendingEarlyItem(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {confirmError && (
         <div className="banner banner-danger" style={{ marginBottom: 12 }} role="alert">
           {confirmError}
+        </div>
+      )}
+
+      {earlyPayError && (
+        <div className="banner banner-danger" style={{ marginBottom: 12 }} role="alert">
+          {earlyPayError}
         </div>
       )}
 
@@ -396,6 +460,15 @@ export default function RecurringPage() {
                             onClick={() => openConfirm(r)}
                           >
                             Confirm Payment
+                          </button>
+                        )}
+                        {r.active && !due && (
+                          <button
+                            className="ghost"
+                            style={{ width: 'auto' }}
+                            onClick={() => setPendingEarlyItem(r)}
+                          >
+                            Pay Early
                           </button>
                         )}
                         <button className="ghost" style={{ width: 'auto' }} onClick={() => startEdit(r)}>Edit</button>

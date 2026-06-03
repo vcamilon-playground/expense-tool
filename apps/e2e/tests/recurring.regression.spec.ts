@@ -109,3 +109,42 @@ test.describe('Recurring Expenses — confirm NO skips expense', () => {
     await expect(expenses.row(E2E_RECURRING_NAME)).toHaveCount(0);
   });
 });
+
+test.describe('Recurring Expenses — pay early', () => {
+  test.beforeAll(async () => {
+    await cleanup.recurring();
+    await cleanup.expenses();
+    await seed.recurringFuture(); // next_charge_date = 14 days from now → not yet due
+  });
+
+  test.afterAll(async () => {
+    await cleanup.recurring();
+    await cleanup.expenses();
+  });
+
+  test('recording early payment creates expense and advances charge date', async ({ page }) => {
+    const recurring = new RecurringPage(page);
+    const expenses = new ExpensesPage(page);
+
+    await recurring.goto();
+
+    // Confirm Payment button is absent — item is not yet due
+    await expect(recurring.confirmPaymentButton(E2E_RECURRING_NAME)).toHaveCount(0);
+    await expect(recurring.payEarlyButton(E2E_RECURRING_NAME)).toBeVisible();
+
+    const chargeDateBefore = await recurring.row(E2E_RECURRING_NAME).locator('td').nth(3).textContent();
+
+    await recurring.payEarlyButton(E2E_RECURRING_NAME).click();
+    await expect(recurring.earlyPayModal()).toBeVisible();
+    await recurring.earlyPayConfirmButton().click();
+    await expect(recurring.earlyPayModal()).toBeHidden();
+
+    // Wait for reload() to complete — date cell must no longer show the old date
+    const dateCell = recurring.row(E2E_RECURRING_NAME).locator('td').nth(3);
+    await expect(dateCell).not.toContainText(chargeDateBefore!);
+
+    // Expense was created
+    await expenses.goto();
+    await expect(expenses.row(E2E_RECURRING_NAME)).toBeVisible();
+  });
+});

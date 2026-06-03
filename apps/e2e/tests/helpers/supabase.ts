@@ -197,6 +197,20 @@ export const seed = {
       category_id: null,
     });
   },
+  recurringFuture: () => {
+    const uid = loadE2EUserId();
+    const d = new Date();
+    d.setDate(d.getDate() + 14);
+    return post('recurring_expenses', {
+      user_id: uid,
+      name: E2E_RECURRING_NAME,
+      amount: 5,
+      cadence: 'monthly',
+      next_charge_date: d.toISOString().slice(0, 10),
+      active: true,
+      category_id: null,
+    });
+  },
   budget: () => {
     const uid = loadE2EUserId();
     return post('budgets', { user_id: uid, monthly_limit: E2E_BUDGET_LIMIT, category_id: null });

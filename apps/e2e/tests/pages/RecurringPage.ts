@@ -116,6 +116,22 @@ export class RecurringPage extends BasePage {
     return this.confirmModal().getByRole('button', { name: /No/ });
   }
 
+  payEarlyButton(name: string): Locator {
+    return this.row(name).getByRole('button', { name: 'Pay Early' });
+  }
+
+  earlyPayModal(): Locator {
+    return this.page.getByRole('dialog').filter({ hasText: /Record Early Payment/ });
+  }
+
+  earlyPayConfirmButton(): Locator {
+    return this.earlyPayModal().getByRole('button', { name: 'Yes, record it' });
+  }
+
+  earlyPayCancelButton(): Locator {
+    return this.earlyPayModal().getByRole('button', { name: 'Cancel' });
+  }
+
   reminderModal(): Locator {
     return this.page.getByRole('dialog').filter({ hasText: /will not be added/ });
   }

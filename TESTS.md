@@ -224,6 +224,10 @@ cd apps/e2e && npx playwright show-report
 - X button closes the modal without deleting the record
 - No, keep it button closes the modal without deleting the record
 
+**Recurring Expenses — pay early button**
+- Pay Early button is visible and opens confirmation modal with item details *(button present for future-dated items, Confirm Payment absent, modal has heading/name/confirm/cancel)*
+- Pay Early modal closes on Cancel, X button, and backdrop click
+
 **Recurring Expenses — column sorting**
 - Name, Category, Cadence, Next Charge, Amount, Active headers are sortable
 - Name sort activates and toggles direction
@@ -342,6 +346,9 @@ cd apps/e2e && npx playwright show-report
 
 **Recurring Expenses — confirm NO skips expense**
 - declining payment advances charge date without creating an expense record
+
+**Recurring Expenses — pay early**
+- recording early payment creates expense and advances charge date
 
 ---
 

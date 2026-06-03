@@ -172,6 +172,53 @@ test.describe('Recurring Expenses — delete confirmation modal', () => {
   });
 });
 
+test.describe('Recurring Expenses — pay early button', () => {
+  let recurring!: RecurringPage;
+
+  test.beforeAll(async () => {
+    await cleanup.recurring();
+    await seed.recurringFuture();
+  });
+
+  test.afterAll(async () => {
+    await cleanup.recurring();
+  });
+
+  test.beforeEach(async ({ page }) => {
+    recurring = new RecurringPage(page);
+    await recurring.goto();
+  });
+
+  test('Pay Early button is visible and opens confirmation modal with item details', async () => {
+    await expect(recurring.payEarlyButton(E2E_RECURRING_NAME)).toBeVisible();
+    await expect(recurring.confirmPaymentButton(E2E_RECURRING_NAME)).toHaveCount(0);
+
+    await recurring.payEarlyButton(E2E_RECURRING_NAME).click();
+    await expect(recurring.earlyPayModal()).toBeVisible();
+    await expect(recurring.earlyPayModal()).toContainText('Record Early Payment');
+    await expect(recurring.earlyPayModal()).toContainText(E2E_RECURRING_NAME);
+    await expect(recurring.earlyPayConfirmButton()).toBeVisible();
+    await expect(recurring.earlyPayCancelButton()).toBeVisible();
+  });
+
+  test('Pay Early modal closes on Cancel, X button, and backdrop click', async () => {
+    await recurring.payEarlyButton(E2E_RECURRING_NAME).click();
+    await expect(recurring.earlyPayModal()).toBeVisible();
+    await recurring.earlyPayCancelButton().click();
+    await expect(recurring.earlyPayModal()).toBeHidden();
+
+    await recurring.payEarlyButton(E2E_RECURRING_NAME).click();
+    await expect(recurring.earlyPayModal()).toBeVisible();
+    await recurring.earlyPayModal().getByRole('button', { name: 'Close' }).click();
+    await expect(recurring.earlyPayModal()).toBeHidden();
+
+    await recurring.payEarlyButton(E2E_RECURRING_NAME).click();
+    await expect(recurring.earlyPayModal()).toBeVisible();
+    await recurring.page.mouse.click(5, 5);
+    await expect(recurring.earlyPayModal()).toBeHidden();
+  });
+});
+
 test.describe('Recurring Expenses — column sorting', () => {
   let recurring!: RecurringPage;
 

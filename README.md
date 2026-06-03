@@ -137,7 +137,9 @@ npm run dev:mobile
 - **Budgets** — overall or per-category monthly limits. Dashboard warns at
   ≥ 80% and flags over-budget.
 - **Recurring** — track subscriptions (weekly / monthly / yearly) with
-  the next charge date.
+  the next charge date. Due items show a "Confirm Payment" flow (record or
+  skip). Future-dated items have a "Pay Early" button to record the payment
+  ahead of schedule and advance the next charge date.
 - **Settings** — profile editing, password change, theme, category management.
 
 ## Development scripts

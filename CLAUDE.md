@@ -150,7 +150,7 @@ All locators and actions are centralised in `apps/e2e/tests/pages/`:
 | `LoginPage.ts` | `goto()`, `usernameInput()`, `passwordInput()`, `submitButton()` |
 | `DashboardPage.ts` | `goto()`, `heading()`, `statLabel()`, section headings |
 | `ExpensesPage.ts` | `goto()`, `openAddModal()`, `fillForm()`, `submitAdd()`, `editRow()`, `deleteRow()` |
-| `RecurringPage.ts` | `goto()`, `openAddModal()`, `fillForm()`, `fillAmount()`, `editRow()`, `deleteRow()` |
+| `RecurringPage.ts` | `goto()`, `openAddModal()`, `fillForm()`, `fillAmount()`, `editRow()`, `deleteRow()`, `dueBadge()`, `confirmPaymentButton()`, `confirmModal()`, `confirmYesButton()`, `confirmNoButton()`, `reminderModal()`, `reminderOkButton()`, `payEarlyButton()`, `earlyPayModal()`, `earlyPayConfirmButton()`, `earlyPayCancelButton()` |
 | `ReportsPage.ts` | `goto()`, `periodSelect()`, `exportCsvButton()`, `selectPeriod()` |
 | `BudgetsPage.ts` | `goto()`, `saveBudgetButton()`, `monthlyLimitInput()` |
 | `SettingsPage.ts` | `goto()`, `heading()`, `firstNameInput()`, `saveChangesButton()`, `cancelChangesButton()`, `unsavedBar()`, `sessionTimeoutRadio()`, `colorSwatch()`, `pastEditToggle()`, `changePasswordHeading()`, `updatePasswordButton()`, `navGuardModal()` |
