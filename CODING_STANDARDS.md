@@ -5,6 +5,73 @@ When a rule here conflicts with an external style guide, this document wins.
 
 ---
 
+## Naming
+
+### Files
+
+| What | Convention | Example |
+|---|---|---|
+| React component | `PascalCase.tsx` | `ExpenseForm.tsx`, `NavBar.tsx` |
+| Utility / library | `kebab-case.ts` (multi-word) or single lowercase word `.ts` | `expense-utils.ts`, `db.ts`, `auth.ts` |
+| File with JSX exports | `.tsx` regardless of purpose | `sort.tsx` (exports `SortIcon` + `useSortState`) |
+| Next.js page | `page.tsx` (required by framework) | `apps/web/src/app/expenses/page.tsx` |
+| Next.js API route | `route.ts` inside a `kebab-case/` directory | `api/extract-receipt/route.ts` |
+| Unit test | `<subject>.test.ts(x)` alongside the file it tests | `expense-utils.test.ts` |
+| E2E smoke spec | `<feature>.spec.ts` | `expenses.spec.ts` |
+| E2E regression spec | `<feature>.regression.spec.ts` | `expenses.regression.spec.ts` |
+| Page object | `PascalCasePage.ts` (non-page helpers keep original name) | `ExpensesPage.ts`, `NavBar.ts` |
+
+### TypeScript identifiers
+
+| What | Convention | Example |
+|---|---|---|
+| Type / interface | `PascalCase` | `Expense`, `Budget`, `RecurringCadence` |
+| Write-input type | `EntityInput` suffix | `ExpenseInput`, `RecurringInput` |
+| Module-level constant | `UPPER_SNAKE_CASE` | `PUBLIC_PATHS`, `DEFAULT_CATEGORIES`, `MODEL` |
+| Function / variable | `camelCase` | `formatMoney`, `handleSubmit` |
+| React component | `PascalCase` | `ExpenseForm`, `DeleteModal` |
+| Custom hook | `use` prefix, `camelCase` | `useAuth`, `useSortState` |
+| React context object | `PascalCase` + `Context` suffix | `AuthContext`, `NavigationGuardContext` |
+| DB function | verb-first `camelCase` | `listExpenses`, `createExpense`, `updateExpense`, `deleteExpense`, `upsertBudget` |
+| Event handler function | `handle` prefix | `handleSubmit`, `handleSave`, `handleEdit` |
+| Event handler prop | `on` prefix | `onConfirm`, `onCancel`, `onClose` |
+
+### React state variables
+
+Use descriptive names — avoid single-letter or abbreviated state names (`err`, `val`, `res`).
+
+| State type | Name | Setter |
+|---|---|---|
+| Page data loading flag | `loading` | `setLoading` |
+| Page-level fetch error | `loadError` | `setLoadError` |
+| Form API / submit error | `submitError` | `setSubmitError` |
+| Per-field validation errors | `fieldErrors` | `setFieldErrors` |
+| Currently-edited item | `editing` | `setEditing` |
+| Pending-delete item | `pendingDelete` | `setPendingDelete` |
+| Modal visibility | `show{Name}` (e.g. `showAdd`, `showForm`) | `setShow{Name}` |
+| Inline scoped error | `{context}Error` (e.g. `confirmError`, `limitError`) | `set{Context}Error` |
+
+Booleans: use the plain descriptive noun or adjective — **no `is` prefix**.
+```ts
+const [loading, setLoading] = useState(true);   // not isLoading
+const [open, setOpen] = useState(false);         // not isOpen
+const [showAdd, setShowAdd] = useState(false);   // not isAddVisible
+```
+
+### CSS classes
+
+All class names are `kebab-case`. State-modifier classes are plain adjectives or past participles — no `is-` prefix.
+
+```css
+.nav-mobile-profile { ... }   /* component class */
+.field-error { ... }          /* utility class */
+.open { ... }                 /* state modifier — not .is-open */
+.sort-active { ... }          /* state modifier — not .is-sort-active */
+.collapsed { ... }            /* state modifier */
+```
+
+---
+
 ## TypeScript
 
 **Strict mode is non-negotiable.** All three workspaces run `tsc --strict`. Keep it that way.

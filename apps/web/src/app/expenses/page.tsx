@@ -24,7 +24,7 @@ export default function ExpensesPage() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [allowPastEdit, setAllowPastEdit] = useState(false);
 
   async function reload() {
@@ -41,7 +41,7 @@ export default function ExpensesPage() {
       try {
         await reload();
       } catch (e) {
-        setErr(e instanceof Error ? e.message : 'Failed to load');
+        setLoadError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
         setLoading(false);
       }
@@ -85,7 +85,7 @@ export default function ExpensesPage() {
   }, [expenses, search, categoryFilter]);
 
   if (!user || loading) return <p className="muted">Loading…</p>;
-  if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
+  if (loadError) return <p style={{ color: 'var(--bad)' }}>{loadError}</p>;
 
   const modalOpen = showAdd || editing !== null;
   const modalTitle = editing ? 'Edit Expense' : 'Add Expense';

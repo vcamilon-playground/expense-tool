@@ -41,14 +41,14 @@ export default function RecurringPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<{ name?: string; amount?: string; date?: string }>({});
   const [pendingDelete, setPendingDelete] = useState<RecurringExpense | null>(null);
 
   // Confirmation flow state
   const [pendingItem, setPendingItem] = useState<RecurringExpense | null>(null);
   const [confirmStep, setConfirmStep] = useState<'confirm' | 'reminder' | null>(null);
-  const [confirmErr, setConfirmErr] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   const today = new Date().toISOString().slice(0, 10);
   const isDue = (r: RecurringExpense) => r.active && r.next_charge_date <= today;
@@ -66,7 +66,7 @@ export default function RecurringPage() {
       try {
         await reload();
       } catch (e) {
-        setErr(e instanceof Error ? e.message : 'Failed to load');
+        setLoadError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
         setLoading(false);
       }
@@ -92,7 +92,7 @@ export default function RecurringPage() {
     setDraft(empty);
     setAmountInput('');
     setShowForm(false);
-    setErr(null);
+    setLoadError(null);
     setFormErrors({});
   }
 
@@ -130,7 +130,7 @@ export default function RecurringPage() {
 
   async function handleConfirmYes() {
     if (!pendingItem || !user) return;
-    setConfirmErr(null);
+    setConfirmError(null);
     const item = pendingItem;
     setPendingItem(null);
     setConfirmStep(null);
@@ -153,7 +153,7 @@ export default function RecurringPage() {
         next_charge_date: advanceDate(item.next_charge_date, item.cadence),
       });
     } catch (e) {
-      setConfirmErr(e instanceof Error ? e.message : 'Failed to record payment. Please try again.');
+      setConfirmError(e instanceof Error ? e.message : 'Failed to record payment. Please try again.');
     }
     await reload();
   }
@@ -192,7 +192,7 @@ export default function RecurringPage() {
 
   return (
     <div>
-      {err && <p style={{ color: 'var(--bad)', marginBottom: 12 }}>{err}</p>}
+      {loadError && <p style={{ color: 'var(--bad)', marginBottom: 12 }}>{loadError}</p>}
       <DeleteModal
         open={pendingDelete !== null}
         itemLabel="Recurring Expense"
@@ -335,9 +335,9 @@ export default function RecurringPage() {
         </div>
       )}
 
-      {confirmErr && (
+      {confirmError && (
         <div className="banner banner-danger" style={{ marginBottom: 12 }} role="alert">
-          {confirmErr}
+          {confirmError}
         </div>
       )}
 
