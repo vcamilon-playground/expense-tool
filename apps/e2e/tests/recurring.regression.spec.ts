@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { E2E_MERCHANT, E2E_RECURRING_NAME, cleanup, seed } from './helpers/supabase';
+import { E2E_RECURRING_NAME, cleanup, seed } from './helpers/supabase';
 import { ExpensesPage } from './pages/ExpensesPage';
 import { RecurringPage } from './pages/RecurringPage';
 
@@ -110,7 +110,7 @@ test.describe('Recurring Expenses — confirm NO skips expense', () => {
   });
 });
 
-test.describe('Recurring Expenses — pay early', () => {
+test.describe('Recurring Expenses — pay now', () => {
   test.beforeAll(async () => {
     await cleanup.recurring();
     await cleanup.expenses();
@@ -130,11 +130,11 @@ test.describe('Recurring Expenses — pay early', () => {
 
     // Confirm Payment button is absent — item is not yet due
     await expect(recurring.confirmPaymentButton(E2E_RECURRING_NAME)).toHaveCount(0);
-    await expect(recurring.payEarlyButton(E2E_RECURRING_NAME)).toBeVisible();
+    await expect(recurring.payNowButton(E2E_RECURRING_NAME)).toBeVisible();
 
     const chargeDateBefore = await recurring.row(E2E_RECURRING_NAME).locator('td').nth(3).textContent();
 
-    await recurring.payEarlyButton(E2E_RECURRING_NAME).click();
+    await recurring.payNowButton(E2E_RECURRING_NAME).click();
     await expect(recurring.earlyPayModal()).toBeVisible();
     await recurring.earlyPayConfirmButton().click();
     await expect(recurring.earlyPayModal()).toBeHidden();

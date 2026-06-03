@@ -116,8 +116,8 @@ export class RecurringPage extends BasePage {
     return this.confirmModal().getByRole('button', { name: /No/ });
   }
 
-  payEarlyButton(name: string): Locator {
-    return this.row(name).getByRole('button', { name: 'Pay Early' });
+  payNowButton(name: string): Locator {
+    return this.row(name).getByRole('button', { name: 'Pay Now' });
   }
 
   earlyPayModal(): Locator {

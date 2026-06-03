@@ -487,6 +487,13 @@ button.ghost:hover:not(:disabled) {
 
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 
+/* Compact variant for table row actions */
+button.btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+  width: auto;
+}
+
 /* ── Utilities ── */
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .muted { color: var(--muted); }

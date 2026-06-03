@@ -169,14 +169,17 @@ export const seed = {
   },
   pastExpense: () => {
     const uid = loadE2EUserId();
-    const d = new Date();
-    d.setDate(1);
-    d.setMonth(d.getMonth() - 1);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 0-indexed LOCAL month
+    const prevYear = month === 0 ? year - 1 : year;
+    const prevMonth = month === 0 ? 12 : month; // 1-indexed: Jan=1…Dec=12
+    const occurred_at = `${prevYear}-${String(prevMonth).padStart(2, '0')}-01`;
     return post('expenses', {
       user_id: uid,
       amount: 1,
       currency: 'PHP',
-      occurred_at: d.toISOString().slice(0, 10),
+      occurred_at,
       source: 'manual',
       merchant: E2E_MERCHANT,
       description: 'E2E past-month lock test',

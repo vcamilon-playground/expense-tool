@@ -176,21 +176,9 @@ export default function BudgetsPage() {
                       <td>{cat ? `${cat.icon ?? ''} ${cat.name}` : 'Overall'}</td>
                       <td style={{ textAlign: 'right' }}>{formatMoney(b.monthly_limit)}</td>
                       <td style={{ textAlign: 'right' }}>
-                        <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
-                          <button
-                            className="ghost"
-                            style={{ width: 'auto' }}
-                            onClick={() => handleEdit(b)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="danger"
-                            style={{ width: 'auto' }}
-                            onClick={() => setPendingDelete(b)}
-                          >
-                            Delete
-                          </button>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
+                          <button className="btn-sm" onClick={() => handleEdit(b)}>Edit</button>
+                          <button className="danger btn-sm" onClick={() => setPendingDelete(b)}>Delete</button>
                         </div>
                       </td>
                     </tr>

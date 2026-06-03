@@ -453,26 +453,20 @@ export default function RecurringPage() {
                       <td data-label="Amount" style={{ textAlign: 'right' }}>{formatMoney(r.amount)}</td>
                       <td data-label="Active">{r.active ? 'Yes' : 'No'}</td>
                       <td data-label="">
-                        {due && (
-                          <button
-                            className="primary"
-                            style={{ width: 'auto' }}
-                            onClick={() => openConfirm(r)}
-                          >
-                            Confirm Payment
-                          </button>
-                        )}
-                        {r.active && !due && (
-                          <button
-                            className="ghost"
-                            style={{ width: 'auto' }}
-                            onClick={() => setPendingEarlyItem(r)}
-                          >
-                            Pay Early
-                          </button>
-                        )}
-                        <button className="ghost" style={{ width: 'auto' }} onClick={() => startEdit(r)}>Edit</button>
-                        <button className="danger" style={{ width: 'auto' }} onClick={() => setPendingDelete(r)}>Delete</button>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
+                          {due && (
+                            <button className="primary btn-sm" onClick={() => openConfirm(r)}>
+                              Confirm Payment
+                            </button>
+                          )}
+                          {r.active && !due && (
+                            <button className="primary btn-sm" onClick={() => setPendingEarlyItem(r)}>
+                              Pay Now
+                            </button>
+                          )}
+                          <button className="btn-sm" onClick={() => startEdit(r)}>Edit</button>
+                          <button className="danger btn-sm" onClick={() => setPendingDelete(r)}>Delete</button>
+                        </div>
                       </td>
                     </tr>
                   );
