@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [recurring, setRecurring] = useState<RecurringExpense[]>([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -46,7 +46,7 @@ export default function DashboardPage() {
         setBudgets(buds);
         setRecurring(recs);
       } catch (e) {
-        setErr(e instanceof Error ? e.message : 'Failed to load');
+        setLoadError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
         setLoading(false);
       }
@@ -73,7 +73,7 @@ export default function DashboardPage() {
   }, [recurring, today, cutoffStr, upSortCol, upSortDir]);
 
   if (!user || loading) return <p className="muted">Loading…</p>;
-  if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
+  if (loadError) return <p style={{ color: 'var(--bad)' }}>{loadError}</p>;
 
   const day: PeriodSummary = summarize(expenses, categories, 'day');
   const week: PeriodSummary = summarize(expenses, categories, 'week');

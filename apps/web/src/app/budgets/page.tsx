@@ -146,7 +146,7 @@ export default function BudgetsPage() {
               {editing ? 'Update Budget' : 'Save Budget'}
             </button>
             {editing && (
-              <button type="button" className="ghost" style={{ flex: 1 }} onClick={handleCancelEdit}>
+              <button type="button" style={{ flex: 1 }} onClick={handleCancelEdit}>
                 Cancel
               </button>
             )}
