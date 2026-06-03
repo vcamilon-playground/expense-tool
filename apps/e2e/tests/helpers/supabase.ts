@@ -111,7 +111,7 @@ async function post(table: string, data: Record<string, unknown>): Promise<void>
     body: JSON.stringify(data),
   });
   if (!res.ok) {
-    console.error(`[seed] ${table}: HTTP ${res.status}`);
+    throw new Error(`[seed] ${table}: HTTP ${res.status}`);
   }
 }
 
