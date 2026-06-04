@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { E2E_MERCHANT, cleanup, seed } from './helpers/supabase';
+import { SMOKE_MERCHANT, cleanup, seed } from './helpers/supabase';
 import { ExpensesPage } from './pages/ExpensesPage';
 
 test.describe('Expenses page', () => {
@@ -82,12 +82,12 @@ test.describe('Expenses — delete confirmation modal', () => {
   let expenses!: ExpensesPage;
 
   test.beforeAll(async () => {
-    await cleanup.expenses();
-    await seed.expense();
+    await cleanup.smokeExpenses();
+    await seed.smokeExpense();
   });
 
   test.afterAll(async () => {
-    await cleanup.expenses();
+    await cleanup.smokeExpenses();
   });
 
   test.beforeEach(async ({ page }) => {
@@ -96,7 +96,7 @@ test.describe('Expenses — delete confirmation modal', () => {
   });
 
   test('delete modal renders with correct content and buttons', async () => {
-    await expenses.openDeleteModal(E2E_MERCHANT);
+    await expenses.openDeleteModal(SMOKE_MERCHANT);
     const dialog = expenses.deleteDialog();
     await expect(dialog.getByRole('heading')).toContainText('Remove');
     await expect(dialog).toContainText('Are you really sure you want to remove the record?');
@@ -107,24 +107,24 @@ test.describe('Expenses — delete confirmation modal', () => {
   });
 
   test('X button closes the modal without deleting the record', async () => {
-    await expenses.openDeleteModal(E2E_MERCHANT);
+    await expenses.openDeleteModal(SMOKE_MERCHANT);
     await expenses.deleteXButton().click();
     await expect(expenses.deleteDialog()).toBeHidden();
-    await expect(expenses.row(E2E_MERCHANT)).toBeVisible();
+    await expect(expenses.row(SMOKE_MERCHANT)).toBeVisible();
   });
 
   test('No, keep it button closes the modal without deleting the record', async () => {
-    await expenses.openDeleteModal(E2E_MERCHANT);
+    await expenses.openDeleteModal(SMOKE_MERCHANT);
     await expenses.deleteNoButton().click();
     await expect(expenses.deleteDialog()).toBeHidden();
-    await expect(expenses.row(E2E_MERCHANT)).toBeVisible();
+    await expect(expenses.row(SMOKE_MERCHANT)).toBeVisible();
   });
 
   test('clicking the backdrop closes the modal without deleting the record', async () => {
-    await expenses.openDeleteModal(E2E_MERCHANT);
+    await expenses.openDeleteModal(SMOKE_MERCHANT);
     await expenses.modalOverlay().click({ position: { x: 5, y: 5 } });
     await expect(expenses.deleteDialog()).toBeHidden();
-    await expect(expenses.row(E2E_MERCHANT)).toBeVisible();
+    await expect(expenses.row(SMOKE_MERCHANT)).toBeVisible();
   });
 });
 

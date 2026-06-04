@@ -435,10 +435,13 @@ Regression specs write real rows to the production database. Every regression sp
 
 Tag test data so cleanup helpers can find it:
 
-| Feature | Tag |
-|---|---|
-| Expenses | `merchant = 'E2E-TEST'` |
-| Recurring expenses | `name = 'E2E Test Subscription'` |
+| Job | Feature | Tag | Cleanup helper |
+|---|---|---|---|
+| Regression | Expenses | `merchant = 'E2E-TEST'` | `cleanup.expenses()` (filter: `E2E*`) |
+| Regression | Recurring expenses | `name = 'E2E Test Subscription'` | `cleanup.recurring()` (filter: `E2E*`) |
+| Smoke | Expenses (delete modal) | `merchant = 'SMOKE-TEST'` | `cleanup.smokeExpenses()` (filter: `SMOKE*`) |
+
+**Important:** smoke and regression CI jobs run in parallel and share the same database. Using distinct merchant prefixes (`E2E-*` vs `SMOKE-*`) prevents each job's cleanup from deleting the other job's live test data. Never use `cleanup.expenses()` (the `E2E*` filter) in smoke specs — use `cleanup.smokeExpenses()` instead.
 
 Cleanup helpers are exported from `tests/helpers/supabase.ts` and call the Supabase REST API directly using `SUPABASE_URL` and `SUPABASE_ANON_KEY`. If these env vars are unset, cleanup warns and skips.
 

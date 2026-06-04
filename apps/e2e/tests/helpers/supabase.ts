@@ -116,6 +116,7 @@ async function post(table: string, data: Record<string, unknown>): Promise<void>
 }
 
 export const E2E_MERCHANT = 'E2E-TEST';
+export const SMOKE_MERCHANT = 'SMOKE-TEST';
 export const E2E_RECURRING_NAME = 'E2E Test Subscription';
 export const E2E_BUDGET_LIMIT = 99999.99;
 export const E2E_BUDGET_LIMIT_EDITED = 88888.88;
@@ -127,6 +128,13 @@ export const cleanup = {
     const filter = uid
       ? `merchant=like.E2E*&user_id=eq.${uid}`
       : 'merchant=like.E2E*';
+    return del('expenses', filter);
+  },
+  smokeExpenses: () => {
+    const uid = loadE2EUserId();
+    const filter = uid
+      ? `merchant=like.SMOKE*&user_id=eq.${uid}`
+      : 'merchant=like.SMOKE*';
     return del('expenses', filter);
   },
   recurring: () => {
@@ -162,6 +170,23 @@ export const seed = {
       source: 'manual',
       merchant: E2E_MERCHANT,
       description: 'E2E delete modal test',
+      conversion_rate: null,
+      category_id: null,
+      receipt_url: null,
+    });
+  },
+  smokeExpense: () => {
+    const uid = loadE2EUserId();
+    const now = new Date();
+    const occurred_at = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return post('expenses', {
+      user_id: uid,
+      amount: 1,
+      currency: 'PHP',
+      occurred_at,
+      source: 'manual',
+      merchant: SMOKE_MERCHANT,
+      description: 'E2E smoke delete modal test',
       conversion_rate: null,
       category_id: null,
       receipt_url: null,
