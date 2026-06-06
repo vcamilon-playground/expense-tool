@@ -121,6 +121,23 @@ npm run dev:web
 npm run dev:mobile
 ```
 
+## Install as an app (PWA)
+
+The web app is a Progressive Web App — installable on iPhone and Android with
+no app store, no developer account, and no extra cost. After deploying to
+Vercel (HTTPS required), open the site on your phone:
+
+- **iPhone (Safari):** Share button → **Add to Home Screen**. Launches
+  fullscreen with its own icon.
+- **Android (Chrome):** menu (⋮) → **Install app** (or the install prompt).
+
+A web manifest (`src/app/manifest.ts`), maskable icon (`public/icon.svg`),
+iOS home-screen icon (`src/app/apple-icon.tsx`, generated via `next/og`), and a
+service worker (`public/sw.js`, network-first with an offline app-shell cache)
+power the install. The service worker never caches `/api/*` or Supabase
+requests, so data is always fresh. Updates ship automatically on the next visit
+after each Vercel deploy.
+
 ## Features
 
 - **Multi-user auth** — register with first name, last name, username, password, profile picture (optional), birth date (optional). Login, logout, and switch-user from the sidebar. No email required. If a password is forgotten, reset it via Supabase SQL editor.

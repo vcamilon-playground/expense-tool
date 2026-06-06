@@ -5,7 +5,7 @@
 Multi-user expense tracking tool with custom authentication. Each user's data is fully isolated. No Supabase Auth — a custom `users` table with bcrypt-hashed passwords and JWT session cookies is used instead.
 
 **Stack:**
-- **Web app** — Next.js 14 App Router, TypeScript, Recharts, deployed on Vercel
+- **Web app** — Next.js 14 App Router, TypeScript, Recharts, deployed on Vercel. Installable as a **PWA** (web manifest at `src/app/manifest.ts`, maskable `public/icon.svg`, iOS icon via `src/app/apple-icon.tsx`, service worker `public/sw.js` registered by `ServiceWorkerRegister`). The SW is network-first and never caches `/api/*` or Supabase; PWA appearance/theme-color/safe-area live in `layout.tsx` `metadata`/`viewport` exports.
 - **Mobile app** — React Native / Expo (separate workspace, not deployed)
 - **Database** — Supabase free tier (Postgres), RLS disabled, anon key has full read/write
 - **Shared library** — `@expense/shared` (types, `formatMoney`, report helpers)
