@@ -17,6 +17,7 @@ function greetingInfo(): { text: string; emoji: string } {
 export default function SiteHeader() {
   const { user } = useAuth();
   const [notifCount, setNotifCount] = useState(0);
+  const avatarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -31,7 +32,6 @@ export default function SiteHeader() {
 
   const { text, emoji } = greetingInfo();
   const initials = `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
-  const avatarRef = useRef<HTMLDivElement>(null);
 
   function handleAvatarClick() {
     if (!avatarRef.current) return;
