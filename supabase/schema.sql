@@ -114,6 +114,17 @@ begin
 end;
 $$ language plpgsql;
 
+-- ---------- income sources ----------
+create table if not exists income_sources (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  type text not null check (type in ('bank', 'ewallet', 'cash')),
+  name text,
+  balance numeric(12,2) not null default 0 check (balance >= 0),
+  created_at timestamptz not null default now()
+);
+create index if not exists income_sources_user_id_idx on income_sources (user_id);
+
 -- ---------- RLS: disabled, anon key has full read/write ----------
 -- The anon key gets full read/write. Do NOT expose this DB beyond your own use.
 alter table users disable row level security;
@@ -121,6 +132,7 @@ alter table categories disable row level security;
 alter table expenses disable row level security;
 alter table budgets disable row level security;
 alter table recurring_expenses disable row level security;
+alter table income_sources disable row level security;
 
 -- ---------- Privileges for anon role ----------
 grant usage on schema public to anon;

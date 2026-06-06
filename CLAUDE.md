@@ -65,10 +65,12 @@ Five tables in Supabase Postgres:
 | `expenses` | `id`, `user_id`, `amount`, `currency`, `conversion_rate`, `category_id`, `merchant`, `description`, `occurred_at`, `receipt_url`, `source` |
 | `budgets` | `id`, `user_id`, `category_id` (null = overall), `monthly_limit` |
 | `recurring_expenses` | `id`, `user_id`, `name`, `amount`, `category_id`, `cadence` (weekly/monthly/yearly), `next_charge_date`, `active` |
+| `income_sources` | `id`, `user_id`, `type` (bank/ewallet/cash), `name` (null for cash), `balance` |
 
 - Every table except `users` has a `user_id` FK. All DB functions in `lib/db.ts` accept `userId: string` and filter by it — RLS is disabled, isolation is enforced in application code.
 - Currency defaults to `PHP`. Overseas expenses store `conversion_rate` (rate to PHP).
 - `source` is `'manual'`, `'receipt'` (AI-extracted from photo), or `'recurring'` (auto-created by the daily cron).
+- `income_sources.type` is `'bank'`, `'ewallet'`, or `'cash'`. Only one `cash` entry is allowed per user (enforced in app code). When an expense is **created** (not edited), the user may optionally select an income source to deduct from; `deductFromIncomeSource` is called immediately after `createExpense`. No restoration occurs on edit or delete.
 - Edit button on expenses is shown for current-month rows by default. If the user enables "Allow past expense editing" in Settings (`localStorage` key `allow-past-edit`), edit is shown on all rows.
 - `budgets.category_id` is nullable — a null category_id means "overall" budget.
 

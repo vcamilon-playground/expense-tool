@@ -71,6 +71,19 @@ export type MonthlyInsight = {
   recommendations: string[];
 };
 
+export type IncomeType = 'bank' | 'ewallet' | 'cash';
+
+export type IncomeSource = {
+  id: string;
+  user_id: string;
+  type: IncomeType;
+  name: string | null;
+  balance: number;
+  created_at?: string;
+};
+
+export type IncomeSourceInput = Omit<IncomeSource, 'id' | 'user_id' | 'created_at'>;
+
 export type User = {
   id: string;
   username: string;

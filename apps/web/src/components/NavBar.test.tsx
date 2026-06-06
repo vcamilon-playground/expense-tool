@@ -42,6 +42,7 @@ describe('NavBar', () => {
     expect(within(sidenav).getByRole('link', { name: /Reports/ })).toBeInTheDocument();
     expect(within(sidenav).getByRole('link', { name: /Budgets/ })).toBeInTheDocument();
     expect(within(sidenav).getByRole('link', { name: /Recurring/ })).toBeInTheDocument();
+    expect(within(sidenav).getByRole('link', { name: /Income/ })).toBeInTheDocument();
     expect(within(sidenav).getByRole('link', { name: /Settings/ })).toBeInTheDocument();
   });
 

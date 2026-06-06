@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { Category, Expense, ExpenseInput } from '@expense/shared';
+import type { Category, Expense, ExpenseInput, IncomeSource } from '@expense/shared';
 import {
   createExpense,
+  deductFromIncomeSource,
   deleteExpense,
   listCategories,
   listExpenses,
+  listIncomeSources,
   updateExpense,
 } from '@/lib/db';
 import ExpenseCalendar from '@/components/ExpenseCalendar';
@@ -20,6 +22,7 @@ export default function ExpensesPage() {
   const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [search, setSearch] = useState('');
@@ -31,9 +34,14 @@ export default function ExpensesPage() {
 
   async function reload() {
     if (!user) return;
-    const [c, e] = await Promise.all([listCategories(user.id), listExpenses(user.id)]);
+    const [c, e, inc] = await Promise.all([
+      listCategories(user.id),
+      listExpenses(user.id),
+      listIncomeSources(user.id),
+    ]);
     setCategories(c);
     setExpenses(e);
+    setIncomeSources(inc);
   }
 
   useEffect(() => {
@@ -55,9 +63,15 @@ export default function ExpensesPage() {
     setEditing(null);
   }
 
-  async function handleCreate(input: ExpenseInput) {
+  async function handleCreate(input: ExpenseInput, incomeSourceId: string | null) {
     if (!user) return;
     await createExpense(input, user.id);
+    if (incomeSourceId) {
+      const phpAmount = input.conversion_rate
+        ? input.amount * input.conversion_rate
+        : input.amount;
+      await deductFromIncomeSource(incomeSourceId, phpAmount);
+    }
     closeModal();
     await reload();
   }
@@ -100,6 +114,7 @@ export default function ExpensesPage() {
       <FormModal open={modalOpen} title={modalTitle} onClose={closeModal}>
         <ExpenseForm
           categories={formCategories}
+          incomeSources={incomeSources}
           initial={editing}
           onSubmit={editing ? handleUpdate : handleCreate}
           onCancel={closeModal}

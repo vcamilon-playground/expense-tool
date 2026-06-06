@@ -5,6 +5,8 @@ import type {
   CategoryInput,
   Expense,
   ExpenseInput,
+  IncomeSource,
+  IncomeSourceInput,
   RecurringExpense,
   RecurringInput,
 } from '@expense/shared';
@@ -167,4 +169,63 @@ export async function updateRecurring(
 export async function deleteRecurring(id: string): Promise<void> {
   const { error } = await supabase.from('recurring_expenses').delete().eq('id', id);
   if (error) throw error;
+}
+
+// ---------- Income Sources ----------
+
+export async function listIncomeSources(userId: string): Promise<IncomeSource[]> {
+  const { data, error } = await supabase
+    .from('income_sources')
+    .select('*')
+    .eq('user_id', userId)
+    .order('type')
+    .order('created_at');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createIncomeSource(
+  input: IncomeSourceInput,
+  userId: string,
+): Promise<IncomeSource> {
+  const { data, error } = await supabase
+    .from('income_sources')
+    .insert({ ...input, user_id: userId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateIncomeSource(
+  id: string,
+  patch: Partial<Pick<IncomeSource, 'name' | 'balance'>>,
+): Promise<IncomeSource> {
+  const { data, error } = await supabase
+    .from('income_sources')
+    .update(patch)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteIncomeSource(id: string): Promise<void> {
+  const { error } = await supabase.from('income_sources').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function deductFromIncomeSource(id: string, amount: number): Promise<void> {
+  const { data, error } = await supabase
+    .from('income_sources')
+    .select('balance')
+    .eq('id', id)
+    .single();
+  if (error) throw error;
+  const { error: upErr } = await supabase
+    .from('income_sources')
+    .update({ balance: Number(data.balance) - amount })
+    .eq('id', id);
+  if (upErr) throw upErr;
 }

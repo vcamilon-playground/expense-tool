@@ -987,6 +987,41 @@ button.btn-sm {
     gap: 6px;
     padding-top: 8px;
   }
+
+  /* Income table: same two-line card view */
+  .income-table thead { display: none; }
+  .income-table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .income-table tbody tr:last-child { border-bottom: none; }
+  .income-table tbody td { border-bottom: none; padding: 0; }
+  .income-table tbody td:nth-child(1) {
+    flex: 1 1 auto;
+    font-weight: 500;
+    font-size: 14px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .income-table tbody td:nth-child(2) {
+    flex: 0 0 auto;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    text-align: right;
+  }
+  .income-table tbody td:nth-child(3) {
+    flex: 0 0 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    padding-top: 8px;
+  }
   .expense-table td[data-label=""]::before { display: none; }
 
   /* Recurring table: card view */

@@ -1,19 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import type { Category, Expense, ExpenseInput } from '@expense/shared';
+import type { Category, Expense, ExpenseInput, IncomeSource } from '@expense/shared';
 
 type Props = {
   categories: Category[];
+  incomeSources?: IncomeSource[];
   initial?: Expense | null;
-  onSubmit: (input: ExpenseInput) => Promise<void>;
+  onSubmit: (input: ExpenseInput, incomeSourceId: string | null) => Promise<void>;
   onCancel?: () => void;
   embedded?: boolean;
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export default function ExpenseForm({ categories, initial, onSubmit, onCancel, embedded }: Props) {
+export default function ExpenseForm({ categories, incomeSources, initial, onSubmit, onCancel, embedded }: Props) {
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
   const [currency, setCurrency] = useState(initial?.currency ?? 'PHP');
   const [conversionRate, setConversionRate] = useState(
@@ -23,6 +24,7 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel, e
   const [merchant, setMerchant] = useState(initial?.merchant ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [occurredAt, setOccurredAt] = useState(initial?.occurred_at ?? today());
+  const [incomeSourceId, setIncomeSourceId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ amount?: string; date?: string }>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -33,6 +35,12 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel, e
   const phpPreview = isOverseas && parsedAmount > 0 && parsedRate > 0
     ? parsedAmount * parsedRate
     : null;
+
+  const isCreating = !initial;
+  const bankSources = (incomeSources ?? []).filter((s) => s.type === 'bank');
+  const ewalletSources = (incomeSources ?? []).filter((s) => s.type === 'ewallet');
+  const cashSource = (incomeSources ?? []).find((s) => s.type === 'cash');
+  const hasIncomeSources = (incomeSources ?? []).length > 0;
 
   function clearFieldError(field: keyof typeof fieldErrors) {
     setFieldErrors((p) => { const n = { ...p }; delete n[field]; return n; });
@@ -61,17 +69,20 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel, e
     setSubmitting(true);
     try {
       const rate = parseFloat(conversionRate);
-      await onSubmit({
-        amount: parsed,
-        currency: currency.toUpperCase(),
-        conversion_rate: isOverseas && Number.isFinite(rate) && rate > 0 ? rate : null,
-        category_id: categoryId || null,
-        merchant: merchant || null,
-        description: description || null,
-        occurred_at: occurredAt,
-        receipt_url: initial?.receipt_url ?? null,
-        source: initial?.source ?? 'manual',
-      });
+      await onSubmit(
+        {
+          amount: parsed,
+          currency: currency.toUpperCase(),
+          conversion_rate: isOverseas && Number.isFinite(rate) && rate > 0 ? rate : null,
+          category_id: categoryId || null,
+          merchant: merchant || null,
+          description: description || null,
+          occurred_at: occurredAt,
+          receipt_url: initial?.receipt_url ?? null,
+          source: initial?.source ?? 'manual',
+        },
+        isCreating ? (incomeSourceId || null) : null,
+      );
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Save failed');
     } finally {
@@ -152,6 +163,33 @@ export default function ExpenseForm({ categories, initial, onSubmit, onCancel, e
             rows={2}
           />
         </label>
+        {isCreating && hasIncomeSources && (
+          <label style={{ gridColumn: '1 / -1' }}>
+            <div className="muted">Deduct from (optional)</div>
+            <select value={incomeSourceId} onChange={(e) => setIncomeSourceId(e.target.value)}>
+              <option value="">— Don't deduct —</option>
+              {bankSources.length > 0 && (
+                <optgroup label="Bank">
+                  {bankSources.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </optgroup>
+              )}
+              {ewalletSources.length > 0 && (
+                <optgroup label="E-Wallet">
+                  {ewalletSources.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </optgroup>
+              )}
+              {cashSource && (
+                <optgroup label="Cash">
+                  <option value={cashSource.id}>Cash on Hand</option>
+                </optgroup>
+              )}
+            </select>
+          </label>
+        )}
       </div>
       {submitError && <p style={{ color: 'var(--bad)', marginTop: 8 }}>{submitError}</p>}
       <div className="row" style={{ marginTop: 12 }}>

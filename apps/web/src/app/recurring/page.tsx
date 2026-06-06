@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Category, RecurringCadence, RecurringExpense, RecurringInput } from '@expense/shared';
+import type { Category, IncomeSource, RecurringCadence, RecurringExpense, RecurringInput } from '@expense/shared';
 import { advanceDate, formatMoney } from '@expense/shared';
 import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 import {
   createExpense,
   createRecurring,
+  deductFromIncomeSource,
   deleteRecurring,
   listCategories,
+  listIncomeSources,
   listRecurring,
   updateRecurring,
 } from '@/lib/db';
@@ -36,6 +38,7 @@ export default function RecurringPage() {
   const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<RecurringExpense[]>([]);
+  const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
   const [draft, setDraft] = useState<RecurringInput>(empty);
   const [amountInput, setAmountInput] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -49,19 +52,26 @@ export default function RecurringPage() {
   const [pendingItem, setPendingItem] = useState<RecurringExpense | null>(null);
   const [confirmStep, setConfirmStep] = useState<'confirm' | 'reminder' | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [confirmIncomeId, setConfirmIncomeId] = useState('');
 
   // Early payment flow state (not-yet-due items)
   const [pendingEarlyItem, setPendingEarlyItem] = useState<RecurringExpense | null>(null);
   const [earlyPayError, setEarlyPayError] = useState<string | null>(null);
+  const [earlyPayIncomeId, setEarlyPayIncomeId] = useState('');
 
   const today = new Date().toISOString().slice(0, 10);
   const isDue = (r: RecurringExpense) => r.active && r.next_charge_date <= today;
 
   async function reload() {
     if (!user) return;
-    const [c, r] = await Promise.all([listCategories(user.id), listRecurring(user.id)]);
+    const [c, r, inc] = await Promise.all([
+      listCategories(user.id),
+      listRecurring(user.id),
+      listIncomeSources(user.id),
+    ]);
     setCategories(c);
     setItems(r);
+    setIncomeSources(inc);
   }
 
   useEffect(() => {
@@ -136,8 +146,10 @@ export default function RecurringPage() {
     if (!pendingItem || !user) return;
     setConfirmError(null);
     const item = pendingItem;
+    const incomeId = confirmIncomeId;
     setPendingItem(null);
     setConfirmStep(null);
+    setConfirmIncomeId('');
     try {
       await createExpense(
         {
@@ -153,6 +165,7 @@ export default function RecurringPage() {
         },
         user.id,
       );
+      if (incomeId) await deductFromIncomeSource(incomeId, item.amount);
       await updateRecurring(item.id, {
         next_charge_date: advanceDate(item.next_charge_date, item.cadence),
       });
@@ -170,7 +183,9 @@ export default function RecurringPage() {
     if (!pendingEarlyItem || !user) return;
     setEarlyPayError(null);
     const item = pendingEarlyItem;
+    const incomeId = earlyPayIncomeId;
     setPendingEarlyItem(null);
+    setEarlyPayIncomeId('');
     try {
       await createExpense(
         {
@@ -186,6 +201,7 @@ export default function RecurringPage() {
         },
         user.id,
       );
+      if (incomeId) await deductFromIncomeSource(incomeId, item.amount);
       await updateRecurring(item.id, {
         next_charge_date: advanceDate(item.next_charge_date, item.cadence),
       });
@@ -333,9 +349,36 @@ export default function RecurringPage() {
               <h3 style={{ margin: 0 }}>Confirm Payment</h3>
               <button className="ghost close-btn" onClick={dismissConfirm} aria-label="Close">✕</button>
             </div>
-            <p style={{ marginBottom: 20 }}>
+            <p style={{ marginBottom: 16 }}>
               Has <strong>{pendingItem.name}</strong> ({formatMoney(pendingItem.amount)}) already been paid?
             </p>
+            {incomeSources.length > 0 && (
+              <label style={{ display: 'block', marginBottom: 16 }}>
+                <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Deduct from (optional)</div>
+                <select value={confirmIncomeId} onChange={(e) => setConfirmIncomeId(e.target.value)}>
+                  <option value="">— Don&apos;t deduct —</option>
+                  {incomeSources.filter((s) => s.type === 'bank').length > 0 && (
+                    <optgroup label="Bank">
+                      {incomeSources.filter((s) => s.type === 'bank').map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {incomeSources.filter((s) => s.type === 'ewallet').length > 0 && (
+                    <optgroup label="E-Wallet">
+                      {incomeSources.filter((s) => s.type === 'ewallet').map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {incomeSources.find((s) => s.type === 'cash') && (
+                    <optgroup label="Cash">
+                      <option value={incomeSources.find((s) => s.type === 'cash')!.id}>Cash on Hand</option>
+                    </optgroup>
+                  )}
+                </select>
+              </label>
+            )}
             <div className="row" style={{ justifyContent: 'flex-end', gap: 10 }}>
               <button className="primary" style={{ width: 'auto' }} onClick={handleConfirmYes}>
                 Yes, it&apos;s been paid
@@ -376,16 +419,43 @@ export default function RecurringPage() {
               <h3 style={{ margin: 0 }}>Record Early Payment</h3>
               <button className="ghost close-btn" onClick={() => setPendingEarlyItem(null)} aria-label="Close">✕</button>
             </div>
-            <p style={{ marginBottom: 20 }}>
+            <p style={{ marginBottom: 16 }}>
               Record an early payment for <strong>{pendingEarlyItem.name}</strong> ({formatMoney(pendingEarlyItem.amount)})?
               The next charge date will advance from <strong>{pendingEarlyItem.next_charge_date}</strong> to{' '}
               <strong>{advanceDate(pendingEarlyItem.next_charge_date, pendingEarlyItem.cadence)}</strong>.
             </p>
+            {incomeSources.length > 0 && (
+              <label style={{ display: 'block', marginBottom: 16 }}>
+                <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Deduct from (optional)</div>
+                <select value={earlyPayIncomeId} onChange={(e) => setEarlyPayIncomeId(e.target.value)}>
+                  <option value="">— Don&apos;t deduct —</option>
+                  {incomeSources.filter((s) => s.type === 'bank').length > 0 && (
+                    <optgroup label="Bank">
+                      {incomeSources.filter((s) => s.type === 'bank').map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {incomeSources.filter((s) => s.type === 'ewallet').length > 0 && (
+                    <optgroup label="E-Wallet">
+                      {incomeSources.filter((s) => s.type === 'ewallet').map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {incomeSources.find((s) => s.type === 'cash') && (
+                    <optgroup label="Cash">
+                      <option value={incomeSources.find((s) => s.type === 'cash')!.id}>Cash on Hand</option>
+                    </optgroup>
+                  )}
+                </select>
+              </label>
+            )}
             <div className="row" style={{ justifyContent: 'flex-end', gap: 10 }}>
               <button className="primary" style={{ width: 'auto' }} onClick={handleEarlyPayConfirm}>
                 Yes, record it
               </button>
-              <button className="ghost" style={{ width: 'auto' }} onClick={() => setPendingEarlyItem(null)}>
+              <button className="ghost" style={{ width: 'auto' }} onClick={() => { setPendingEarlyItem(null); setEarlyPayIncomeId(''); }}>
                 Cancel
               </button>
             </div>
