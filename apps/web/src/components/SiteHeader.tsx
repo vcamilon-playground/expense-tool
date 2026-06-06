@@ -7,11 +7,11 @@ import ThemeToggle from './ThemeToggle';
 import { listRecurring } from '@/lib/db';
 import { computeNotifications, incomeReminderKey } from '@/lib/notifications';
 
-function greeting(): string {
+function greetingInfo(): { text: string; emoji: string } {
   const h = new Date().getHours();
-  if (h < 12) return 'Good Morning,';
-  if (h < 18) return 'Good Afternoon,';
-  return 'Good Evening,';
+  if (h < 12) return { text: 'Good Morning,', emoji: '🌅' };
+  if (h < 18) return { text: 'Good Afternoon,', emoji: '☀️' };
+  return { text: 'Good Evening,', emoji: '🌙' };
 }
 
 export default function SiteHeader() {
@@ -29,9 +29,11 @@ export default function SiteHeader() {
 
   if (!user) return null;
 
+  const { text, emoji } = greetingInfo();
+
   return (
     <div className="site-header">
-      <p className="site-welcome">{greeting()} {user.first_name}!</p>
+      <p className="site-welcome">{text} {user.first_name}! {emoji}</p>
 
       <div className="site-header-search">
         <input

@@ -18,12 +18,17 @@ import type { Budget, Expense } from '@expense/shared';
 type Props = { expenses: Expense[]; budgets: Budget[] };
 type Point = { month: string; Spent: number; Budget?: number };
 
-function barColor(spent: number, budget?: number): string {
-  if (!budget || budget === 0) return '#5b8def';
+function cssVar(name: string, fallback: string): string {
+  if (typeof document === 'undefined') return fallback;
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
+function barColor(spent: number, budget: number | undefined, accent: string): string {
+  if (!budget || budget === 0) return accent;
   const pct = spent / budget;
-  if (pct > 0.90) return '#ef6f6c'; // red
-  if (pct > 0.75) return '#f6c177'; // amber
-  return '#4cc38a';                  // green
+  if (pct > 0.90) return '#ef6f6c'; // red — over budget
+  if (pct > 0.75) return '#f6c177'; // amber — approaching limit
+  return '#4cc38a';                  // green — within budget
 }
 
 function buildTrend(expenses: Expense[], budgets: Budget[]): Point[] {
@@ -58,19 +63,23 @@ export default function TrendChart({ expenses, budgets }: Props) {
   const data = buildTrend(expenses, budgets);
   const hasBudget = data.some((d) => d.Budget);
 
+  const accent = cssVar('--accent', '#3b6fd4');
+  const border = cssVar('--border', '#2a3447');
+  const muted = cssVar('--muted', '#8a96ad');
+
   return (
     <div style={{ width: '100%', height: 240 }}>
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2a3447" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={border} vertical={false} />
           <XAxis
             dataKey="month"
-            tick={{ fill: '#8a96ad', fontSize: 12 }}
+            tick={{ fill: muted, fontSize: 12 }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: '#8a96ad', fontSize: 11 }}
+            tick={{ fill: muted, fontSize: 11 }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v: number) => `₱${v.toLocaleString()}`}
@@ -83,17 +92,17 @@ export default function TrendChart({ expenses, budgets }: Props) {
           />
           <Legend
             wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
-            formatter={(v: string) => <span style={{ color: 'var(--muted)' }}>{v}</span>}
+            formatter={(v: string) => <span style={{ color: muted }}>{v}</span>}
           />
           <Bar dataKey="Spent" radius={[4, 4, 0, 0]} maxBarSize={48}>
             {data.map((entry, i) => (
-              <Cell key={i} fill={barColor(entry.Spent, entry.Budget)} />
+              <Cell key={i} fill={barColor(entry.Spent, entry.Budget, accent)} />
             ))}
           </Bar>
           {hasBudget && (
             <Line
               dataKey="Budget"
-              stroke="#4cc38a"
+              stroke={accent}
               strokeWidth={2}
               dot={false}
               strokeDasharray="6 3"
