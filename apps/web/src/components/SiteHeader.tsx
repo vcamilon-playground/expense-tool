@@ -30,11 +30,23 @@ export default function SiteHeader() {
   if (!user) return null;
 
   const { text, emoji } = greetingInfo();
+  const initials = `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
 
   return (
     <div className="site-header">
-      <p className="site-welcome">{text} {user.first_name}! {emoji}</p>
+      {/* Left: avatar (mobile-only) + greeting */}
+      <div className="site-header-left">
+        <div className="header-avatar">
+          {user.profile_picture_url ? (
+            <img src={user.profile_picture_url} alt={user.first_name} />
+          ) : (
+            <span>{initials}</span>
+          )}
+        </div>
+        <p className="site-welcome">{text} {user.first_name}! {emoji}</p>
+      </div>
 
+      {/* Center: search (hidden on mobile) */}
       <div className="site-header-search">
         <input
           type="text"
@@ -48,6 +60,7 @@ export default function SiteHeader() {
         </svg>
       </div>
 
+      {/* Right: theme toggle + notifications */}
       <div className="site-header-actions">
         <ThemeToggle compact />
         <Link
