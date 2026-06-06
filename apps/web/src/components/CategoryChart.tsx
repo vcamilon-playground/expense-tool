@@ -30,13 +30,16 @@ export default function CategoryChart({ data }: Props) {
     return <p className="muted">No expenses yet this month.</p>;
   }
 
-  const accent = cssVar('--accent', '#3b6fd4');
   const muted = cssVar('--muted', '#8a96ad');
   const panel = cssVar('--panel', '#ffffff');
+  const accent = cssVar('--accent', '#3b6fd4');
 
-  // Monochrome accent palette: each slice fades the accent so the whole chart
-  // stays on-theme. Step opacity down across slices (never below 0.35).
-  const sliceOpacity = (i: number) => Math.max(0.35, 1 - i * (0.6 / Math.max(1, data.length - 1)));
+  // Distinct color per category; lead with the active accent, then a fixed
+  // multi-hue palette. Cycles if there are more categories than colors.
+  const palette = [
+    accent, '#16a34a', '#ea580c', '#7c3aed', '#dc2626',
+    '#0891b2', '#d97706', '#db2777', '#65a30d', '#4f46e5',
+  ];
 
   return (
     <div style={{ width: '100%', height: 240 }}>
@@ -55,7 +58,7 @@ export default function CategoryChart({ data }: Props) {
             strokeWidth={2}
           >
             {data.map((_, i) => (
-              <Cell key={i} fill={accent} fillOpacity={sliceOpacity(i)} />
+              <Cell key={i} fill={palette[i % palette.length]} />
             ))}
           </Pie>
           <Tooltip

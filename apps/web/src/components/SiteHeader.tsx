@@ -67,20 +67,6 @@ export default function SiteHeader() {
         <p className="site-welcome">{text} {user.first_name}! {emoji}</p>
       </div>
 
-      {/* Center: search (hidden on mobile) */}
-      <div className="site-header-search">
-        <input
-          type="text"
-          className="site-search-input"
-          placeholder="Search"
-          aria-label="Search"
-        />
-        <svg className="site-search-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-      </div>
-
       {/* Right: theme toggle + notifications */}
       <div className="site-header-actions">
         <ThemeToggle compact />
