@@ -721,129 +721,105 @@ button.btn-sm {
   .grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* ── Mobile bottom tab bar ── */
+.bottom-nav { display: none; }
+.nav-profile-mobile-only { display: none; }
+
 /* ── Responsive: mobile (≤640px) ── */
 @media (max-width: 640px) {
-  /* Stack sidebar above content */
-  .app-layout { flex-direction: column; }
+  /* Sidebar replaced by bottom tab bar */
+  nav.sidenav { display: none; }
 
-  /* Convert sidebar to top navbar */
-  nav.sidenav,
-  nav.sidenav.collapsed {
-    width: 100%;
-    height: auto;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    flex-direction: row;
-    align-items: center;
-    padding: 10px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.15);
-    overflow: visible;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-    flex-shrink: 0;
-    transition: none;
-  }
-
-  .brand-row,
-  nav.sidenav.collapsed .brand-row {
-    border-bottom: none;
-    padding-right: 0;
-    justify-content: flex-start;
-    flex: 1;
-    gap: 0;
-  }
-
-  nav.sidenav a.brand,
-  nav.sidenav.collapsed a.brand {
-    padding: 0;
-    flex: 1;
-    justify-content: flex-start;
-  }
-
-  .brand-collapse-btn { display: none; }
-
-  .nav-bottom {
+  /* Bottom tab bar */
+  .bottom-nav {
     display: flex;
-    align-items: center;
-    border-top: none;
-    padding: 0;
-    margin-right: 4px;
-  }
-  nav.sidenav .nav-bottom .theme-label { display: none; }
-  nav.sidenav .nav-bottom .settings-label { display: none; }
-  nav.sidenav .nav-bottom button { width: auto; height: 36px; padding: 0 10px; }
-  .nav-settings-link { width: auto; height: 36px; padding: 0 10px; }
-  .nav-settings-link.active { background: rgba(255,255,255,0.2); }
-
-  /* Hide profile avatar from top bar on mobile — it lives in the hamburger dropdown instead */
-  .nav-user-wrapper { display: none; }
-
-  /* Profile entry at the bottom of the hamburger dropdown */
-  .nav-mobile-profile {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    border-top: 1px solid var(--border);
-    margin-top: 4px;
-    border-radius: 6px;
-    cursor: pointer;
-    user-select: none;
-  }
-  .nav-mobile-profile:hover { background: var(--panel-2); }
-  .nav-mobile-profile .nav-user-name { color: var(--text); }
-  .nav-mobile-profile .nav-user-handle { color: var(--muted); }
-
-  .nav-toggle { display: flex; order: 1; margin-left: 0; }
-
-  .nav-links {
-    display: none;
-    flex-direction: column;
-    position: absolute;
-    top: 100%;
+    position: fixed;
+    bottom: 0;
     left: 0;
     right: 0;
+    height: 64px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    padding: 6px 8px;
-    gap: 2px;
-    box-shadow: var(--shadow-md);
-    flex: none;
-    overflow: visible;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.10);
     z-index: 200;
+    align-items: stretch;
   }
-  .nav-links.open { display: flex; }
 
-  nav.sidenav .nav-links a,
-  nav.sidenav.collapsed .nav-links a {
-    border-radius: 6px;
-    padding: 12px 16px;
-    font-size: 15px;
-    justify-content: flex-start;
+  .bottom-nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 0 4px;
     color: var(--muted);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    background: none;
+    border: none;
+    height: 100%;
+    transition: color 0.15s;
   }
-  nav.sidenav .nav-links a:hover,
-  nav.sidenav.collapsed .nav-links a:hover {
-    background: var(--panel-2);
-    color: var(--text);
-  }
-  nav.sidenav .nav-links a.active,
-  nav.sidenav.collapsed .nav-links a.active {
-    border-left: 3px solid var(--accent);
-    padding-left: 13px;
-    background: var(--accent-subtle);
-    color: var(--accent);
-    font-weight: 600;
-  }
-  /* Always show labels and brand text on mobile regardless of desktop collapsed state */
-  nav.sidenav.collapsed .nav-links .nav-label { display: inline; }
-  nav.sidenav.collapsed .brand-text { display: inline; }
-  nav.sidenav.collapsed .theme-label { display: inline; }
-  nav.sidenav.collapsed .nav-bottom .nav-label { display: inline; }
-  nav.sidenav.collapsed .settings-label { display: none; }
-  nav.sidenav.collapsed .nav-bottom button { justify-content: flex-start; padding-left: 12px; padding-right: 12px; }
+  .bottom-nav-tab:hover,
+  .bottom-nav-tab:hover:not(:disabled) { background: none; color: var(--text); text-decoration: none; }
+  .bottom-nav-tab.active { color: var(--accent); }
 
-  main.container { padding: 12px; }
+  .bottom-nav-fab-slot {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .bottom-nav-fab-btn {
+    position: absolute;
+    top: -14px;
+    width: 52px;
+    height: 52px;
+    background: var(--text);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bg);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.28);
+    text-decoration: none;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .bottom-nav-fab-btn:hover { text-decoration: none; box-shadow: 0 6px 24px rgba(0,0,0,0.34); }
+  .bottom-nav-fab-btn:active { transform: scale(0.94); }
+
+  .bottom-nav-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .bottom-nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .bottom-nav-tab.active .bottom-nav-avatar {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* Profile popup items shown only on mobile */
+  .nav-profile-mobile-only { display: flex; }
+  .nav-profile-menu { min-width: 220px; }
+
+  main.container { padding: 12px 12px calc(64px + env(safe-area-inset-bottom, 0px) + 12px); }
   h1 { font-size: 20px; }
   h2 { font-size: 17px; }
 

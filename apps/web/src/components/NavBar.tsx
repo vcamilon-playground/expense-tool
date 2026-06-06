@@ -157,6 +157,11 @@ export default function NavBar() {
     setProfileMenuOpen(true);
   }
 
+  function openProfileMenuFromBottomNav() {
+    setPopupStyle({ bottom: 72, right: 12 });
+    setProfileMenuOpen((prev) => !prev);
+  }
+
   const pathname = usePathname();
 
   const isActive = (href: string) =>
@@ -179,7 +184,7 @@ export default function NavBar() {
 
   return (
     <>
-      <nav className={`sidenav${collapsed ? ' collapsed' : ''}`}>
+      <nav aria-label="Sidebar navigation" className={`sidenav${collapsed ? ' collapsed' : ''}`}>
 
         {/* Brand row: logo + collapse toggle (desktop only) */}
         <div className="brand-row">
@@ -303,6 +308,11 @@ export default function NavBar() {
           ref={popupRef}
           style={{ position: 'fixed', zIndex: 400, ...popupStyle }}
         >
+          {/* Mobile-only: theme toggle at top of menu */}
+          <div className="nav-profile-mobile-only" style={{ borderBottom: '1px solid var(--border)' }}>
+            <ThemeToggle />
+          </div>
+
           <Link
             href="/settings"
             className="nav-profile-menu-item"
@@ -315,6 +325,37 @@ export default function NavBar() {
             </svg>
             Settings
           </Link>
+
+          {/* Mobile-only: Budgets and Recurring (in sidebar on desktop) */}
+          <Link
+            href="/budgets"
+            className="nav-profile-menu-item nav-profile-mobile-only"
+            role="menuitem"
+            onClick={(e) => { handleNavClick('/budgets', e); setProfileMenuOpen(false); }}
+          >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+              <line x1="12" y1="12" x2="12" y2="16"/>
+              <line x1="10" y1="14" x2="14" y2="14"/>
+            </svg>
+            Budgets
+          </Link>
+          <Link
+            href="/recurring"
+            className="nav-profile-menu-item nav-profile-mobile-only"
+            role="menuitem"
+            onClick={(e) => { handleNavClick('/recurring', e); setProfileMenuOpen(false); }}
+          >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="17 1 21 5 17 9"/>
+              <path d="M3 11V9a4 4 0 014-4h14"/>
+              <polyline points="7 23 3 19 7 15"/>
+              <path d="M21 13v2a4 4 0 01-4 4H3"/>
+            </svg>
+            Recurring
+          </Link>
+
           <button
             className="nav-profile-menu-item"
             role="menuitem"
@@ -342,6 +383,87 @@ export default function NavBar() {
           </button>
         </div>
       )}
+
+      {/* ── Mobile bottom tab bar (hidden on desktop via CSS) ── */}
+      <nav className="bottom-nav" aria-label="Mobile navigation">
+        {/* Home */}
+        <Link
+          href="/"
+          className={`bottom-nav-tab${isActive('/') ? ' active' : ''}`}
+          onClick={(e) => handleNavClick('/', e)}
+          aria-label="Dashboard"
+        >
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H15v-5h-4v5H4a1 1 0 01-1-1z"/>
+          </svg>
+          <span>Home</span>
+        </Link>
+
+        {/* Expenses */}
+        <Link
+          href="/expenses"
+          className={`bottom-nav-tab${isActive('/expenses') ? ' active' : ''}`}
+          onClick={(e) => handleNavClick('/expenses', e)}
+          aria-label="Expenses"
+        >
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 00-2 2v16l3-3 3 3 3-3 3 3 3-3V4a2 2 0 00-2-2z"/>
+            <line x1="8" y1="9" x2="16" y2="9"/>
+            <line x1="8" y1="13" x2="14" y2="13"/>
+          </svg>
+          <span>Expenses</span>
+        </Link>
+
+        {/* FAB: Add Expense */}
+        <div className="bottom-nav-fab-slot">
+          <Link
+            href="/expenses"
+            className="bottom-nav-fab-btn"
+            onClick={(e) => handleNavClick('/expenses', e)}
+            aria-label="Add expense"
+          >
+            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </Link>
+        </div>
+
+        {/* Reports */}
+        <Link
+          href="/reports"
+          className={`bottom-nav-tab${isActive('/reports') ? ' active' : ''}`}
+          onClick={(e) => handleNavClick('/reports', e)}
+          aria-label="Reports"
+        >
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="6" y1="20" x2="6" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="18" y1="20" x2="18" y2="14"/>
+          </svg>
+          <span>Reports</span>
+        </Link>
+
+        {/* Profile */}
+        {user && (
+          <button
+            className={`bottom-nav-tab${profileMenuOpen ? ' active' : ''}`}
+            onClick={openProfileMenuFromBottomNav}
+            aria-label="Profile menu"
+            aria-haspopup="menu"
+            aria-expanded={profileMenuOpen}
+          >
+            <div className="bottom-nav-avatar">
+              {user.profile_picture_url ? (
+                <img src={user.profile_picture_url} alt="" />
+              ) : (
+                <span>{initials}</span>
+              )}
+            </div>
+            <span>Profile</span>
+          </button>
+        )}
+      </nav>
 
       {/* Unsaved settings changes modal */}
       {pendingNavHref !== null && (

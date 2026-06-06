@@ -146,7 +146,7 @@ All locators and actions are centralised in `apps/e2e/tests/pages/`:
 | File | Covers |
 |---|---|
 | `BasePage.ts` | `page: Page`, `waitForLoad()` |
-| `NavBar.ts` | `toggle`, `navLinks`, `openIfMobile()`, `mobileProfile()`, `openProfileMenu()`, `settingsLink()`, `profileMenu()`, `settingsMenuItem()` |
+| `NavBar.ts` | `toggle`, `navLinks`, `openIfMobile()`, `mobileProfile()`, `openProfileMenu()`, `settingsLink()`, `profileMenu()`, `settingsMenuItem()` | **Note:** mobile nav is now a bottom tab bar — `openIfMobile()` / `mobileProfile()` / `toggle` methods target the old hamburger and need updating |
 | `LoginPage.ts` | `goto()`, `usernameInput()`, `passwordInput()`, `submitButton()` |
 | `DashboardPage.ts` | `goto()`, `heading()`, `statLabel()`, section headings |
 | `ExpensesPage.ts` | `goto()`, `openAddModal()`, `fillForm()`, `submitAdd()`, `editRow()`, `deleteRow()` |
@@ -182,11 +182,18 @@ Regression specs write real rows to the production database. Cleanup rules:
 
 ### Mobile viewport handling
 
-`nav.sidenav` converts to a top bar on mobile and hides nav links behind a hamburger. The profile avatar moves inside the hamburger dropdown (`.nav-mobile-profile`), not the top bar. Before interacting with nav links or the profile entry, call `nav.openIfMobile()` (no-op on desktop).
+**On desktop (>640px):** `nav.sidenav` is a collapsible left sidebar. Profile avatar and ThemeToggle live in the sidebar's nav-bottom section.
+
+**On mobile (≤640px):** The sidebar is hidden (`display: none`). A fixed **bottom tab bar** (`.bottom-nav`) is shown instead with 4 tabs + a raised FAB button:
+- Tabs: Home (Dashboard), Expenses, [+ FAB → /expenses], Reports, Profile
+- The Profile tab opens the profile popup (positioned above the bar at `bottom: 72px`). The popup includes mobile-only items: ThemeToggle, Budgets, and Recurring (since those lack dedicated bottom tabs).
+- The hamburger toggle (`.nav-toggle`) is still in the DOM but hidden by CSS on mobile.
+
+> **⚠ NavBar.ts POM pending update:** `openIfMobile()`, `mobileProfile()`, and `toggle()` target the old hamburger pattern and will not work on mobile viewports until the page object is updated.
 
 **Cross-viewport coverage rule:** Whenever a navbar or sidebar element is added, removed, or restyled, tests must cover **both** viewports:
 - Desktop tests live in the `Navigation — sidebar collapse` describe block (no `test.use` override → default 1280px).
-- Mobile tests live in the `Navigation — mobile hamburger` describe block (`test.use({ viewport: { width: 390, height: 844 } })`).
+- Mobile tests live in the `Navigation — mobile bottom tab bar` describe block (`test.use({ viewport: { width: 390, height: 844 } })`). Note: the old "mobile hamburger" describe block needs to be replaced.
 
 For every new control in the sidebar, ask two questions:
 1. Is there a desktop test asserting it is **visible**?
@@ -527,11 +534,11 @@ When adding tests for a new feature:
 | `getByRole('button', { name: 'Add Expense' })` matches two elements | Scope to `dialog.getByRole(...)` |
 | `.stat` count is wrong | Use `.stat .label` with `.filter({ hasText: '...' })` — MonthEndBanner also renders `.stat` |
 | `getByLabel('Period')` doesn't find select | Label uses implicit association. Use `locator('label').filter({ hasText: 'Period' }).locator('select')` |
-| Nav links not found on mobile | Call `nav.openIfMobile()` before interacting with links |
-| Profile avatar not found on mobile | Avatar is inside the hamburger dropdown (`.nav-mobile-profile`), not the top bar — open hamburger first |
+| Nav links not found on mobile | On mobile the sidebar is hidden — use the bottom tab bar (`.bottom-nav`) instead. `openIfMobile()` targets the old hamburger and needs updating. |
+| Profile avatar not found on mobile | Avatar is in the bottom tab bar's Profile tab (`.bottom-nav-avatar`). Click the Profile tab to open the popup. |
 | Element is invisible due to matching fg/bg color but `toBeVisible()` passes | Use `evaluate(el => getComputedStyle(el).color)` to assert the computed color is not the same as the background |
 | `.field-error` shows in wrong color inside a modal | `.modal p` has higher specificity — `.field-error` uses `color: var(--bad) !important` to override |
-| Sidebar control works on desktop but missing on mobile (or vice versa) | Each sidebar control needs a test in both the desktop describe block and the mobile hamburger describe block — see cross-viewport coverage rule |
+| Sidebar control works on desktop but missing on mobile (or vice versa) | Each sidebar control needs a test in both the desktop describe block and the mobile bottom tab bar describe block — see cross-viewport coverage rule |
 | Tests hang in CI | Vercel Authentication is enabled — disable it in Vercel project settings |
 | Cleanup skipped in CI | Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as GitHub repository secrets |
 | `page.goto` fails with "Cannot navigate to invalid URL" | Playwright must be run from `apps/e2e/` directory — `baseURL` is only set when the config file is loaded |

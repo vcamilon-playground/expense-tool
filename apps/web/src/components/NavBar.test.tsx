@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import NavBar from './NavBar';
 
@@ -34,21 +34,24 @@ describe('NavBar', () => {
 
   it('renders all nav links', () => {
     render(<NavBar />);
-    expect(screen.getByRole('link', { name: /Dashboard/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /^Expenses$/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Reports/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Budgets/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Recurring/ })).toBeInTheDocument();
+    const sidenav = screen.getByRole('navigation', { name: 'Sidebar navigation' });
+    expect(within(sidenav).getByRole('link', { name: /Dashboard/ })).toBeInTheDocument();
+    expect(within(sidenav).getByRole('link', { name: /^Expenses$/ })).toBeInTheDocument();
+    expect(within(sidenav).getByRole('link', { name: /Reports/ })).toBeInTheDocument();
+    expect(within(sidenav).getByRole('link', { name: /Budgets/ })).toBeInTheDocument();
+    expect(within(sidenav).getByRole('link', { name: /Recurring/ })).toBeInTheDocument();
   });
 
   it('marks Dashboard as active when pathname is "/"', () => {
     render(<NavBar />);
-    expect(screen.getByRole('link', { name: /Dashboard/ })).toHaveClass('active');
+    const sidenav = screen.getByRole('navigation', { name: 'Sidebar navigation' });
+    expect(within(sidenav).getByRole('link', { name: /Dashboard/ })).toHaveClass('active');
   });
 
   it('does not mark Expenses as active when pathname is "/"', () => {
     render(<NavBar />);
-    expect(screen.getByRole('link', { name: /^Expenses$/ })).not.toHaveClass('active');
+    const sidenav = screen.getByRole('navigation', { name: 'Sidebar navigation' });
+    expect(within(sidenav).getByRole('link', { name: /^Expenses$/ })).not.toHaveClass('active');
   });
 
   it('renders the toggle button', () => {
