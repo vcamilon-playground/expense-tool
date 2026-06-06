@@ -87,7 +87,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!user) return;
 
-    const savedAccentVal = (localStorage.getItem('accent') as Accent | null) ?? 'default';
+    const savedAccentVal = ((user.accent_color ?? localStorage.getItem('accent')) as Accent | null) ?? 'default';
     const savedSessionTimeout = (localStorage.getItem('session-timeout') as SessionTimeout | null) ?? 'never';
     const savedAllowPastEdit = localStorage.getItem('allow-past-edit') === 'true';
 
@@ -123,46 +123,40 @@ export default function SettingsPage() {
     setGlobalErr(null);
 
     try {
-      // Profile update if name/avatar/birth date changed
-      const saved = savedRef.current!;
-      const profileChanged =
-        draft.first_name !== saved.first_name ||
-        draft.last_name !== saved.last_name ||
-        draft.birth_date !== saved.birth_date ||
-        draft.avatarFile !== null;
-
-      if (profileChanged) {
-        let profilePictureUrl = user.profile_picture_url;
-        if (draft.avatarFile) {
-          const ext = draft.avatarFile.name.split('.').pop();
-          const path = `${user.id}.${ext}`;
-          const { error } = await supabase.storage.from('avatars').upload(path, draft.avatarFile, {
-            upsert: true, contentType: draft.avatarFile.type,
-          });
-          if (!error) {
-            const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-            profilePictureUrl = data.publicUrl;
-          }
-        }
-        const res = await fetch('/api/auth/update-profile', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            first_name: draft.first_name,
-            last_name: draft.last_name,
-            birth_date: draft.birth_date || null,
-            profile_picture_url: profilePictureUrl,
-          }),
+      // Upload avatar if changed
+      let profilePictureUrl = user.profile_picture_url;
+      if (draft.avatarFile) {
+        const ext = draft.avatarFile.name.split('.').pop();
+        const path = `${user.id}.${ext}`;
+        const { error } = await supabase.storage.from('avatars').upload(path, draft.avatarFile, {
+          upsert: true, contentType: draft.avatarFile.type,
         });
-        if (!res.ok) {
-          const data = await res.json();
-          setGlobalErr(data.error ?? 'Failed to update profile');
-          return;
+        if (!error) {
+          const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+          profilePictureUrl = data.publicUrl;
         }
-        await refresh();
       }
 
-      // Persist preferences
+      // Always persist profile + accent_color to DB so changes sync across devices
+      const res = await fetch('/api/auth/update-profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name: draft.first_name,
+          last_name: draft.last_name,
+          birth_date: draft.birth_date || null,
+          profile_picture_url: profilePictureUrl,
+          accent_color: draft.accent,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setGlobalErr(data.error ?? 'Failed to save settings');
+        return;
+      }
+      await refresh();
+
+      // Sync localStorage write-through cache
       applyAccentToDOM(draft.accent);
       if (draft.accent === 'default') {
         localStorage.removeItem('accent');

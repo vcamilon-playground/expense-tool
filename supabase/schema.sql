@@ -15,6 +15,10 @@ create table if not exists users (
   created_at timestamptz not null default now()
 );
 
+-- Add appearance preference columns (run once; safe to re-run)
+alter table users add column if not exists accent_color text not null default 'default';
+alter table users add column if not exists theme text not null default 'light';
+
 -- ---------- categories ----------
 create table if not exists categories (
   id uuid primary key default gen_random_uuid(),

@@ -91,5 +91,7 @@ export type User = {
   last_name: string;
   profile_picture_url: string | null;
   birth_date: string | null; // ISO date (YYYY-MM-DD)
+  accent_color?: string;     // 'default' | 'yellow' | 'green' | 'red' | 'orange' | 'violet'
+  theme?: string;            // 'light' | 'dark'
   created_at?: string;
 };

@@ -19,6 +19,24 @@ type AuthContextValue = {
   logout: () => Promise<void>;
 };
 
+function applyUserPreferences(user: User) {
+  const accent = user.accent_color ?? 'default';
+  const theme = user.theme ?? 'light';
+  if (accent === 'default') {
+    document.documentElement.removeAttribute('data-accent');
+    localStorage.removeItem('accent');
+  } else {
+    document.documentElement.setAttribute('data-accent', accent);
+    localStorage.setItem('accent', accent);
+  }
+  if (theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  localStorage.setItem('theme', theme);
+}
+
 const AuthContext = createContext<AuthContextValue>({
   user: null,
   loading: true,
@@ -40,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
+        applyUserPreferences(data.user);
       } else {
         setUser(null);
       }
