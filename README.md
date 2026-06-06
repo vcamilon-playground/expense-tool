@@ -126,8 +126,7 @@ npm run dev:mobile
 - **Multi-user auth** — register with first name, last name, username, password, profile picture (optional), birth date (optional). Login, logout, and switch-user from the sidebar. No email required. If a password is forgotten, reset it via Supabase SQL editor.
 - **Dashboard** — totals for today / this week / this month / this year,
   category breakdown, budget status bars, monthly AI insight (on demand).
-- **Expenses** — full CRUD. List, add, edit (tap on mobile), delete
-  (long-press on mobile / confirm dialog on web).
+- **Expenses** — full CRUD with two views: **List view** (grouped by month, collapsible, sortable) and **Calendar view** (monthly grid showing daily totals; click any day to see and edit that day's expenses). Filters (search, category) apply in both views.
 - **Receipt scan (mobile)** — camera or gallery → AI vision extracts
   `amount`, `merchant`, `date`, `category guess`, `description`,
   `confidence`. You confirm before saving. Provider configurable via

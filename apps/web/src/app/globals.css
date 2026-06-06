@@ -591,6 +591,110 @@ button.btn-sm {
   color: var(--muted);
 }
 
+/* ── View toggle (List / Calendar) ── */
+.view-toggle {
+  display: flex;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 3px;
+}
+.view-toggle button.btn-sm { height: 30px; border-radius: 6px; }
+.view-toggle button.ghost.btn-sm:hover:not(:disabled) { background: var(--border); }
+
+/* ── Expense Calendar ── */
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.cal-month-label { font-weight: 600; font-size: 16px; }
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.cal-dow {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  padding: 6px 0;
+}
+
+.cal-cell {
+  min-height: 72px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.cal-cell-empty {
+  background: transparent;
+  border-color: transparent;
+}
+
+.cal-cell-has-expense {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+  cursor: pointer;
+}
+.cal-cell-has-expense:hover { filter: brightness(0.96); }
+
+.cal-cell-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+.cal-day-num {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1;
+  margin-bottom: 4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cal-cell-today .cal-day-num {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+.cal-day-total {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-top: auto;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.cal-day-detail {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+}
+
 /* ── Footer ── */
 .site-footer {
   text-align: center;
@@ -811,6 +915,13 @@ button.btn-sm {
   }
   .recurring-table td[data-label=""] { justify-content: flex-end; gap: 8px; margin-top: 6px; }
   .recurring-table td[data-label=""]::before { display: none; }
+
+  /* Calendar: hide amounts in cells on small screens — detail panel shows them */
+  .cal-cell { min-height: 48px; padding: 4px; }
+  .cal-day-num { font-size: 11px; }
+  .cal-dow { font-size: 10px; }
+  .cal-day-total { display: none; }
+  .cal-grid { gap: 2px; }
 }
 
 /* ── Responsive: small mobile (≤400px) ── */

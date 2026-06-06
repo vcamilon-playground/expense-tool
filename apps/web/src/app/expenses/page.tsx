@@ -9,6 +9,7 @@ import {
   listExpenses,
   updateExpense,
 } from '@/lib/db';
+import ExpenseCalendar from '@/components/ExpenseCalendar';
 import ExpenseForm from '@/components/ExpenseForm';
 import ExpenseList from '@/components/ExpenseList';
 import FormModal from '@/components/FormModal';
@@ -26,6 +27,7 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [allowPastEdit, setAllowPastEdit] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
   async function reload() {
     if (!user) return;
@@ -109,9 +111,21 @@ export default function ExpensesPage() {
 
       <div className="row" style={{ justifyContent: 'space-between', marginBottom: 16 }}>
         <h1 style={{ margin: 0 }}>Expenses</h1>
-        <button className="primary" style={{ width: 'auto' }} onClick={() => setShowAdd(true)}>
-          + Add Expense
-        </button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className="view-toggle">
+            <button
+              className={viewMode === 'list' ? 'primary btn-sm' : 'ghost btn-sm'}
+              onClick={() => setViewMode('list')}
+            >List</button>
+            <button
+              className={viewMode === 'calendar' ? 'primary btn-sm' : 'ghost btn-sm'}
+              onClick={() => setViewMode('calendar')}
+            >Calendar</button>
+          </div>
+          <button className="primary" style={{ width: 'auto' }} onClick={() => setShowAdd(true)}>
+            + Add Expense
+          </button>
+        </div>
       </div>
 
       <div className="card" style={{ padding: '12px 16px', marginBottom: 8 }}>
@@ -134,7 +148,15 @@ export default function ExpensesPage() {
       </div>
 
       <div className="card">
-        {filteredExpenses.length === 0 && (search || categoryFilter) ? (
+        {viewMode === 'calendar' ? (
+          <ExpenseCalendar
+            expenses={filteredExpenses}
+            categories={categories}
+            onEdit={(e) => setEditing(e)}
+            onDelete={handleDelete}
+            allowPastEdit={allowPastEdit}
+          />
+        ) : filteredExpenses.length === 0 && (search || categoryFilter) ? (
           <p className="muted">No expenses match your search.</p>
         ) : (
           <ExpenseList
