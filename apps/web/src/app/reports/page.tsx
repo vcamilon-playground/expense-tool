@@ -81,6 +81,7 @@ export default function ReportsPage() {
   const [customFrom, setCustomFrom] = useState<string>(oneMonthAgoISO);
   const [customTo, setCustomTo] = useState<string>(todayISO);
   const [compare, setCompare] = useState(false);
+  const [optionsExpanded, setOptionsExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -139,6 +140,20 @@ export default function ReportsPage() {
       <h1 style={{ marginBottom: 4 }}>Reports</h1>
 
       <div className="card">
+        <button
+          type="button"
+          className="collapse-header"
+          onClick={() => setOptionsExpanded((v) => !v)}
+          aria-expanded={optionsExpanded}
+        >
+          <h2 style={{ margin: 0 }}>Report Options</h2>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span className="muted" style={{ fontSize: 13 }}>{summary.from} → {summary.to}</span>
+            <span className="collapse-chevron" aria-hidden="true">{optionsExpanded ? '▾' : '▸'}</span>
+          </span>
+        </button>
+        {optionsExpanded && (
+        <div style={{ marginTop: 16 }}>
         <div className="row" style={{ gap: 8, marginBottom: 16 }}>
           <button
             className={viewMode === 'preset' ? 'primary' : 'ghost'}
@@ -212,6 +227,8 @@ export default function ReportsPage() {
             <span className="muted" style={{ fontSize: 13 }}>Compare with previous period</span>
           </label>
         </div>
+        </div>
+        )}
       </div>
 
       <div className="grid cols-3">
