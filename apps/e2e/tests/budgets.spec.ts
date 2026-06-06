@@ -18,8 +18,8 @@ test.describe('Budgets page', () => {
 
   test('Add Budget modal shows the form fields and save button', async () => {
     await budgets.openAddModal();
-    await expect(budgets.dialog().getByText('Category')).toBeVisible();
-    await expect(budgets.dialog().getByText('Monthly Limit')).toBeVisible();
+    await expect(budgets.dialog().getByText('Category', { exact: true })).toBeVisible();
+    await expect(budgets.dialog().getByText('Monthly Limit', { exact: true })).toBeVisible();
     await expect(budgets.monthlyLimitInput()).toBeVisible();
     await expect(budgets.saveBudgetButton()).toHaveText('Save Budget');
   });

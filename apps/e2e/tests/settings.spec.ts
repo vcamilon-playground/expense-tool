@@ -193,16 +193,13 @@ test.describe('Settings page', () => {
   });
 
   test('dark mode shows warning banner instead of note', async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem('theme', 'dark');
-      document.documentElement.setAttribute('data-theme', 'dark');
-    });
+    // The settings page detects dark mode via a MutationObserver on
+    // data-theme. Toggle it after the page has loaded (auth resolves and
+    // applies the DB theme on navigation, so a reload would override it).
     await settings.goto();
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
     await expect(settings.darkModeBanner()).toBeVisible();
-    await page.evaluate(() => {
-      localStorage.removeItem('theme');
-      document.documentElement.removeAttribute('data-theme');
-    });
+    await page.evaluate(() => document.documentElement.removeAttribute('data-theme'));
   });
 });
 
