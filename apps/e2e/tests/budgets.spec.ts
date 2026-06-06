@@ -9,14 +9,19 @@ test.describe('Budgets page', () => {
     await budgets.goto();
   });
 
-  test('page renders with heading, form, and budget sections', async () => {
+  test('page renders with heading, add button, and budget sections', async () => {
     await expect(budgets.heading()).toHaveText('Budgets');
     await expect(budgets.page.getByText('Set a monthly limit overall or per category')).toBeVisible();
-    await expect(budgets.page.getByText('Category').first()).toBeVisible();
-    await expect(budgets.page.getByText('Monthly Limit').first()).toBeVisible();
+    await expect(budgets.addBudgetButton()).toBeVisible();
+    await expect(budgets.currentBudgetsHeading()).toHaveText('Current Budgets');
+  });
+
+  test('Add Budget modal shows the form fields and save button', async () => {
+    await budgets.openAddModal();
+    await expect(budgets.dialog().getByText('Category')).toBeVisible();
+    await expect(budgets.dialog().getByText('Monthly Limit')).toBeVisible();
     await expect(budgets.monthlyLimitInput()).toBeVisible();
     await expect(budgets.saveBudgetButton()).toHaveText('Save Budget');
-    await expect(budgets.currentBudgetsHeading()).toHaveText('Current Budgets');
   });
 
   test('each budget row has Edit and Delete buttons', async () => {
@@ -26,7 +31,7 @@ test.describe('Budgets page', () => {
     await expect(rows.first().getByRole('button', { name: 'Delete' })).toBeVisible();
   });
 
-  test('edit mode populates form, disables category, and Cancel restores default state', async () => {
+  test('edit mode opens the modal pre-filled with category disabled; Cancel closes it', async () => {
     const rows = budgets.page.locator('table tbody tr');
     if (await rows.count() === 0) test.skip();
 
@@ -35,22 +40,26 @@ test.describe('Budgets page', () => {
     await expect(budgets.cancelEditButton()).toBeVisible();
     await expect(budgets.saveBudgetButton()).toBeHidden();
     expect(await budgets.monthlyLimitInput().inputValue()).not.toBe('');
-    await expect(budgets.page.locator('select')).toBeDisabled();
+    await expect(budgets.categorySelect()).toBeDisabled();
 
     await budgets.cancelEdit();
+    await expect(budgets.dialog()).toBeHidden();
+
+    // A fresh add opens with the category select enabled again.
+    await budgets.openAddModal();
     await expect(budgets.saveBudgetButton()).toBeVisible();
-    await expect(budgets.updateBudgetButton()).toBeHidden();
-    await expect(budgets.page.locator('select')).toBeEnabled();
+    await expect(budgets.categorySelect()).toBeEnabled();
   });
 
-  test('invalid Monthly Limit values show inline error', async ({ page }) => {
+  test('invalid Monthly Limit values show inline error', async () => {
+    await budgets.openAddModal();
     await budgets.monthlyLimitInput().fill('');
     await budgets.saveBudgetButton().click();
-    await expect(page.locator('label').filter({ hasText: 'Monthly Limit' }).locator('.field-error')).toBeVisible();
+    await expect(budgets.dialog().locator('label').filter({ hasText: 'Monthly Limit' }).locator('.field-error')).toBeVisible();
 
     await budgets.monthlyLimitInput().fill('-1');
     await budgets.saveBudgetButton().click();
-    await expect(page.locator('label').filter({ hasText: 'Monthly Limit' }).locator('.field-error')).toBeVisible();
+    await expect(budgets.dialog().locator('label').filter({ hasText: 'Monthly Limit' }).locator('.field-error')).toBeVisible();
   });
 });
 

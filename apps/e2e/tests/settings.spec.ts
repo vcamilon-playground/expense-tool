@@ -269,39 +269,26 @@ test.describe('Settings — past expense editing toggle', () => {
   });
 });
 
-test.describe('Settings — profile menu access (desktop)', () => {
-  test('avatar is visible in sidebar and opens profile menu with Settings link', async ({ page }) => {
+test.describe('Settings — access (desktop)', () => {
+  test('profile card is visible and the sidebar Settings link navigates to /settings', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');
-    await expect(nav.settingsLink()).toBeVisible();
-    await nav.openProfileMenu();
-    await expect(nav.settingsMenuItem()).toBeVisible();
-    await nav.settingsMenuItem().click();
+    await expect(nav.profileCard()).toBeVisible();
+    await expect(nav.userName()).toBeVisible();
+    await nav.link('Settings').click();
     await expect(page).toHaveURL(/\/settings/);
-  });
-
-  test('profile menu trigger remains visible in collapsed sidebar', async ({ page }) => {
-    const nav = new NavBar(page);
-    await page.goto('/');
-    await nav.collapseButton().click();
-    await expect(nav.settingsLink()).toBeVisible();
   });
 });
 
-test.describe('Settings — profile menu access (mobile)', () => {
+test.describe('Settings — access (mobile)', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('profile menu trigger is visible in hamburger dropdown on mobile', async ({ page }) => {
+  test('header avatar opens the profile popup and Settings navigates to /settings', async ({ page }) => {
     const nav = new NavBar(page);
     await page.goto('/');
-    await nav.toggle.click();
-    await expect(nav.mobileProfile()).toBeVisible();
-  });
-
-  test('clicking avatar on mobile opens profile menu and Settings navigates to /settings', async ({ page }) => {
-    const nav = new NavBar(page);
-    await page.goto('/');
-    await nav.openProfileMenu();
+    await expect(nav.headerAvatar()).toBeVisible();
+    await nav.openMobileProfileMenu();
+    await expect(nav.settingsMenuItem()).toBeVisible();
     await nav.settingsMenuItem().click();
     await expect(page).toHaveURL(/\/settings/);
   });

@@ -14,7 +14,8 @@ test.describe('Dashboard', () => {
   });
 
   test('all page sections render correctly', async () => {
-    await expect(dashboard.heading()).toHaveText('Dashboard');
+    await expect(dashboard.greeting()).toBeVisible();
+    await expect(dashboard.greeting()).toContainText('E2E');
     await expect(dashboard.stats()).toHaveCount(4);
     await expect(dashboard.statLabel('Today')).toBeVisible();
     await expect(dashboard.statLabel('This Week')).toBeVisible();

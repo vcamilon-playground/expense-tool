@@ -9,14 +9,18 @@ test.describe('Reports page', () => {
     await reports.goto();
   });
 
-  test('page renders with all required controls and sections', async () => {
+  test('page renders with summary, sections, and (once expanded) the controls', async () => {
     await expect(reports.heading()).toHaveText('Reports');
-    await expect(reports.periodSelect()).toBeVisible();
-    await expect(reports.dateInput()).toBeVisible();
+    // Summary cards and By Category are always visible (outside the panel).
     await expect(reports.statLabel('Total')).toBeVisible();
     await expect(reports.statLabel('Expenses')).toBeVisible();
     await expect(reports.statLabel('Average')).toBeVisible();
     await expect(reports.byCategoryHeading()).toHaveText('By Category');
+    // The report-type controls are collapsed by default.
+    await expect(reports.periodSelect()).not.toBeVisible();
+    await reports.expandOptions();
+    await expect(reports.periodSelect()).toBeVisible();
+    await expect(reports.dateInput()).toBeVisible();
     await expect(reports.dateRangeText()).toBeVisible();
     await expect(reports.presetPeriodButton()).toBeVisible();
     await expect(reports.dateRangeButton()).toBeVisible();
@@ -24,6 +28,7 @@ test.describe('Reports page', () => {
   });
 
   test('period select options are capitalized', async () => {
+    await reports.expandOptions();
     const options = await reports.periodSelect().locator('option').allTextContents();
     for (const opt of options) {
       expect(opt[0]).toBe(opt[0]?.toUpperCase());
@@ -31,6 +36,7 @@ test.describe('Reports page', () => {
   });
 
   test('changing period updates the date range text', async () => {
+    await reports.expandOptions();
     const before = await reports.dateRangeText().textContent();
     await reports.selectPeriod('year');
     const after = await reports.dateRangeText().textContent();
@@ -38,6 +44,7 @@ test.describe('Reports page', () => {
   });
 
   test('Date Range toggle shows custom inputs and Preset restores select', async () => {
+    await reports.expandOptions();
     await reports.dateRangeButton().click();
     await expect(reports.customFromInput()).toBeVisible();
     await expect(reports.customToInput()).toBeVisible();
@@ -49,6 +56,7 @@ test.describe('Reports page', () => {
   });
 
   test('compare checkbox shows and hides Period Comparison section', async () => {
+    await reports.expandOptions();
     await reports.compareCheckbox().check();
     await expect(reports.comparisonHeading()).toBeVisible();
 
@@ -57,6 +65,7 @@ test.describe('Reports page', () => {
   });
 
   test('custom date range updates the Showing text', async () => {
+    await reports.expandOptions();
     await reports.dateRangeButton().click();
     await reports.customFromInput().fill('2026-01-01');
     await reports.customToInput().fill('2026-01-31');
