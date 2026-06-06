@@ -752,13 +752,13 @@ button.btn-sm {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    padding: 0 4px;
+    gap: 2px;
+    padding: 0 2px;
     color: var(--muted);
     text-decoration: none;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 500;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
     cursor: pointer;
     background: none;
     border: none;
@@ -768,32 +768,6 @@ button.btn-sm {
   .bottom-nav-tab:hover,
   .bottom-nav-tab:hover:not(:disabled) { background: none; color: var(--text); text-decoration: none; }
   .bottom-nav-tab.active { color: var(--accent); }
-
-  .bottom-nav-fab-slot {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
-
-  .bottom-nav-fab-btn {
-    position: absolute;
-    top: -14px;
-    width: 52px;
-    height: 52px;
-    background: var(--text);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--bg);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.28);
-    text-decoration: none;
-    transition: transform 0.12s, box-shadow 0.12s;
-  }
-  .bottom-nav-fab-btn:hover { text-decoration: none; box-shadow: 0 6px 24px rgba(0,0,0,0.34); }
-  .bottom-nav-fab-btn:active { transform: scale(0.94); }
 
   .bottom-nav-avatar {
     width: 24px;

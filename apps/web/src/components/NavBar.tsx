@@ -326,36 +326,6 @@ export default function NavBar() {
             Settings
           </Link>
 
-          {/* Mobile-only: Budgets and Recurring (in sidebar on desktop) */}
-          <Link
-            href="/budgets"
-            className="nav-profile-menu-item nav-profile-mobile-only"
-            role="menuitem"
-            onClick={(e) => { handleNavClick('/budgets', e); setProfileMenuOpen(false); }}
-          >
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="7" width="20" height="14" rx="2"/>
-              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
-              <line x1="12" y1="12" x2="12" y2="16"/>
-              <line x1="10" y1="14" x2="14" y2="14"/>
-            </svg>
-            Budgets
-          </Link>
-          <Link
-            href="/recurring"
-            className="nav-profile-menu-item nav-profile-mobile-only"
-            role="menuitem"
-            onClick={(e) => { handleNavClick('/recurring', e); setProfileMenuOpen(false); }}
-          >
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="17 1 21 5 17 9"/>
-              <path d="M3 11V9a4 4 0 014-4h14"/>
-              <polyline points="7 23 3 19 7 15"/>
-              <path d="M21 13v2a4 4 0 01-4 4H3"/>
-            </svg>
-            Recurring
-          </Link>
-
           <button
             className="nav-profile-menu-item"
             role="menuitem"
@@ -414,20 +384,37 @@ export default function NavBar() {
           <span>Expenses</span>
         </Link>
 
-        {/* FAB: Add Expense */}
-        <div className="bottom-nav-fab-slot">
-          <Link
-            href="/expenses"
-            className="bottom-nav-fab-btn"
-            onClick={(e) => handleNavClick('/expenses', e)}
-            aria-label="Add expense"
-          >
-            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-          </Link>
-        </div>
+        {/* Budgets */}
+        <Link
+          href="/budgets"
+          className={`bottom-nav-tab${isActive('/budgets') ? ' active' : ''}`}
+          onClick={(e) => handleNavClick('/budgets', e)}
+          aria-label="Budgets"
+        >
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+            <line x1="12" y1="12" x2="12" y2="16"/>
+            <line x1="10" y1="14" x2="14" y2="14"/>
+          </svg>
+          <span>Budgets</span>
+        </Link>
+
+        {/* Recurring */}
+        <Link
+          href="/recurring"
+          className={`bottom-nav-tab${isActive('/recurring') ? ' active' : ''}`}
+          onClick={(e) => handleNavClick('/recurring', e)}
+          aria-label="Recurring"
+        >
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="17 1 21 5 17 9"/>
+            <path d="M3 11V9a4 4 0 014-4h14"/>
+            <polyline points="7 23 3 19 7 15"/>
+            <path d="M21 13v2a4 4 0 01-4 4H3"/>
+          </svg>
+          <span>Recurring</span>
+        </Link>
 
         {/* Reports */}
         <Link
@@ -436,7 +423,7 @@ export default function NavBar() {
           onClick={(e) => handleNavClick('/reports', e)}
           aria-label="Reports"
         >
-          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="6" y1="20" x2="6" y2="10"/>
             <line x1="12" y1="20" x2="12" y2="4"/>
             <line x1="18" y1="20" x2="18" y2="14"/>
