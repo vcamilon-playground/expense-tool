@@ -461,6 +461,14 @@ h3 { font-size: 15px; margin: 16px 0 8px; }
   box-shadow: var(--shadow-sm);
 }
 
+/* Chart cards — tinted with the active theme color */
+.chart-card {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+}
+.chart-grid { margin-bottom: 16px; }
+.chart-grid .chart-card { margin-bottom: 0; }
+
 /* ── Grid ── */
 .grid { display: grid; gap: 12px; }
 .grid > * { min-width: 0; }

@@ -1,13 +1,12 @@
 'use client';
 
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
-  YAxis,
 } from 'recharts';
 import { formatMoney } from '@expense/shared';
 
@@ -32,38 +31,43 @@ export default function CategoryChart({ data }: Props) {
   }
 
   const accent = cssVar('--accent', '#3b6fd4');
-  const border = cssVar('--border', '#2a3447');
   const muted = cssVar('--muted', '#8a96ad');
+  const panel = cssVar('--panel', '#ffffff');
+
+  // Monochrome accent palette: each slice fades the accent so the whole chart
+  // stays on-theme. Step opacity down across slices (never below 0.35).
+  const sliceOpacity = (i: number) => Math.max(0.35, 1 - i * (0.6 / Math.max(1, data.length - 1)));
 
   return (
-    <div style={{ width: '100%', height: 220 }}>
+    <div style={{ width: '100%', height: 240 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={border} vertical={false} />
-          <XAxis
-            dataKey="name"
-            tick={{ fill: muted, fontSize: 11 }}
-            axisLine={false}
-            tickLine={false}
-            interval={0}
-            angle={data.length > 4 ? -30 : 0}
-            textAnchor={data.length > 4 ? 'end' : 'middle'}
-            height={data.length > 4 ? 48 : 30}
-          />
-          <YAxis
-            tick={{ fill: muted, fontSize: 11 }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(v: number) => `₱${v.toLocaleString()}`}
-            width={76}
-          />
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="total"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            innerRadius="45%"
+            outerRadius="75%"
+            paddingAngle={2}
+            stroke={panel}
+            strokeWidth={2}
+          >
+            {data.map((_, i) => (
+              <Cell key={i} fill={accent} fillOpacity={sliceOpacity(i)} />
+            ))}
+          </Pie>
           <Tooltip
-            formatter={(value: number) => [formatMoney(value), 'Total']}
+            formatter={(value: number, name: string) => [formatMoney(value), name]}
             contentStyle={tooltipStyle}
             labelStyle={{ color: 'var(--text)', fontWeight: 600 }}
           />
-          <Bar dataKey="total" fill={accent} radius={[4, 4, 0, 0]} maxBarSize={48} />
-        </BarChart>
+          <Legend
+            wrapperStyle={{ fontSize: 12 }}
+            formatter={(v: string) => <span style={{ color: muted }}>{v}</span>}
+          />
+        </PieChart>
       </ResponsiveContainer>
     </div>
   );
