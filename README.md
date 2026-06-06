@@ -141,6 +141,20 @@ npm run dev:mobile
   ahead of schedule and advance the next charge date.
 - **Settings** — profile editing, password change, theme, category management.
 
+## Versioning
+
+The app version (`apps/web/package.json`) is injected at build time and shown in the site footer as **v1.0.0 · abc1234** (version + commit SHA). Every Vercel deployment is tagged to a specific commit.
+
+| Command | Effect |
+|---|---|
+| `npm run release:patch` | Bug fix / small tweak → `1.0.0 → 1.0.1` |
+| `npm run release:minor` | New feature → `1.0.1 → 1.1.0` |
+| `npm run release:major` | Breaking change → `1.1.0 → 2.0.0` |
+
+Each command bumps `apps/web/package.json`, commits `chore(release): vX.Y.Z`, creates an annotated git tag, and pushes — triggering a new Vercel deployment automatically.
+
+**Rolling back:** Vercel dashboard → Deployments → find the target → "Promote to Production". Or `vercel rollback` from the CLI.
+
 ## Development scripts
 
 | Command | What it does |
@@ -153,6 +167,8 @@ npm run dev:mobile
 | `npm run test:e2e` | Full Playwright smoke suite (auto-starts dev server) |
 | `npm run test:e2e:ui` | Open Playwright UI mode |
 | `npm run install:browsers` | Download Playwright browser binaries (run once after clone) |
+| `npm run release:patch` | Bump patch version, tag, and push |
+| `npm run release:minor` | Bump minor version, tag, and push |
 
 ## Architecture — where things live
 

@@ -697,12 +697,22 @@ button.btn-sm {
 
 /* ── Footer ── */
 .site-footer {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   padding: 16px 24px;
   color: var(--muted);
   font-size: 12px;
   border-top: 1px solid var(--border);
   flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.footer-version {
+  font-size: 11px;
+  opacity: 0.65;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 /* ── Responsive: tablet (≤800px) ── */

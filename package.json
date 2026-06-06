@@ -17,7 +17,10 @@
     "test:e2e:regression": "npm run test:regression -w @expense/e2e",
     "test:e2e:ui": "npm run test:ui -w @expense/e2e",
     "install:browsers": "npm run install:browsers -w @expense/e2e",
-    "test:dashboard": "npm run generate:dashboard -w @expense/e2e"
+    "test:dashboard": "npm run generate:dashboard -w @expense/e2e",
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major"
   },
   "engines": {
     "node": ">=20"

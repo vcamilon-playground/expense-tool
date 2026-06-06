@@ -18,7 +18,12 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
       <NavBar />
       <div className="main-wrapper">
         <main className="container">{children}</main>
-        <footer className="site-footer">Created by Vegil Camilon &amp; Claude Code</footer>
+        <footer className="site-footer">
+          Created by Vegil Camilon &amp; Claude Code
+          <span className="footer-version">
+            v{process.env.NEXT_PUBLIC_APP_VERSION} · {process.env.NEXT_PUBLIC_BUILD_SHA}
+          </span>
+        </footer>
       </div>
     </div>
   );

@@ -438,6 +438,30 @@ git push origin main
 
 ---
 
+## Versioning
+
+The app version lives in `apps/web/package.json` (`version` field). It is injected at build time into `NEXT_PUBLIC_APP_VERSION` via `next.config.js` and displayed in the site footer alongside the build SHA (`NEXT_PUBLIC_BUILD_SHA`). In Vercel production builds, the SHA comes from `VERCEL_GIT_COMMIT_SHA`; locally it falls back to `git rev-parse --short HEAD`.
+
+### When to cut a release
+
+| Change type | Command | Example |
+|---|---|---|
+| Bug fix, small UI tweak | `npm run release:patch` | `1.0.0` → `1.0.1` |
+| New feature, significant UX change | `npm run release:minor` | `1.0.1` → `1.1.0` |
+| Breaking change or major redesign | `npm run release:major` | `1.1.0` → `2.0.0` |
+
+The release scripts (`scripts/release.mjs`) bump `apps/web/package.json`, commit with `chore(release): vX.Y.Z`, create an annotated git tag `vX.Y.Z`, and push both the commit and the tag. Pushing to main triggers a new Vercel deployment automatically.
+
+**Claude should never run a release script** unless the user explicitly asks for a version bump. Normal feature commits do not increment the version — the user decides when to cut a release.
+
+### Rolling back
+
+1. In the Vercel dashboard → Deployments → find the target deployment → "Promote to Production".
+2. Or `vercel rollback` from the CLI (rolls back to the previous production deployment).
+3. To find which deployment corresponds to a version: `git log --oneline --decorate | grep "tag: v"`.
+
+---
+
 ## Adding a New Feature
 
 1. Add or update types in `packages/shared/src/types.ts`.
