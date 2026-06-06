@@ -10,6 +10,7 @@ import {
   updateIncomeSource,
 } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { errorMessage } from '@/lib/errors';
 import DeleteModal from '@/components/DeleteModal';
 
 const typeLabel: Record<IncomeType, string> = {
@@ -49,7 +50,7 @@ export default function IncomePage() {
       try {
         await reload();
       } catch (e) {
-        setLoadError(e instanceof Error ? e.message : 'Failed to load');
+        setLoadError(errorMessage(e, 'Failed to load'));
       } finally {
         setLoading(false);
       }
@@ -116,7 +117,7 @@ export default function IncomePage() {
       resetForm();
       await reload();
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Save failed');
+      setSubmitError(errorMessage(err, 'Save failed'));
     }
   }
 
