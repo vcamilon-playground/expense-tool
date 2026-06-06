@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest) {
       .from('users')
       .update(patch)
       .eq('id', payload.sub)
-      .select('id, username, first_name, last_name, profile_picture_url, birth_date, accent_color, theme')
+      .select('id, username, first_name, last_name, profile_picture_url, birth_date')
       .single();
 
     if (error || !user) return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
