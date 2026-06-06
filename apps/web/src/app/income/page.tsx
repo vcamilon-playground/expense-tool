@@ -13,6 +13,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { errorMessage } from '@/lib/errors';
 import DeleteModal from '@/components/DeleteModal';
+import FormModal from '@/components/FormModal';
 
 const typeLabel: Record<IncomeType, string> = {
   bank: 'Bank',
@@ -38,6 +39,7 @@ export default function IncomePage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<IncomeSource | null>(null);
 
+  const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formType, setFormType] = useState<IncomeType>('bank');
   const [formName, setFormName] = useState('');
@@ -51,6 +53,7 @@ export default function IncomePage() {
   const [transferAmount, setTransferAmount] = useState('');
   const [transferError, setTransferError] = useState<string | null>(null);
   const [transferring, setTransferring] = useState(false);
+  const [cashExpanded, setCashExpanded] = useState(true);
 
   async function reload() {
     if (!user) return;
@@ -77,7 +80,12 @@ export default function IncomePage() {
     setFormBalance(String(s.balance));
     setFieldErrors({});
     setSubmitError(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setFormOpen(true);
+  }
+
+  function openAddForm() {
+    resetForm();
+    setFormOpen(true);
   }
 
   function resetForm() {
@@ -128,6 +136,7 @@ export default function IncomePage() {
         );
       }
       resetForm();
+      setFormOpen(false);
       await reload();
     } catch (err) {
       setSubmitError(errorMessage(err, 'Save failed'));
@@ -258,11 +267,16 @@ export default function IncomePage() {
 
       <div className="row" style={{ justifyContent: 'space-between', marginBottom: 4 }}>
         <h1 style={{ margin: 0 }}>Income</h1>
-        {sources.length >= 2 && (
-          <button className="primary" style={{ width: 'auto' }} onClick={openTransfer}>
-            ⇄ Transfer
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="primary" style={{ width: 'auto' }} onClick={openAddForm}>
+            + Add Source
           </button>
-        )}
+          {sources.length >= 2 && (
+            <button className="ghost" style={{ width: 'auto' }} onClick={openTransfer}>
+              ⇄ Transfer
+            </button>
+          )}
+        </div>
       </div>
       <p className="muted">Track your money across bank accounts, e-wallets, and cash. Expenses can be deducted from any source when recorded.</p>
 
@@ -288,12 +302,15 @@ export default function IncomePage() {
         </div>
       </div>
 
-      {/* Add / Edit form */}
-      <form onSubmit={handleSave} noValidate className="card">
-        <h2 style={{ marginTop: 0 }}>{editingId ? `Edit ${typeLabel[formType]}` : 'Add Income Source'}</h2>
-        <div className="grid cols-3">
-          <label>
-            <div className="muted">Type</div>
+      {/* Add / Edit modal */}
+      <FormModal
+        open={formOpen}
+        title={editingId ? `Edit ${typeLabel[formType]}` : 'Add Income Source'}
+        onClose={() => setFormOpen(false)}
+      >
+        <form onSubmit={handleSave} noValidate>
+          <label style={{ display: 'block', marginBottom: 12 }}>
+            <div className="muted" style={{ marginBottom: 4 }}>Type</div>
             <select
               value={formType}
               onChange={(e) => { setFormType(e.target.value as IncomeType); setFieldErrors({}); }}
@@ -306,8 +323,8 @@ export default function IncomePage() {
           </label>
 
           {formType !== 'cash' && (
-            <label>
-              <div className="muted">{formType === 'bank' ? 'Bank Name' : 'E-Wallet Name'}</div>
+            <label style={{ display: 'block', marginBottom: 12 }}>
+              <div className="muted" style={{ marginBottom: 4 }}>{formType === 'bank' ? 'Bank Name' : 'E-Wallet Name'}</div>
               <input
                 value={formName}
                 placeholder={formType === 'bank' ? 'e.g. BDO Savings' : 'e.g. GCash'}
@@ -318,8 +335,8 @@ export default function IncomePage() {
             </label>
           )}
 
-          <label>
-            <div className="muted">Balance (₱)</div>
+          <label style={{ display: 'block', marginBottom: 12 }}>
+            <div className="muted" style={{ marginBottom: 4 }}>Balance (₱)</div>
             <input
               type="number"
               step="0.01"
@@ -331,20 +348,18 @@ export default function IncomePage() {
             />
             {fieldErrors.balance && <p className="field-error">{fieldErrors.balance}</p>}
           </label>
-        </div>
 
-        {submitError && <p style={{ color: 'var(--bad)', marginTop: 8 }}>{submitError}</p>}
-        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-          <button type="submit" className="primary" style={{ width: 'auto' }}>
-            {editingId ? 'Update' : 'Add'}
-          </button>
-          {editingId && (
-            <button type="button" className="ghost" style={{ width: 'auto' }} onClick={resetForm}>
+          {submitError && <p className="field-error">{submitError}</p>}
+          <div className="row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
+            <button type="button" className="ghost" style={{ width: 'auto' }} onClick={() => setFormOpen(false)}>
               Cancel
             </button>
-          )}
-        </div>
-      </form>
+            <button type="submit" className="primary" style={{ width: 'auto' }}>
+              {editingId ? 'Update' : 'Add'}
+            </button>
+          </div>
+        </form>
+      </FormModal>
 
       {/* Bank Accounts */}
       <IncomeSection
@@ -368,19 +383,32 @@ export default function IncomePage() {
 
       {/* Cash on Hand */}
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>💵 Cash on Hand</h2>
-        {!cashSource ? (
-          <p className="muted">No cash balance set. Select "Cash on Hand" in the form above to add it.</p>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-            <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>
-              {formatMoney(cashSource.balance)}
-            </span>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button className="btn-sm" onClick={() => startEdit(cashSource)}>Edit Balance</button>
-              <button className="danger btn-sm" onClick={() => setPendingDelete(cashSource)}>Delete</button>
+        <button
+          type="button"
+          className="collapse-header"
+          onClick={() => setCashExpanded((v) => !v)}
+          aria-expanded={cashExpanded}
+        >
+          <h2 style={{ margin: 0 }}>💵 Cash on Hand</h2>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span className="muted" style={{ fontSize: 14, fontWeight: 600 }}>{formatMoney(totalCash)}</span>
+            <span className="collapse-chevron" aria-hidden="true">{cashExpanded ? '▾' : '▸'}</span>
+          </span>
+        </button>
+        {cashExpanded && (
+          !cashSource ? (
+            <p className="muted" style={{ marginBottom: 0, marginTop: 12 }}>No cash balance set. Click "+ Add Source" and choose "Cash on Hand".</p>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginTop: 12 }}>
+              <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>
+                {formatMoney(cashSource.balance)}
+              </span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button className="btn-sm" onClick={() => startEdit(cashSource)}>Edit Balance</button>
+                <button className="danger btn-sm" onClick={() => setPendingDelete(cashSource)}>Delete</button>
+              </div>
             </div>
-          </div>
+          )
         )}
       </div>
     </div>
@@ -397,37 +425,53 @@ function IncomeSection({
   onEdit: (s: IncomeSource) => void;
   onDelete: (s: IncomeSource) => void;
 }) {
+  const [expanded, setExpanded] = useState(true);
+  const total = sources.reduce((sum, s) => sum + s.balance, 0);
+
   return (
     <div className="card">
-      <h2 style={{ marginTop: 0 }}>{icon} {title}</h2>
-      {sources.length === 0 ? (
-        <p className="muted">{emptyText}</p>
-      ) : (
-        <div className="table-wrap">
-          <table className="income-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th style={{ textAlign: 'right' }}>Balance</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {sources.map((s) => (
-                <tr key={s.id}>
-                  <td style={{ fontWeight: 500 }}>{s.name}</td>
-                  <td style={{ textAlign: 'right', fontWeight: 600 }}>{formatMoney(s.balance)}</td>
-                  <td style={{ textAlign: 'right' }}>
-                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                      <button className="btn-sm" onClick={() => onEdit(s)}>Edit</button>
-                      <button className="danger btn-sm" onClick={() => onDelete(s)}>Delete</button>
-                    </div>
-                  </td>
+      <button
+        type="button"
+        className="collapse-header"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+      >
+        <h2 style={{ margin: 0 }}>{icon} {title}</h2>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span className="muted" style={{ fontSize: 14, fontWeight: 600 }}>{formatMoney(total)}</span>
+          <span className="collapse-chevron" aria-hidden="true">{expanded ? '▾' : '▸'}</span>
+        </span>
+      </button>
+      {expanded && (
+        sources.length === 0 ? (
+          <p className="muted" style={{ marginBottom: 0 }}>{emptyText}</p>
+        ) : (
+          <div className="table-wrap" style={{ marginTop: 12 }}>
+            <table className="income-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th style={{ textAlign: 'right' }}>Balance</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {sources.map((s) => (
+                  <tr key={s.id}>
+                    <td style={{ fontWeight: 500 }}>{s.name}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 600 }}>{formatMoney(s.balance)}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                        <button className="btn-sm" onClick={() => onEdit(s)}>Edit</button>
+                        <button className="danger btn-sm" onClick={() => onDelete(s)}>Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
       )}
     </div>
   );

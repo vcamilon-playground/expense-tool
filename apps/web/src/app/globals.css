@@ -438,6 +438,27 @@ h3 { font-size: 15px; margin: 16px 0 8px; }
   border-color: var(--accent);
 }
 
+/* Collapsible card header — full-width clickable row */
+.collapse-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  text-align: left;
+}
+.collapse-header:hover { background: none; }
+.collapse-chevron {
+  font-size: 14px;
+  color: var(--muted);
+  transition: color 0.15s;
+}
+.collapse-header:hover .collapse-chevron { color: var(--text); }
+
 /* ── Grid ── */
 .grid { display: grid; gap: 12px; }
 .grid > * { min-width: 0; }

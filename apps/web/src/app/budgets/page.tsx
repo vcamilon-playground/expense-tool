@@ -7,6 +7,7 @@ import { deleteBudget, listBudgets, listCategories, updateBudget, upsertBudget }
 import { useAuth } from '@/contexts/AuthContext';
 import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 import DeleteModal from '@/components/DeleteModal';
+import FormModal from '@/components/FormModal';
 
 export default function BudgetsPage() {
   const { user } = useAuth();
@@ -19,6 +20,7 @@ export default function BudgetsPage() {
   const [limitError, setLimitError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Budget | null>(null);
   const [editing, setEditing] = useState<Budget | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
 
   async function reload() {
     if (!user) return;
@@ -45,6 +47,15 @@ export default function BudgetsPage() {
     setCategoryId(b.category_id ?? '');
     setLimit(String(b.monthly_limit));
     setLimitError(null);
+    setFormOpen(true);
+  }
+
+  function openAddForm() {
+    setEditing(null);
+    setCategoryId('');
+    setLimit('');
+    setLimitError(null);
+    setFormOpen(true);
   }
 
   function handleCancelEdit() {
@@ -52,6 +63,7 @@ export default function BudgetsPage() {
     setCategoryId('');
     setLimit('');
     setLimitError(null);
+    setFormOpen(false);
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -75,6 +87,7 @@ export default function BudgetsPage() {
     }
     setLimit('');
     setCategoryId('');
+    setFormOpen(false);
     await reload();
   }
 
@@ -106,19 +119,29 @@ export default function BudgetsPage() {
         onCancel={() => setPendingDelete(null)}
       />
 
-      <h1>Budgets</h1>
+      <div className="row" style={{ justifyContent: 'space-between', marginBottom: 4 }}>
+        <h1 style={{ margin: 0 }}>Budgets</h1>
+        <button className="primary" style={{ width: 'auto' }} onClick={openAddForm}>
+          + Add Budget
+        </button>
+      </div>
       <p className="muted">Set a monthly limit overall or per category. Dashboard will warn at 80% and flag overspend.</p>
 
       {loadError && <p style={{ color: 'var(--bad)', marginBottom: 12 }}>{loadError}</p>}
-      <form onSubmit={handleSave} noValidate className="card">
-        {editing && (
-          <p className="muted" style={{ marginTop: 0 }}>
-            Editing budget for <strong>{editing.category_id ? (catMap.get(editing.category_id)?.name ?? 'Unknown') : 'Overall'}</strong>
-          </p>
-        )}
-        <div className="grid cols-3">
-          <label>
-            <div className="muted">Category</div>
+
+      <FormModal
+        open={formOpen}
+        title={editing ? 'Edit Budget' : 'Add Budget'}
+        onClose={handleCancelEdit}
+      >
+        <form onSubmit={handleSave} noValidate>
+          {editing && (
+            <p className="muted" style={{ marginTop: 0 }}>
+              Editing budget for <strong>{editing.category_id ? (catMap.get(editing.category_id)?.name ?? 'Unknown') : 'Overall'}</strong>
+            </p>
+          )}
+          <label style={{ display: 'block', marginBottom: 12 }}>
+            <div className="muted" style={{ marginBottom: 4 }}>Category</div>
             <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} disabled={editing !== null}>
               <option value="">Overall (any category)</option>
               {activeCategories.map((c) => (
@@ -128,8 +151,8 @@ export default function BudgetsPage() {
               ))}
             </select>
           </label>
-          <label>
-            <div className="muted">Monthly Limit</div>
+          <label style={{ display: 'block', marginBottom: 12 }}>
+            <div className="muted" style={{ marginBottom: 4 }}>Monthly Limit</div>
             <input
               type="number"
               step="0.01"
@@ -141,18 +164,16 @@ export default function BudgetsPage() {
             />
             {limitError && <p className="field-error">{limitError}</p>}
           </label>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
-            <button type="submit" className="primary" style={{ flex: 1 }}>
+          <div className="row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
+            <button type="button" className="ghost" style={{ width: 'auto' }} onClick={handleCancelEdit}>
+              Cancel
+            </button>
+            <button type="submit" className="primary" style={{ width: 'auto' }}>
               {editing ? 'Update Budget' : 'Save Budget'}
             </button>
-            {editing && (
-              <button type="button" style={{ flex: 1 }} onClick={handleCancelEdit}>
-                Cancel
-              </button>
-            )}
           </div>
-        </div>
-      </form>
+        </form>
+      </FormModal>
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>Current Budgets</h2>
