@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from './ThemeToggle';
@@ -31,12 +31,33 @@ export default function SiteHeader() {
 
   const { text, emoji } = greetingInfo();
   const initials = `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
+  const avatarRef = useRef<HTMLDivElement>(null);
+
+  function handleAvatarClick() {
+    if (!avatarRef.current) return;
+    const rect = avatarRef.current.getBoundingClientRect();
+    document.dispatchEvent(
+      new CustomEvent('open-profile-menu', {
+        detail: { top: Math.round(rect.bottom) + 8, left: Math.round(rect.left) },
+      }),
+    );
+  }
 
   return (
     <div className="site-header">
-      {/* Left: avatar (mobile-only) + greeting */}
+      {/* Left: avatar (mobile-only, click opens profile popup) + greeting */}
       <div className="site-header-left">
-        <div className="header-avatar">
+        <div
+          className="header-avatar"
+          ref={avatarRef}
+          role="button"
+          tabIndex={0}
+          onClick={handleAvatarClick}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleAvatarClick(); }}
+          aria-label="Open profile menu"
+          aria-haspopup="menu"
+          style={{ cursor: 'pointer' }}
+        >
           {user.profile_picture_url ? (
             <img src={user.profile_picture_url} alt={user.first_name} />
           ) : (

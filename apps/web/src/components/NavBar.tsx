@@ -141,10 +141,16 @@ export default function NavBar() {
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [profileMenuOpen]);
 
-  function openProfileMenuFromBottomNav() {
-    setPopupStyle({ bottom: 72, right: 12 });
-    setProfileMenuOpen((prev) => !prev);
-  }
+  // Listen for profile menu trigger from the SiteHeader avatar button
+  useEffect(() => {
+    function handleOpen(e: Event) {
+      const { top, left } = (e as CustomEvent<{ top: number; left: number }>).detail;
+      setPopupStyle({ top, left });
+      setProfileMenuOpen((prev) => !prev);
+    }
+    document.addEventListener('open-profile-menu', handleOpen);
+    return () => document.removeEventListener('open-profile-menu', handleOpen);
+  }, []);
 
   const pathname = usePathname();
 
@@ -367,24 +373,6 @@ export default function NavBar() {
           <span>Reports</span>
         </Link>
 
-        {user && (
-          <button
-            className={`bottom-nav-tab${profileMenuOpen ? ' active' : ''}`}
-            onClick={openProfileMenuFromBottomNav}
-            aria-label="Profile menu"
-            aria-haspopup="menu"
-            aria-expanded={profileMenuOpen}
-          >
-            <div className="bottom-nav-avatar">
-              {user.profile_picture_url ? (
-                <img src={user.profile_picture_url} alt="" />
-              ) : (
-                <span>{initials}</span>
-              )}
-            </div>
-            <span>Profile</span>
-          </button>
-        )}
       </nav>
 
       {/* Unsaved settings changes modal */}
