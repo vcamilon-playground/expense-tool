@@ -1,54 +1,70 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+/**
+ * Navigation model for the redesigned shell:
+ * - Desktop: a fixed left sidebar (`nav.sidenav`, aria-label "Sidebar navigation")
+ *   with a profile card at the top, nav links, and Switch User / Log Out buttons
+ *   at the bottom. Settings is a direct nav link (no popup on desktop).
+ * - Mobile (≤640px): the sidebar is hidden; a fixed bottom tab bar
+ *   (`nav.bottom-nav`, aria-label "Mobile navigation") is shown. The profile
+ *   popup is opened by tapping the avatar in the site header.
+ */
 export class NavBar {
-  readonly toggle: Locator;
-  readonly navLinks: Locator;
+  constructor(private readonly page: Page) {}
 
-  constructor(private readonly page: Page) {
-    this.toggle = page.getByRole('button', { name: 'Toggle navigation' });
-    this.navLinks = page.locator('.nav-links');
-  }
-
+  // ── Desktop sidebar ──────────────────────────────────────────────────────
   nav(): Locator {
     return this.page.locator('nav.sidenav');
   }
 
+  sidebarNav(): Locator {
+    return this.page.getByRole('navigation', { name: 'Sidebar navigation' });
+  }
+
+  /** Sidebar nav link by its visible label (Home, Income, Expenses, …, Settings). */
   link(name: string): Locator {
-    return this.page.getByRole('navigation').getByRole('link', { name, exact: true });
-  }
-
-  brandLink(): Locator {
-    return this.page.getByRole('link', { name: /💸 Expenses/ });
-  }
-
-  collapseButton(): Locator {
-    return this.page.getByRole('button', { name: /Collapse sidebar/i });
-  }
-
-  expandButton(): Locator {
-    return this.page.getByRole('button', { name: /Expand sidebar/i });
+    return this.sidebarNav().getByRole('link', { name, exact: true });
   }
 
   navLabel(name: string): Locator {
     return this.page.locator('.nav-label').filter({ hasText: name });
   }
 
-  brandText(): Locator {
-    return this.page.locator('.brand-text');
+  // Profile card at the top of the sidebar
+  profileCard(): Locator {
+    return this.page.locator('.sidebar-profile');
   }
 
-  themeToggle(): Locator {
-    return this.page.locator('nav.sidenav button[title*="Switch to"]');
+  userName(): Locator {
+    return this.page.locator('.sidebar-user-name');
   }
 
-  // Profile menu trigger — desktop sidebar
-  settingsLink(): Locator {
-    return this.page.locator('nav.sidenav .nav-user');
+  userHandle(): Locator {
+    return this.page.locator('.sidebar-user-handle');
   }
 
-  // Profile entry inside the mobile hamburger dropdown
-  mobileProfile(): Locator {
-    return this.page.locator('.nav-mobile-profile');
+  // Direct actions at the bottom of the sidebar (desktop)
+  sidebarSwitchUserButton(): Locator {
+    return this.nav().locator('.sidebar-action-btn', { hasText: 'Switch User' });
+  }
+
+  sidebarLogoutButton(): Locator {
+    return this.nav().locator('.sidebar-action-btn.sidebar-logout');
+  }
+
+  // ── Mobile bottom tab bar ────────────────────────────────────────────────
+  bottomNav(): Locator {
+    return this.page.locator('nav.bottom-nav');
+  }
+
+  /** Bottom tab by its visible label (Home, Income, Expenses, Budgets, Recurring, Reports). */
+  bottomTab(name: string): Locator {
+    return this.bottomNav().locator('.bottom-nav-tab').filter({ hasText: name });
+  }
+
+  // ── Profile popup (opened by the site-header avatar on mobile) ────────────
+  headerAvatar(): Locator {
+    return this.page.locator('.header-avatar');
   }
 
   profileMenu(): Locator {
@@ -56,17 +72,24 @@ export class NavBar {
   }
 
   settingsMenuItem(): Locator {
-    return this.page.locator('.nav-profile-menu').getByRole('menuitem', { name: /settings/i });
+    return this.profileMenu().getByRole('menuitem', { name: /settings/i });
   }
 
-  logoutButton(): Locator {
-    return this.page.locator('.nav-profile-menu').getByRole('menuitem', { name: /log out/i });
+  switchUserMenuItem(): Locator {
+    return this.profileMenu().getByRole('menuitem', { name: /switch user/i });
   }
 
-  switchUserButton(): Locator {
-    return this.page.locator('.nav-profile-menu').getByRole('menuitem', { name: /switch user/i });
+  logoutMenuItem(): Locator {
+    return this.profileMenu().getByRole('menuitem', { name: /log out/i });
   }
 
+  /** Mobile only: tap the header avatar to open the profile popup. */
+  async openMobileProfileMenu(): Promise<void> {
+    await this.headerAvatar().click();
+    await expect(this.profileMenu()).toBeVisible();
+  }
+
+  // ── Confirmation modals (shared desktop + mobile) ─────────────────────────
   logoutModal(): Locator {
     return this.page.getByRole('dialog', { name: /confirm logout/i });
   }
@@ -75,37 +98,17 @@ export class NavBar {
     return this.page.getByRole('dialog', { name: /confirm switch user/i });
   }
 
-  userInfo(): Locator {
-    return this.page.locator('.nav-user');
-  }
-
-  async openProfileMenu(): Promise<void> {
-    if (await this.toggle.isVisible()) {
-      // Mobile: profile is inside the hamburger dropdown
-      if (!await this.navLinks.evaluate((el) => el.classList.contains('open'))) {
-        await this.toggle.click();
-        await expect(this.navLinks).toHaveClass(/open/);
-      }
-      await this.mobileProfile().click();
-    } else {
-      await this.userInfo().click();
-    }
-    await expect(this.profileMenu()).toBeVisible();
-  }
-
+  // ── Footer ────────────────────────────────────────────────────────────────
   footer(): Locator {
     return this.page.locator('footer.site-footer');
   }
 
-  async openIfMobile(): Promise<void> {
-    if (await this.toggle.isVisible()) {
-      await this.toggle.click();
-      await expect(this.navLinks).toHaveClass(/open/);
-    }
-  }
-
+  /** Navigate by visible label: desktop uses the sidebar link, mobile the bottom tab. */
   async clickLink(name: string): Promise<void> {
-    await this.openIfMobile();
-    await this.link(name).click();
+    if (await this.bottomNav().isVisible()) {
+      await this.bottomTab(name).click();
+    } else {
+      await this.link(name).click();
+    }
   }
 }

@@ -15,6 +15,19 @@ export class ReportsPage extends BasePage {
     return this.page.getByRole('heading', { level: 1, name: 'Reports' });
   }
 
+  // The report-type controls are now in a collapsible panel, collapsed by
+  // default. Expand it before interacting with the period/date/compare inputs.
+  optionsHeader(): Locator {
+    return this.page.locator('.collapse-header').filter({ hasText: 'Report Options' });
+  }
+
+  async expandOptions(): Promise<void> {
+    if (!(await this.presetPeriodButton().isVisible())) {
+      await this.optionsHeader().click();
+      await this.presetPeriodButton().waitFor({ state: 'visible' });
+    }
+  }
+
   periodSelect(): Locator {
     return this.page.locator('label').filter({ hasText: 'Period' }).locator('select');
   }

@@ -11,8 +11,10 @@ export class DashboardPage extends BasePage {
     await this.waitForLoad();
   }
 
-  heading(): Locator {
-    return this.page.getByRole('heading', { level: 1, name: 'Dashboard' });
+  // The Home page no longer has an <h1>; the page is identified by the
+  // time-based greeting in the site header (e.g. "Good Morning, E2E!").
+  greeting(): Locator {
+    return this.page.locator('.site-welcome');
   }
 
   stats(): Locator {

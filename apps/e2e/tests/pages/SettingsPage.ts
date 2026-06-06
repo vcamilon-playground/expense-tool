@@ -20,12 +20,19 @@ export class SettingsPage extends BasePage {
     return this.page.getByRole('heading', { level: 2, name: 'Profile' });
   }
 
+  // Located by label — the Profile card also contains an avatar "image URL"
+  // textbox above the name fields, so positional (.first()/.nth()) selectors
+  // would target the wrong input.
   firstNameInput(): Locator {
-    return this.page.locator('.card').filter({ hasText: 'Profile' }).getByRole('textbox').first();
+    return this.page.locator('label').filter({ hasText: 'First Name' }).locator('input');
   }
 
   lastNameInput(): Locator {
-    return this.page.locator('.card').filter({ hasText: 'Profile' }).getByRole('textbox').nth(1);
+    return this.page.locator('label').filter({ hasText: 'Last Name' }).locator('input');
+  }
+
+  avatarUrlInput(): Locator {
+    return this.page.locator('input[type="url"]');
   }
 
   // Global save / cancel (only visible when there are unsaved changes)

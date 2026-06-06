@@ -15,20 +15,38 @@ export class BudgetsPage extends BasePage {
     return this.page.getByRole('heading', { level: 1, name: 'Budgets' });
   }
 
+  // The add/edit form is now a modal opened by "+ Add Budget" (or Edit on a row).
+  addBudgetButton(): Locator {
+    return this.page.getByRole('button', { name: '+ Add Budget' });
+  }
+
+  dialog(): Locator {
+    return this.page.getByRole('dialog');
+  }
+
+  async openAddModal(): Promise<void> {
+    await this.addBudgetButton().click();
+    await expect(this.dialog()).toBeVisible();
+  }
+
   saveBudgetButton(): Locator {
-    return this.page.getByRole('button', { name: 'Save Budget' });
+    return this.dialog().getByRole('button', { name: 'Save Budget' });
   }
 
   updateBudgetButton(): Locator {
-    return this.page.getByRole('button', { name: 'Update Budget' });
+    return this.dialog().getByRole('button', { name: 'Update Budget' });
   }
 
   cancelEditButton(): Locator {
-    return this.page.getByRole('button', { name: 'Cancel' });
+    return this.dialog().getByRole('button', { name: 'Cancel' });
   }
 
   monthlyLimitInput(): Locator {
-    return this.page.locator('input[type="number"]');
+    return this.dialog().locator('input[type="number"]');
+  }
+
+  categorySelect(): Locator {
+    return this.dialog().locator('select');
   }
 
   currentBudgetsHeading(): Locator {
@@ -62,7 +80,7 @@ export class BudgetsPage extends BasePage {
 
   async cancelEdit(): Promise<void> {
     await this.cancelEditButton().click();
-    await expect(this.saveBudgetButton()).toBeVisible();
+    await expect(this.dialog()).toBeHidden();
   }
 
   async deleteRow(label: string): Promise<void> {
