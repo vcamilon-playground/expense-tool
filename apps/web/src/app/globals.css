@@ -921,7 +921,9 @@ button.btn-sm {
   .nav-profile-mobile-only { display: flex; }
   .nav-profile-menu { min-width: 220px; }
 
-  .site-header { display: none; }
+  .site-header { padding: 10px 14px; gap: 10px; }
+  .site-welcome { font-size: 16px; }
+  .site-header-search { display: none; }
   main.container { padding: 12px 12px calc(64px + env(safe-area-inset-bottom, 0px) + 12px); }
   h1 { font-size: 20px; }
   h2 { font-size: 17px; }
