@@ -27,9 +27,11 @@ vi.mock('@/contexts/AuthContext', () => ({
 }));
 
 describe('NavBar', () => {
-  it('renders the brand link', () => {
+  it('renders user profile in sidebar', () => {
     render(<NavBar />);
-    expect(screen.getByRole('link', { name: /💸 Expenses/ })).toBeInTheDocument();
+    const sidenav = screen.getByRole('navigation', { name: 'Sidebar navigation' });
+    expect(within(sidenav).getByText('Test User')).toBeInTheDocument();
+    expect(within(sidenav).getByText('@testuser')).toBeInTheDocument();
   });
 
   it('renders all nav links', () => {
@@ -40,6 +42,7 @@ describe('NavBar', () => {
     expect(within(sidenav).getByRole('link', { name: /Reports/ })).toBeInTheDocument();
     expect(within(sidenav).getByRole('link', { name: /Budgets/ })).toBeInTheDocument();
     expect(within(sidenav).getByRole('link', { name: /Recurring/ })).toBeInTheDocument();
+    expect(within(sidenav).getByRole('link', { name: /Settings/ })).toBeInTheDocument();
   });
 
   it('marks Dashboard as active when pathname is "/"', () => {

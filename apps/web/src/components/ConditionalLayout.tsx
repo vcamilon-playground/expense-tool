@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import NavBar from './NavBar';
+import SiteHeader from './SiteHeader';
 
 const AUTH_PATHS = ['/login', '/register'];
 
@@ -17,6 +18,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
     <div className="app-layout">
       <NavBar />
       <div className="main-wrapper">
+        <SiteHeader />
         <main className="container">{children}</main>
         <footer className="site-footer">
           Created by Vegil Camilon &amp; Claude Code

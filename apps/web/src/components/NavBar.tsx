@@ -63,34 +63,29 @@ const links = [
       </svg>
     ),
   },
+  {
+    href: '/settings',
+    label: 'Settings',
+    icon: (
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+    ),
+  },
 ];
-
-const ChevronLeft = () => (
-  <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="15 18 9 12 15 6"/>
-  </svg>
-);
-
-const ChevronRight = () => (
-  <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="9 18 15 12 9 6"/>
-  </svg>
-);
 
 type ConfirmModal = 'logout' | 'switch' | null;
 type PopupStyle = { top?: number; bottom?: number; left?: number; right?: number };
 
 export default function NavBar() {
   const [open, setOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmModal>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [popupStyle, setPopupStyle] = useState<PopupStyle>({});
   const [pendingNavHref, setPendingNavHref] = useState<string | null>(null);
   const [navGuardSaving, setNavGuardSaving] = useState(false);
   const [navGuardErr, setNavGuardErr] = useState<string | null>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const mobileProfileRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
   const { guard } = useNavigationGuard();
@@ -128,34 +123,13 @@ export default function NavBar() {
   }
 
   useEffect(() => {
-    if (localStorage.getItem('sidebar-collapsed') === 'true') setCollapsed(true);
-  }, []);
-
-  useEffect(() => {
     if (!profileMenuOpen) return;
     function handleOutside(e: MouseEvent) {
-      const target = e.target as Node;
-      const inWrapper = wrapperRef.current?.contains(target);
-      const inPopup = popupRef.current?.contains(target);
-      if (!inWrapper && !inPopup) setProfileMenuOpen(false);
+      if (!popupRef.current?.contains(e.target as Node)) setProfileMenuOpen(false);
     }
     document.addEventListener('mousedown', handleOutside);
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [profileMenuOpen]);
-
-  function openProfileMenu() {
-    if (!wrapperRef.current) return;
-    const rect = wrapperRef.current.getBoundingClientRect();
-    setPopupStyle({ bottom: window.innerHeight - rect.top + 6, left: rect.left });
-    setProfileMenuOpen(true);
-  }
-
-  function openProfileMenuFromMobile() {
-    const navEl = document.querySelector('nav.sidenav');
-    const navBottom = navEl ? navEl.getBoundingClientRect().bottom : 60;
-    setPopupStyle({ top: navBottom + 4, right: 8 });
-    setProfileMenuOpen(true);
-  }
 
   function openProfileMenuFromBottomNav() {
     setPopupStyle({ bottom: 72, right: 12 });
@@ -166,12 +140,6 @@ export default function NavBar() {
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href);
-
-  function toggleCollapsed() {
-    const next = !collapsed;
-    setCollapsed(next);
-    localStorage.setItem('sidebar-collapsed', String(next));
-  }
 
   async function handleConfirm() {
     setConfirm(null);
@@ -184,25 +152,24 @@ export default function NavBar() {
 
   return (
     <>
-      <nav aria-label="Sidebar navigation" className={`sidenav${collapsed ? ' collapsed' : ''}`}>
+      <nav aria-label="Sidebar navigation" className="sidenav">
 
-        {/* Brand row: logo + collapse toggle (desktop only) */}
-        <div className="brand-row">
-          <Link href="/" className="brand" aria-label="💸 Expenses" onClick={(e) => { handleNavClick('/', e); setOpen(false); }}>
-            <span>💸</span>
-            <span className="brand-text"> Expenses</span>
-          </Link>
-          <button
-            className="brand-collapse-btn"
-            onClick={toggleCollapsed}
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? <ChevronRight /> : <ChevronLeft />}
-          </button>
-        </div>
+        {/* User profile card at top of sidebar */}
+        {user && (
+          <div className="sidebar-profile">
+            <div className="sidebar-avatar">
+              {user.profile_picture_url ? (
+                <img src={user.profile_picture_url} alt={user.first_name} />
+              ) : (
+                <span>{initials}</span>
+              )}
+            </div>
+            <div className="sidebar-user-name">{user.first_name} {user.last_name}</div>
+            <div className="sidebar-user-handle">@{user.username}</div>
+          </div>
+        )}
 
-        {/* Mobile hamburger toggle */}
+        {/* Mobile hamburger toggle (hidden on desktop) */}
         <button
           className="nav-toggle"
           onClick={() => { setOpen(!open); setProfileMenuOpen(false); }}
@@ -226,81 +193,37 @@ export default function NavBar() {
               <span className="nav-label">{l.label}</span>
             </Link>
           ))}
-
-          {/* Mobile-only profile entry at bottom of hamburger menu */}
-          {user && (
-            <div
-              className="nav-mobile-profile"
-              ref={mobileProfileRef}
-              role="button"
-              tabIndex={0}
-              onClick={() => { openProfileMenuFromMobile(); setOpen(false); }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  openProfileMenuFromMobile();
-                  setOpen(false);
-                }
-              }}
-              aria-label="Open profile menu"
-              aria-haspopup="menu"
-              aria-expanded={profileMenuOpen}
-            >
-              <div className="nav-user-avatar">
-                {user.profile_picture_url ? (
-                  <img src={user.profile_picture_url} alt={user.first_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <span>{initials}</span>
-                )}
-              </div>
-              <div className="nav-user-info">
-                <div className="nav-user-name">{user.first_name} {user.last_name}</div>
-                <div className="nav-user-handle">@{user.username}</div>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Bottom: theme toggle + user (profile menu) */}
-        <div className="nav-bottom">
-          <ThemeToggle />
-
-          {user && (
-            <div className="nav-user-wrapper" ref={wrapperRef}>
-              {/* Clickable user block */}
-              <div
-                className="nav-user"
-                role="button"
-                tabIndex={0}
-                onClick={() => profileMenuOpen ? setProfileMenuOpen(false) : openProfileMenu()}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    profileMenuOpen ? setProfileMenuOpen(false) : openProfileMenu();
-                  }
-                }}
-                aria-label="Open profile menu"
-                aria-expanded={profileMenuOpen}
-                aria-haspopup="menu"
-              >
-                <div className="nav-user-avatar">
-                  {user.profile_picture_url ? (
-                    <img src={user.profile_picture_url} alt={user.first_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <span>{initials}</span>
-                  )}
-                </div>
-                <div className="nav-user-info">
-                  <div className="nav-user-name">{user.first_name} {user.last_name}</div>
-                  <div className="nav-user-handle">@{user.username}</div>
-                </div>
-              </div>
-            </div>
-          )}
+        {/* Sidebar bottom: switch user + logout */}
+        <div className="sidebar-bottom">
+          <button
+            className="sidebar-action-btn"
+            onClick={() => { setOpen(false); setConfirm('switch'); }}
+          >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+              <path d="M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            <span className="nav-label">Switch User</span>
+          </button>
+          <button
+            className="sidebar-action-btn sidebar-logout"
+            onClick={() => { setOpen(false); setConfirm('logout'); }}
+          >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span className="nav-label">Log Out</span>
+          </button>
         </div>
       </nav>
 
-      {/* Profile popup menu — rendered outside <nav> as fixed overlay to avoid stacking context issues */}
+      {/* Profile popup — opened by mobile bottom nav Profile tab */}
       {profileMenuOpen && user && (
         <div
           className="nav-profile-menu"
@@ -308,7 +231,6 @@ export default function NavBar() {
           ref={popupRef}
           style={{ position: 'fixed', zIndex: 400, ...popupStyle }}
         >
-          {/* Mobile-only: theme toggle at top of menu */}
           <div className="nav-profile-mobile-only" style={{ borderBottom: '1px solid var(--border)' }}>
             <ThemeToggle />
           </div>
@@ -356,27 +278,25 @@ export default function NavBar() {
 
       {/* ── Mobile bottom tab bar (hidden on desktop via CSS) ── */}
       <nav className="bottom-nav" aria-label="Mobile navigation">
-        {/* Home */}
         <Link
           href="/"
           className={`bottom-nav-tab${isActive('/') ? ' active' : ''}`}
           onClick={(e) => handleNavClick('/', e)}
           aria-label="Dashboard"
         >
-          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H15v-5h-4v5H4a1 1 0 01-1-1z"/>
           </svg>
           <span>Home</span>
         </Link>
 
-        {/* Expenses */}
         <Link
           href="/expenses"
           className={`bottom-nav-tab${isActive('/expenses') ? ' active' : ''}`}
           onClick={(e) => handleNavClick('/expenses', e)}
           aria-label="Expenses"
         >
-          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14 2H6a2 2 0 00-2 2v16l3-3 3 3 3-3 3 3 3-3V4a2 2 0 00-2-2z"/>
             <line x1="8" y1="9" x2="16" y2="9"/>
             <line x1="8" y1="13" x2="14" y2="13"/>
@@ -384,7 +304,6 @@ export default function NavBar() {
           <span>Expenses</span>
         </Link>
 
-        {/* Budgets */}
         <Link
           href="/budgets"
           className={`bottom-nav-tab${isActive('/budgets') ? ' active' : ''}`}
@@ -400,7 +319,6 @@ export default function NavBar() {
           <span>Budgets</span>
         </Link>
 
-        {/* Recurring */}
         <Link
           href="/recurring"
           className={`bottom-nav-tab${isActive('/recurring') ? ' active' : ''}`}
@@ -416,7 +334,6 @@ export default function NavBar() {
           <span>Recurring</span>
         </Link>
 
-        {/* Reports */}
         <Link
           href="/reports"
           className={`bottom-nav-tab${isActive('/reports') ? ' active' : ''}`}
@@ -431,7 +348,6 @@ export default function NavBar() {
           <span>Reports</span>
         </Link>
 
-        {/* Profile */}
         {user && (
           <button
             className={`bottom-nav-tab${profileMenuOpen ? ' active' : ''}`}
