@@ -7,6 +7,13 @@ import ThemeToggle from './ThemeToggle';
 import { listRecurring } from '@/lib/db';
 import { computeNotifications, incomeReminderKey } from '@/lib/notifications';
 
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good Morning,';
+  if (h < 18) return 'Good Afternoon,';
+  return 'Good Evening,';
+}
+
 export default function SiteHeader() {
   const { user } = useAuth();
   const [notifCount, setNotifCount] = useState(0);
@@ -24,7 +31,7 @@ export default function SiteHeader() {
 
   return (
     <div className="site-header">
-      <p className="site-welcome">Welcome {user.first_name}!</p>
+      <p className="site-welcome">{greeting()} {user.first_name}!</p>
 
       <div className="site-header-search">
         <input
