@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ compact = false }: { compact?: boolean }) {
   const [theme, setTheme] = useState<'dark' | 'light'>('light');
 
   useEffect(() => {
@@ -18,6 +18,31 @@ export default function ThemeToggle() {
     setTheme(next);
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('theme', next);
+  }
+
+  if (compact) {
+    return (
+      <div className="theme-toggle-pill" role="group" aria-label="Color scheme">
+        <button
+          className={`theme-pill-btn${theme === 'light' ? ' active' : ''}`}
+          onClick={() => { if (theme !== 'light') toggle(); }}
+          title="Light mode"
+          aria-label="Light mode"
+          aria-pressed={theme === 'light'}
+        >
+          ☀️
+        </button>
+        <button
+          className={`theme-pill-btn${theme === 'dark' ? ' active' : ''}`}
+          onClick={() => { if (theme !== 'dark') toggle(); }}
+          title="Dark mode"
+          aria-label="Dark mode"
+          aria-pressed={theme === 'dark'}
+        >
+          🌙
+        </button>
+      </div>
+    );
   }
 
   return (

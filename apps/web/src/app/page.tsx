@@ -89,7 +89,7 @@ export default function DashboardPage() {
   return (
     <div>
       <MonthEndBanner />
-      <h1>Dashboard</h1>
+      <h1>Home</h1>
 
       {/* KPIs */}
       <SummaryCards day={day} week={week} month={month} year={year} />

@@ -37,7 +37,7 @@ describe('NavBar', () => {
   it('renders all nav links', () => {
     render(<NavBar />);
     const sidenav = screen.getByRole('navigation', { name: 'Sidebar navigation' });
-    expect(within(sidenav).getByRole('link', { name: /Dashboard/ })).toBeInTheDocument();
+    expect(within(sidenav).getByRole('link', { name: /Home/ })).toBeInTheDocument();
     expect(within(sidenav).getByRole('link', { name: /^Expenses$/ })).toBeInTheDocument();
     expect(within(sidenav).getByRole('link', { name: /Reports/ })).toBeInTheDocument();
     expect(within(sidenav).getByRole('link', { name: /Budgets/ })).toBeInTheDocument();
@@ -45,10 +45,10 @@ describe('NavBar', () => {
     expect(within(sidenav).getByRole('link', { name: /Settings/ })).toBeInTheDocument();
   });
 
-  it('marks Dashboard as active when pathname is "/"', () => {
+  it('marks Home as active when pathname is "/"', () => {
     render(<NavBar />);
     const sidenav = screen.getByRole('navigation', { name: 'Sidebar navigation' });
-    expect(within(sidenav).getByRole('link', { name: /Dashboard/ })).toHaveClass('active');
+    expect(within(sidenav).getByRole('link', { name: /Home/ })).toHaveClass('active');
   });
 
   it('does not mark Expenses as active when pathname is "/"', () => {

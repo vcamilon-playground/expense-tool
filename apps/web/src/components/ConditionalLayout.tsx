@@ -23,7 +23,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
         <footer className="site-footer">
           Created by Vegil Camilon &amp; Claude Code
           <span className="footer-version">
-            v{process.env.NEXT_PUBLIC_APP_VERSION} · {process.env.NEXT_PUBLIC_BUILD_SHA}
+            v{process.env.NEXT_PUBLIC_APP_VERSION}
           </span>
         </footer>
       </div>
