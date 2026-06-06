@@ -89,10 +89,27 @@ export default function DashboardPage() {
   return (
     <div>
       <MonthEndBanner />
-      <h1>Home</h1>
 
       {/* KPIs */}
       <SummaryCards day={day} week={week} month={month} year={year} />
+
+      {/* Budget Status */}
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>Budget Status</h2>
+        <BudgetAlerts statuses={statuses} />
+      </div>
+
+      {/* Charts — side by side on desktop, stacked on mobile */}
+      <div className="grid cols-2 chart-grid">
+        <div className="card chart-card">
+          <h2 style={{ marginTop: 0 }}>This Month by Category</h2>
+          <CategoryChart data={catChartData} />
+        </div>
+        <div className="card chart-card">
+          <h2 style={{ marginTop: 0 }}>6-Month Trend</h2>
+          <TrendChart expenses={expenses} budgets={budgets} />
+        </div>
+      </div>
 
       {/* Upcoming Charges */}
       <div className="card">
@@ -123,24 +140,6 @@ export default function DashboardPage() {
             </table>
           </div>
         )}
-      </div>
-
-      {/* Budget Status */}
-      <div className="card">
-        <h2 style={{ marginTop: 0 }}>Budget Status</h2>
-        <BudgetAlerts statuses={statuses} />
-      </div>
-
-      {/* Charts — side by side on desktop, stacked on mobile */}
-      <div className="grid cols-2 chart-grid">
-        <div className="card chart-card">
-          <h2 style={{ marginTop: 0 }}>This Month by Category</h2>
-          <CategoryChart data={catChartData} />
-        </div>
-        <div className="card chart-card">
-          <h2 style={{ marginTop: 0 }}>6-Month Trend</h2>
-          <TrendChart expenses={expenses} budgets={budgets} />
-        </div>
       </div>
 
       {/* AI Insight */}
