@@ -393,6 +393,27 @@ nav.sidenav button:active:not(:disabled) { transform: scale(0.97); }
 }
 .site-notif-btn:hover { background: var(--panel); color: var(--text); }
 
+/* Notification badge on bell icon */
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--bad);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+  box-shadow: 0 0 0 2px var(--bg);
+}
+
 /* ── Layout ── */
 main.container {
   flex: 1;
