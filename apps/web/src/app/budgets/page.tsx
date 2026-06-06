@@ -160,7 +160,7 @@ export default function BudgetsPage() {
           <p className="muted">No budgets set.</p>
         ) : (
           <div className="table-wrap">
-            <table>
+            <table className="budget-table">
               <thead>
                 <tr>
                   <th className="sortable" onClick={() => handleSort('category')}>Category <SortIcon col="category" sortCol={sortCol} sortDir={sortDir} /></th>

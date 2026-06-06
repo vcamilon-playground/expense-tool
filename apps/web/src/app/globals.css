@@ -951,6 +951,42 @@ button.btn-sm {
     min-width: 80px;
   }
   .expense-table td[data-label=""] { justify-content: flex-end; gap: 8px; margin-top: 6px; }
+
+  /* Budget table: two-line card view */
+  .budget-table thead { display: none; }
+  .budget-table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 0;
+  }
+  .budget-table tbody tr:last-child { border-bottom: none; }
+  .budget-table tbody td { border-bottom: none; padding: 0; }
+  .budget-table tbody td:nth-child(1) {
+    flex: 1 1 auto;
+    font-weight: 500;
+    font-size: 14px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .budget-table tbody td:nth-child(2) {
+    flex: 0 0 auto;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    text-align: right;
+  }
+  .budget-table tbody td:nth-child(3) {
+    flex: 0 0 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    padding-top: 8px;
+  }
   .expense-table td[data-label=""]::before { display: none; }
 
   /* Recurring table: card view */
