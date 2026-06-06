@@ -27,6 +27,7 @@ type Draft = {
   birth_date: string;
   avatarFile: File | null;
   avatarPreview: string | null;
+  avatarUrl?: string; // set when the user pastes a web image URL (persisted directly, no upload)
   accent: Accent;
   sessionTimeout: SessionTimeout;
   allowPastEdit: boolean;
@@ -111,6 +112,7 @@ export default function SettingsPage() {
     draft.last_name !== savedRef.current.last_name ||
     draft.birth_date !== savedRef.current.birth_date ||
     draft.avatarFile !== null ||
+    draft.avatarPreview !== savedRef.current.avatarPreview ||
     draft.accent !== savedRef.current.accent ||
     draft.sessionTimeout !== savedRef.current.sessionTimeout ||
     draft.allowPastEdit !== savedRef.current.allowPastEdit
@@ -123,18 +125,24 @@ export default function SettingsPage() {
     setGlobalErr(null);
 
     try {
-      // Upload avatar if changed
+      // Resolve the avatar URL: uploaded file > pasted web URL > unchanged.
       let profilePictureUrl = user.profile_picture_url;
       if (draft.avatarFile) {
         const ext = draft.avatarFile.name.split('.').pop();
         const path = `${user.id}.${ext}`;
-        const { error } = await supabase.storage.from('avatars').upload(path, draft.avatarFile, {
+        const { error: uploadError } = await supabase.storage.from('avatars').upload(path, draft.avatarFile, {
           upsert: true, contentType: draft.avatarFile.type,
         });
-        if (!error) {
-          const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-          profilePictureUrl = data.publicUrl;
+        if (uploadError) {
+          setGlobalErr(`Avatar upload failed: ${uploadError.message}. Ensure the "avatars" storage bucket exists and is public.`);
+          return;
         }
+        const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+        // Cache-bust: the upsert path is identical each time, so without a
+        // version query param the browser would keep showing the old image.
+        profilePictureUrl = `${data.publicUrl}?v=${Date.now()}`;
+      } else if (draft.avatarUrl !== undefined) {
+        profilePictureUrl = draft.avatarUrl.trim() || null;
       }
 
       // Always persist profile + accent_color to DB so changes sync across devices
@@ -167,7 +175,12 @@ export default function SettingsPage() {
       localStorage.setItem('allow-past-edit', String(draft.allowPastEdit));
 
       // Commit draft as new saved baseline
-      const committed: Draft = { ...draft, avatarFile: null };
+      const committed: Draft = {
+        ...draft,
+        avatarFile: null,
+        avatarUrl: undefined,
+        avatarPreview: profilePictureUrl,
+      };
       savedRef.current = committed;
       setDraft(committed);
 
@@ -271,7 +284,11 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) { setGlobalErr('Profile picture must be under 2 MB'); return; }
-    setDraft((d) => d ? { ...d, avatarFile: file, avatarPreview: URL.createObjectURL(file) } : d);
+    setDraft((d) => d ? { ...d, avatarFile: file, avatarPreview: URL.createObjectURL(file), avatarUrl: undefined } : d);
+  }
+
+  function handleAvatarUrlChange(url: string) {
+    setDraft((d) => d ? { ...d, avatarUrl: url, avatarFile: null, avatarPreview: url.trim() || null } : d);
   }
 
   // ── Loading guard ─────────────────────────────────────────────────────────
@@ -364,6 +381,18 @@ export default function SettingsPage() {
           </div>
           <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
         </div>
+
+        <label style={{ display: 'block', marginBottom: 20 }}>
+          <div className="muted" style={{ fontSize: 13, marginBottom: 4 }}>
+            Or paste an image URL from the web
+          </div>
+          <input
+            type="url"
+            placeholder="https://example.com/photo.jpg"
+            value={draft.avatarUrl ?? ''}
+            onChange={(e) => handleAvatarUrlChange(e.target.value)}
+          />
+        </label>
 
         <div className="grid cols-2" style={{ gap: 12, marginBottom: 12 }}>
           <label>
