@@ -431,9 +431,24 @@ Ask: **"Does this change expose coverage that does not exist at all?"**
 
 All updates and additions must be written and passing **before** step 7. Never defer to a follow-up commit.
 
-### 7 — Commit and push automatically
+### 7 — Bump the version (mandatory before every commit)
 
-Once code review, documentation, typecheck, and local E2E tests all pass:
+**Every commit that changes app behaviour or UI must increment `apps/web/package.json`.**
+This is how deployments are tracked and rollbacks are targeted. There are no exceptions.
+
+| Change type | Bump | Example |
+|---|---|---|
+| Bug fix, small UI tweak, refactor | patch | `1.0.1` → `1.0.2` |
+| New feature, significant UX change | minor | `1.0.2` → `1.1.0` |
+| Breaking change or major redesign | major | `1.1.0` → `2.0.0` |
+
+Edit `apps/web/package.json` directly and include it in the same commit as the change. Do **not** use the release scripts (`npm run release:*`) for this — those create a separate tag commit. Just bump the `version` field inline.
+
+Commits that skip the version bump (docs-only, test-only, CI config, `CLAUDE.md` edits) are the only exceptions.
+
+### 8 — Commit and push automatically
+
+Once code review, documentation, typecheck, local E2E tests, and version bump all pass:
 
 ```bash
 git add <changed files>
@@ -449,17 +464,21 @@ git push origin main
 
 The app version lives in `apps/web/package.json` (`version` field). It is injected at build time into `NEXT_PUBLIC_APP_VERSION` via `next.config.js` and displayed in the site footer alongside the build SHA (`NEXT_PUBLIC_BUILD_SHA`). In Vercel production builds, the SHA comes from `VERCEL_GIT_COMMIT_SHA`; locally it falls back to `git rev-parse --short HEAD`.
 
-### When to cut a release
+### Version bump rule
 
-| Change type | Command | Example |
-|---|---|---|
-| Bug fix, small UI tweak | `npm run release:patch` | `1.0.0` → `1.0.1` |
-| New feature, significant UX change | `npm run release:minor` | `1.0.1` → `1.1.0` |
-| Breaking change or major redesign | `npm run release:major` | `1.1.0` → `2.0.0` |
+**Every commit that changes app behaviour or UI must bump `apps/web/package.json`.** Edit the `version` field directly and include it in the same commit. See step 7 of the Change Workflow for the patch/minor/major decision table.
 
-The release scripts (`scripts/release.mjs`) bump `apps/web/package.json`, commit with `chore(release): vX.Y.Z`, create an annotated git tag `vX.Y.Z`, and push both the commit and the tag. Pushing to main triggers a new Vercel deployment automatically.
+### Cutting a tagged release (optional)
 
-**Claude should never run a release script** unless the user explicitly asks for a version bump. Normal feature commits do not increment the version — the user decides when to cut a release.
+The release scripts create an annotated git tag on top of the normal version bump — useful for marking a milestone:
+
+| Command | Effect |
+|---|---|
+| `npm run release:patch` | Bumps patch, commits `chore(release): vX.Y.Z`, tags, pushes |
+| `npm run release:minor` | Bumps minor, commits `chore(release): vX.Y.Z`, tags, pushes |
+| `npm run release:major` | Bumps major, commits `chore(release): vX.Y.Z`, tags, pushes |
+
+Only run these when the user explicitly asks for a tagged release. For routine commits, bump the version field directly (step 7) — do not use the release scripts.
 
 ### Rolling back
 
