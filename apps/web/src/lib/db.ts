@@ -9,6 +9,8 @@ import type {
   IncomeSourceInput,
   RecurringExpense,
   RecurringInput,
+  Reminder,
+  ReminderInput,
 } from '@expense/shared';
 import { supabase } from './supabase';
 
@@ -228,4 +230,68 @@ export async function deductFromIncomeSource(id: string, amount: number): Promis
     .update({ balance: Number(data.balance) - amount })
     .eq('id', id);
   if (upErr) throw upErr;
+}
+
+export async function transferIncome(fromId: string, toId: string, amount: number): Promise<void> {
+  const { data, error } = await supabase
+    .from('income_sources')
+    .select('id, balance')
+    .in('id', [fromId, toId]);
+  if (error) throw error;
+  const from = data?.find((s) => s.id === fromId);
+  const to = data?.find((s) => s.id === toId);
+  if (!from || !to) throw new Error('Income source not found');
+
+  const { error: fromErr } = await supabase
+    .from('income_sources')
+    .update({ balance: Number(from.balance) - amount })
+    .eq('id', fromId);
+  if (fromErr) throw fromErr;
+
+  const { error: toErr } = await supabase
+    .from('income_sources')
+    .update({ balance: Number(to.balance) + amount })
+    .eq('id', toId);
+  if (toErr) throw toErr;
+}
+
+// ---------- Reminders ----------
+
+export async function listReminders(userId: string): Promise<Reminder[]> {
+  const { data, error } = await supabase
+    .from('reminders')
+    .select('*')
+    .eq('user_id', userId)
+    .order('remind_date');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createReminder(input: ReminderInput, userId: string): Promise<Reminder> {
+  const { data, error } = await supabase
+    .from('reminders')
+    .insert({ ...input, user_id: userId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateReminder(
+  id: string,
+  patch: Partial<ReminderInput>,
+): Promise<Reminder> {
+  const { data, error } = await supabase
+    .from('reminders')
+    .update(patch)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteReminder(id: string): Promise<void> {
+  const { error } = await supabase.from('reminders').delete().eq('id', id);
+  if (error) throw error;
 }

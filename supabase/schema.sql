@@ -129,6 +129,18 @@ create table if not exists income_sources (
 );
 create index if not exists income_sources_user_id_idx on income_sources (user_id);
 
+-- ---------- reminders ----------
+create table if not exists reminders (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  title text not null,
+  remind_date date not null,
+  cadence text not null default 'once' check (cadence in ('once', 'weekly', 'monthly', 'yearly')),
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+create index if not exists reminders_user_id_idx on reminders (user_id);
+
 -- ---------- RLS: disabled, anon key has full read/write ----------
 -- The anon key gets full read/write. Do NOT expose this DB beyond your own use.
 alter table users disable row level security;
@@ -137,6 +149,7 @@ alter table expenses disable row level security;
 alter table budgets disable row level security;
 alter table recurring_expenses disable row level security;
 alter table income_sources disable row level security;
+alter table reminders disable row level security;
 
 -- ---------- Privileges for anon role ----------
 grant usage on schema public to anon;

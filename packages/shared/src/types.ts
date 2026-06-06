@@ -84,6 +84,20 @@ export type IncomeSource = {
 
 export type IncomeSourceInput = Omit<IncomeSource, 'id' | 'user_id' | 'created_at'>;
 
+export type ReminderCadence = 'once' | 'weekly' | 'monthly' | 'yearly';
+
+export type Reminder = {
+  id: string;
+  user_id: string;
+  title: string;
+  remind_date: string; // ISO date (YYYY-MM-DD)
+  cadence: ReminderCadence;
+  active: boolean;
+  created_at?: string;
+};
+
+export type ReminderInput = Omit<Reminder, 'id' | 'user_id' | 'created_at'>;
+
 export type User = {
   id: string;
   username: string;

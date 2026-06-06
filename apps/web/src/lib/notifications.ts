@@ -1,4 +1,4 @@
-import type { RecurringExpense } from '@expense/shared';
+import type { Reminder, RecurringExpense } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
 
 export type NotificationUrgency = 'high' | 'medium' | 'low' | 'info';
@@ -7,6 +7,7 @@ export type NotificationType =
   | 'recurring_due_today'
   | 'recurring_due_soon'
   | 'recurring_due_week'
+  | 'custom_reminder'
   | 'income_reminder';
 
 export type AppNotification = {
@@ -17,6 +18,7 @@ export type AppNotification = {
   urgency: NotificationUrgency;
   href: string;
   recurringId?: string;
+  reminderId?: string;
 };
 
 const urgencyOrder: Record<NotificationUrgency, number> = {
@@ -28,6 +30,7 @@ const urgencyOrder: Record<NotificationUrgency, number> = {
 
 export function computeNotifications(
   recurring: RecurringExpense[],
+  reminders: Reminder[],
   today: string,
   incomeReminderDismissed: boolean,
 ): AppNotification[] {
@@ -75,6 +78,20 @@ export function computeNotifications(
         recurringId: r.id,
       });
     }
+  }
+
+  for (const rem of reminders) {
+    if (!rem.active) continue;
+    if (rem.remind_date > today) continue;
+    notifications.push({
+      id: `reminder-${rem.id}`,
+      type: 'custom_reminder',
+      title: rem.cadence === 'once' ? 'Reminder' : 'Recurring Reminder',
+      body: rem.title,
+      urgency: 'info',
+      href: '/notifications',
+      reminderId: rem.id,
+    });
   }
 
   if (todayDay >= 15 && !incomeReminderDismissed) {

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from './ThemeToggle';
-import { listRecurring } from '@/lib/db';
+import { listRecurring, listReminders } from '@/lib/db';
 import { computeNotifications, incomeReminderKey } from '@/lib/notifications';
 
 function greetingInfo(): { text: string; emoji: string } {
@@ -23,8 +23,8 @@ export default function SiteHeader() {
     if (!user) return;
     const today = new Date().toISOString().slice(0, 10);
     const dismissed = localStorage.getItem(incomeReminderKey(today)) === 'dismissed';
-    listRecurring(user.id).then((items) => {
-      setNotifCount(computeNotifications(items, today, dismissed).length);
+    Promise.all([listRecurring(user.id), listReminders(user.id)]).then(([items, reminders]) => {
+      setNotifCount(computeNotifications(items, reminders, today, dismissed).length);
     });
   }, [user]);
 

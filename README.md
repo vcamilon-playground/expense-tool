@@ -138,7 +138,15 @@ npm run dev:mobile
 - **Recurring** — track subscriptions (weekly / monthly / yearly) with
   the next charge date. Due items show a "Confirm Payment" flow (record or
   skip). Future-dated items have a "Pay Now" button to record the payment
-  ahead of schedule and advance the next charge date.
+  ahead of schedule and advance the next charge date. Both flows can
+  optionally deduct from an income source.
+- **Income** — track balances across bank accounts, e-wallets, and cash on
+  hand. Expenses (and recurring payments) can optionally deduct from a chosen
+  source when recorded. **Transfer** moves money between any two sources.
+- **Notifications** — a bell in the header lists recurring payments due within
+  a week, a monthly income-update prompt (15th onward), and your own
+  reminders. **Reminders** can be one-time (removed when marked Done) or
+  recurring (weekly / monthly / yearly — advances to the next occurrence).
 - **Settings** — profile editing, password change, theme, category management.
 
 ## Versioning

@@ -7,6 +7,7 @@ import {
   createIncomeSource,
   deleteIncomeSource,
   listIncomeSources,
+  transferIncome,
   updateIncomeSource,
 } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,6 +26,10 @@ const typeIcon: Record<IncomeType, string> = {
   cash: '💵',
 };
 
+function sourceLabel(s: IncomeSource): string {
+  return s.type === 'cash' ? 'Cash on Hand' : (s.name ?? typeLabel[s.type]);
+}
+
 export default function IncomePage() {
   const { user } = useAuth();
   const [sources, setSources] = useState<IncomeSource[]>([]);
@@ -38,6 +43,14 @@ export default function IncomePage() {
   const [formName, setFormName] = useState('');
   const [formBalance, setFormBalance] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ name?: string; balance?: string }>({});
+
+  // Transfer modal state
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferFrom, setTransferFrom] = useState('');
+  const [transferTo, setTransferTo] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferError, setTransferError] = useState<string | null>(null);
+  const [transferring, setTransferring] = useState(false);
 
   async function reload() {
     if (!user) return;
@@ -126,6 +139,49 @@ export default function IncomePage() {
     await reload();
   }
 
+  function openTransfer() {
+    setTransferFrom('');
+    setTransferTo('');
+    setTransferAmount('');
+    setTransferError(null);
+    setTransferOpen(true);
+  }
+
+  async function handleTransfer(e: React.FormEvent) {
+    e.preventDefault();
+    setTransferError(null);
+
+    if (!transferFrom || !transferTo) {
+      setTransferError('Select both a source and a destination.');
+      return;
+    }
+    if (transferFrom === transferTo) {
+      setTransferError('Source and destination must be different.');
+      return;
+    }
+    const amount = parseFloat(transferAmount);
+    if (!transferAmount || !Number.isFinite(amount) || amount <= 0) {
+      setTransferError('Enter a valid amount greater than zero.');
+      return;
+    }
+    const fromSource = sources.find((s) => s.id === transferFrom);
+    if (fromSource && amount > fromSource.balance) {
+      setTransferError(`Amount exceeds the ${sourceLabel(fromSource)} balance (${formatMoney(fromSource.balance)}).`);
+      return;
+    }
+
+    setTransferring(true);
+    try {
+      await transferIncome(transferFrom, transferTo, amount);
+      setTransferOpen(false);
+      await reload();
+    } catch (err) {
+      setTransferError(errorMessage(err, 'Transfer failed'));
+    } finally {
+      setTransferring(false);
+    }
+  }
+
   if (!user || loading) return <p className="muted">Loading…</p>;
 
   const bankSources = sources.filter((s) => s.type === 'bank');
@@ -149,7 +205,65 @@ export default function IncomePage() {
         onCancel={() => setPendingDelete(null)}
       />
 
-      <h1>Income</h1>
+      {transferOpen && (
+        <div className="modal-overlay" onClick={() => setTransferOpen(false)}>
+          <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <h3 style={{ margin: 0 }}>Transfer Between Sources</h3>
+              <button className="ghost close-btn" onClick={() => setTransferOpen(false)} aria-label="Close">✕</button>
+            </div>
+            <form onSubmit={handleTransfer} noValidate>
+              <label style={{ display: 'block', marginBottom: 12 }}>
+                <div className="muted" style={{ marginBottom: 4 }}>From</div>
+                <select value={transferFrom} onChange={(e) => { setTransferFrom(e.target.value); setTransferError(null); }}>
+                  <option value="">— Select source —</option>
+                  {sources.map((s) => (
+                    <option key={s.id} value={s.id}>{sourceLabel(s)} ({formatMoney(s.balance)})</option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: 'block', marginBottom: 12 }}>
+                <div className="muted" style={{ marginBottom: 4 }}>To</div>
+                <select value={transferTo} onChange={(e) => { setTransferTo(e.target.value); setTransferError(null); }}>
+                  <option value="">— Select destination —</option>
+                  {sources.filter((s) => s.id !== transferFrom).map((s) => (
+                    <option key={s.id} value={s.id}>{sourceLabel(s)} ({formatMoney(s.balance)})</option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: 'block', marginBottom: 12 }}>
+                <div className="muted" style={{ marginBottom: 4 }}>Amount (₱)</div>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={transferAmount}
+                  onChange={(e) => { setTransferAmount(e.target.value); setTransferError(null); }}
+                />
+              </label>
+              {transferError && <p className="field-error">{transferError}</p>}
+              <div className="row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
+                <button type="button" className="ghost" style={{ width: 'auto' }} onClick={() => setTransferOpen(false)} disabled={transferring}>
+                  Cancel
+                </button>
+                <button type="submit" className="primary" style={{ width: 'auto' }} disabled={transferring}>
+                  {transferring ? 'Transferring…' : 'Transfer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="row" style={{ justifyContent: 'space-between', marginBottom: 4 }}>
+        <h1 style={{ margin: 0 }}>Income</h1>
+        {sources.length >= 2 && (
+          <button className="primary" style={{ width: 'auto' }} onClick={openTransfer}>
+            ⇄ Transfer
+          </button>
+        )}
+      </div>
       <p className="muted">Track your money across bank accounts, e-wallets, and cash. Expenses can be deducted from any source when recorded.</p>
 
       {loadError && <p style={{ color: 'var(--bad)', marginBottom: 12 }}>{loadError}</p>}
