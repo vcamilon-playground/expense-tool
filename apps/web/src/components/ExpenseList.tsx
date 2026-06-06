@@ -120,14 +120,16 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete, al
               aria-expanded={!isCollapsed}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span className="date-group-chevron">{isCollapsed ? '▶' : '▼'}</span>
                 <span className="date-group-date">{monthLabel(key)}</span>
                 <span className="muted" style={{ fontSize: 12 }}>
                   {items.length} item{items.length !== 1 ? 's' : ''}
                 </span>
                 {isArchived && <span className="pill warn" style={{ fontSize: 10 }}>archived</span>}
               </div>
-              <span style={{ fontWeight: 600, flexShrink: 0 }}>{formatMoney(total)}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                <span style={{ fontWeight: 600 }}>{formatMoney(total)}</span>
+                <span className="collapse-chevron" aria-hidden="true">{isCollapsed ? '▸' : '▾'}</span>
+              </span>
             </div>
 
             {!isCollapsed && (

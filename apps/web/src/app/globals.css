@@ -525,7 +525,6 @@ th.sortable:hover { color: var(--text); background: var(--border); }
 }
 .date-group-header:hover { background: var(--border); }
 .date-group-date { font-weight: 600; font-size: 14px; }
-.date-group-chevron { font-size: 9px; color: var(--muted); flex-shrink: 0; }
 .date-group-body { background: var(--panel); }
 .date-group-body .expense-table { margin: 0; }
 .date-group-body tr:last-child td { border-bottom: none; }
