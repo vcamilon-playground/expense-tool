@@ -32,6 +32,18 @@ test.describe('Income page', () => {
     await expect(income.summaryValue('Grand Total')).toHaveText('••••••');
   });
 
+  test('each summary card has its own eye that reveals only that card', async () => {
+    // Four per-card eyes; everything masked by default.
+    await expect(income.summaryCardEye('Bank Total')).toHaveCount(1);
+    await expect(income.summaryValue('Bank Total')).toContainText('••••••');
+    await expect(income.summaryValue('Grand Total')).toContainText('••••••');
+
+    // Revealing one card does not reveal the others.
+    await income.summaryCardEye('Bank Total').click();
+    await expect(income.summaryValue('Bank Total')).toContainText('₱');
+    await expect(income.summaryValue('Grand Total')).toContainText('••••••');
+  });
+
   test('Add Source modal opens with type, name, and balance fields', async () => {
     await income.openAddModal();
     await expect(income.typeSelect()).toBeVisible();

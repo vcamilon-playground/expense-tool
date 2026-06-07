@@ -142,7 +142,9 @@ after each Vercel deploy.
 
 - **Multi-user auth** — register with first name, last name, username, password, profile picture (optional), birth date (optional). Login, logout, and switch-user from the sidebar. No email required. If a password is forgotten, reset it via Supabase SQL editor.
 - **Dashboard** — totals for today / this week / this month / this year,
-  category breakdown, budget status bars, monthly AI insight (on demand).
+  category breakdown (pie), budget status bars, daily spend trend (past 7 days)
+  and weekly spend trend (past 5 weeks) line charts, 6-month trend, monthly AI
+  insight (on demand).
 - **Expenses** — full CRUD with two views: **List view** (grouped by month, collapsible, sortable) and **Calendar view** (monthly grid showing daily totals; click any day to see and edit that day's expenses). Filters (search, category) apply in both views.
 - **Receipt scan (mobile)** — camera or gallery → AI vision extracts
   `amount`, `merchant`, `date`, `category guess`, `description`,
@@ -160,6 +162,8 @@ after each Vercel deploy.
 - **Income** — track balances across bank accounts, e-wallets, and cash on
   hand. Expenses (and recurring payments) can optionally deduct from a chosen
   source when recorded. **Transfer** moves money between any two sources.
+  Amounts are hidden by default for privacy — reveal everything with the header
+  eye, or peek a single card/source with its own inline eye.
 - **Notifications** — a bell in the header lists recurring payments due within
   a week, a monthly income-update prompt (15th onward), and your own
   reminders. **Reminders** can be one-time (removed when marked Done) or

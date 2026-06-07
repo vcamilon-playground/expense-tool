@@ -37,6 +37,14 @@ export class DashboardPage extends BasePage {
     return this.page.getByRole('heading', { level: 2, name: '6-Month Trend' });
   }
 
+  dailyTrendSection(): Locator {
+    return this.page.getByRole('heading', { level: 2, name: 'Daily Spend — Past 7 Days' });
+  }
+
+  weeklyTrendSection(): Locator {
+    return this.page.getByRole('heading', { level: 2, name: 'Weekly Spend — Past 5 Weeks' });
+  }
+
   upcomingChargesSection(): Locator {
     return this.page.getByRole('heading', { level: 2, name: 'Upcoming Charges' });
   }

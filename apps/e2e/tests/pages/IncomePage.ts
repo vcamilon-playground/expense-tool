@@ -36,6 +36,11 @@ export class IncomePage extends BasePage {
     return this.summaryCard(label).locator('.value');
   }
 
+  // Per-card inline eye toggle (reveals just this card's amount).
+  summaryCardEye(label: string): Locator {
+    return this.summaryCard(label).locator('.amount-eye');
+  }
+
   // ── Add / Edit modal ──
   dialog(): Locator {
     return this.page.getByRole('dialog');

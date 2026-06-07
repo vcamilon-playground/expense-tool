@@ -33,23 +33,44 @@ function sourceLabel(s: IncomeSource): string {
 
 const AMOUNT_MASK = '••••••';
 
-function displayAmount(amount: number, visible: boolean): string {
+// Display-only mask (for amounts inside the section header buttons, which can't
+// nest their own eye button — they mirror the matching summary card's key).
+function maskText(amount: number, visible: boolean): string {
   return visible ? formatMoney(amount) : AMOUNT_MASK;
 }
 
-const EyeIcon = () => (
-  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const EyeIcon = ({ size = 18 }: { size?: number }) => (
+  <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
     <circle cx="12" cy="12" r="3"/>
   </svg>
 );
 
-const EyeOffIcon = () => (
-  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const EyeOffIcon = ({ size = 18 }: { size?: number }) => (
+  <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
     <line x1="1" y1="1" x2="23" y2="23"/>
   </svg>
 );
+
+// An amount with its own inline eye toggle. `visible` comes from the global
+// toggle OR a per-item reveal; clicking the eye toggles just this item.
+function AmountWithEye({ amount, visible, onToggle }: { amount: number; visible: boolean; onToggle: () => void }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+      <span>{visible ? formatMoney(amount) : AMOUNT_MASK}</span>
+      <button
+        type="button"
+        className="amount-eye"
+        onClick={onToggle}
+        aria-label={visible ? 'Hide amount' : 'Show amount'}
+        title={visible ? 'Hide amount' : 'Show amount'}
+      >
+        {visible ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
+      </button>
+    </span>
+  );
+}
 
 export default function IncomePage() {
   const { user } = useAuth();
@@ -75,8 +96,10 @@ export default function IncomePage() {
   const [transferring, setTransferring] = useState(false);
   const [cashExpanded, setCashExpanded] = useState(true);
 
-  // Privacy: amounts hidden by default; preference persisted per device.
+  // Privacy: amounts hidden by default; global preference persisted per device,
+  // plus a per-item reveal set so individual cards/sources can be peeked.
   const [amountsVisible, setAmountsVisible] = useState(false);
+  const [revealed, setRevealed] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     setAmountsVisible(localStorage.getItem('income-amounts-visible') === 'true');
@@ -86,6 +109,15 @@ export default function IncomePage() {
     setAmountsVisible((v) => {
       const next = !v;
       localStorage.setItem('income-amounts-visible', String(next));
+      return next;
+    });
+  }
+
+  const isVisible = (key: string) => amountsVisible || revealed.has(key);
+  function toggleKey(key: string) {
+    setRevealed((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
   }
@@ -330,19 +362,19 @@ export default function IncomePage() {
       <div className="grid cols-4 stat-grid">
         <div className="stat card">
           <div className="label muted">Bank Total</div>
-          <div className="value">{displayAmount(totalBank, amountsVisible)}</div>
+          <div className="value"><AmountWithEye amount={totalBank} visible={isVisible('sum-bank')} onToggle={() => toggleKey('sum-bank')} /></div>
         </div>
         <div className="stat card">
           <div className="label muted">E-Wallet Total</div>
-          <div className="value">{displayAmount(totalEwallet, amountsVisible)}</div>
+          <div className="value"><AmountWithEye amount={totalEwallet} visible={isVisible('sum-ewallet')} onToggle={() => toggleKey('sum-ewallet')} /></div>
         </div>
         <div className="stat card">
           <div className="label muted">Cash on Hand</div>
-          <div className="value">{displayAmount(totalCash, amountsVisible)}</div>
+          <div className="value"><AmountWithEye amount={totalCash} visible={isVisible('sum-cash')} onToggle={() => toggleKey('sum-cash')} /></div>
         </div>
         <div className="stat card">
           <div className="label muted">Grand Total</div>
-          <div className="value" style={{ color: 'var(--accent)' }}>{displayAmount(grandTotal, amountsVisible)}</div>
+          <div className="value" style={{ color: 'var(--accent)' }}><AmountWithEye amount={grandTotal} visible={isVisible('sum-grand')} onToggle={() => toggleKey('sum-grand')} /></div>
         </div>
       </div>
 
@@ -413,7 +445,9 @@ export default function IncomePage() {
         emptyText="No bank accounts added yet."
         onEdit={startEdit}
         onDelete={setPendingDelete}
-        amountsVisible={amountsVisible}
+        totalKey="sum-bank"
+        isVisible={isVisible}
+        toggleKey={toggleKey}
       />
 
       {/* E-Wallets */}
@@ -424,7 +458,9 @@ export default function IncomePage() {
         emptyText="No e-wallets added yet."
         onEdit={startEdit}
         onDelete={setPendingDelete}
-        amountsVisible={amountsVisible}
+        totalKey="sum-ewallet"
+        isVisible={isVisible}
+        toggleKey={toggleKey}
       />
 
       {/* Cash on Hand */}
@@ -437,7 +473,7 @@ export default function IncomePage() {
         >
           <h2 style={{ margin: 0 }}>💵 Cash on Hand</h2>
           <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span className="muted" style={{ fontSize: 14, fontWeight: 600 }}>{displayAmount(totalCash, amountsVisible)}</span>
+            <span className="muted" style={{ fontSize: 14, fontWeight: 600 }}>{maskText(totalCash, isVisible('sum-cash'))}</span>
             <span className="collapse-chevron" aria-hidden="true">{cashExpanded ? '▾' : '▸'}</span>
           </span>
         </button>
@@ -447,7 +483,7 @@ export default function IncomePage() {
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginTop: 12 }}>
               <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>
-                {displayAmount(cashSource.balance, amountsVisible)}
+                <AmountWithEye amount={cashSource.balance} visible={isVisible(cashSource.id)} onToggle={() => toggleKey(cashSource.id)} />
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button className="btn-sm" onClick={() => startEdit(cashSource)}>Edit Balance</button>
@@ -462,7 +498,7 @@ export default function IncomePage() {
 }
 
 function IncomeSection({
-  title, icon, sources, emptyText, onEdit, onDelete, amountsVisible,
+  title, icon, sources, emptyText, onEdit, onDelete, totalKey, isVisible, toggleKey,
 }: {
   title: string;
   icon: string;
@@ -470,7 +506,9 @@ function IncomeSection({
   emptyText: string;
   onEdit: (s: IncomeSource) => void;
   onDelete: (s: IncomeSource) => void;
-  amountsVisible: boolean;
+  totalKey: string;
+  isVisible: (key: string) => boolean;
+  toggleKey: (key: string) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
   const total = sources.reduce((sum, s) => sum + s.balance, 0);
@@ -485,7 +523,7 @@ function IncomeSection({
       >
         <h2 style={{ margin: 0 }}>{icon} {title}</h2>
         <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span className="muted" style={{ fontSize: 14, fontWeight: 600 }}>{displayAmount(total, amountsVisible)}</span>
+          <span className="muted" style={{ fontSize: 14, fontWeight: 600 }}>{maskText(total, isVisible(totalKey))}</span>
           <span className="collapse-chevron" aria-hidden="true">{expanded ? '▾' : '▸'}</span>
         </span>
       </button>
@@ -506,7 +544,7 @@ function IncomeSection({
                 {sources.map((s) => (
                   <tr key={s.id}>
                     <td style={{ fontWeight: 500 }}>{s.name}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 600 }}>{displayAmount(s.balance, amountsVisible)}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 600 }}><AmountWithEye amount={s.balance} visible={isVisible(s.id)} onToggle={() => toggleKey(s.id)} /></td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                         <button className="btn-sm" onClick={() => onEdit(s)}>Edit</button>

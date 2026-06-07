@@ -22,6 +22,8 @@ test.describe('Dashboard', () => {
     await expect(dashboard.statLabel('This Month')).toBeVisible();
     await expect(dashboard.statLabel('This Year')).toBeVisible();
     await expect(dashboard.budgetStatusSection()).toHaveText('Budget Status');
+    await expect(dashboard.dailyTrendSection()).toBeVisible();
+    await expect(dashboard.weeklyTrendSection()).toBeVisible();
     await expect(dashboard.categoryChartSection()).toHaveText('This Month by Category');
     await expect(dashboard.trendSection()).toHaveText('6-Month Trend');
     await expect(dashboard.upcomingChargesSection()).toHaveText('Upcoming Charges');

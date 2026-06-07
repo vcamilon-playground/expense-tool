@@ -86,7 +86,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/reports.spec.ts` | Smoke | Page load, period select, preset/date-range mode toggle, compare period, column sorting |
 | `tests/budgets.spec.ts` | Smoke | Page load, form labels, edit/cancel flow, inline validation errors, column sorting |
 | `tests/settings.spec.ts` | Smoke | Session expiry, profile section, global save/cancel, navigation guard, change password, theme colours, categories, past-edit toggle, profile menu |
-| `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + eye toggle, Add Source modal fields, cash hides name field, inline validation |
+| `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + global eye toggle + per-card eye reveal, Add Source modal fields, cash hides name field, inline validation |
 | `tests/notifications.spec.ts` | Smoke | Page load, Add Reminder form (title/repeat/date), repeat cadence options, empty-title validation, form open/close toggle |
 | `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, theme pill toggles data-theme, notification bell links to /notifications |
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
@@ -145,7 +145,7 @@ cd apps/e2e && npx playwright show-report
 
 **Dashboard**
 - page title is correct
-- all page sections render correctly *(header greeting, 4 KPI cards, Budget Status, Category Chart, 6-Month Trend, Upcoming Charges)*
+- all page sections render correctly *(header greeting, 4 KPI cards, Budget Status, Daily + Weekly spend charts, Category Chart, 6-Month Trend, Upcoming Charges)*
 - month-end reminder banner is conditional on days remaining in month
 
 **Dashboard — Upcoming Charges column sorting**
@@ -195,7 +195,8 @@ cd apps/e2e && npx playwright show-report
 
 **Income page**
 - page renders heading, add button, and four summary cards
-- amounts are hidden by default and the eye toggle reveals them
+- amounts are hidden by default and the (global) eye toggle reveals them
+- each summary card has its own eye that reveals only that card
 - Add Source modal opens with type, name, and balance fields
 - selecting Cash on Hand hides the name field
 - empty required fields show inline errors

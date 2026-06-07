@@ -20,7 +20,9 @@ import BudgetAlerts from '@/components/BudgetAlerts';
 import InsightCard from '@/components/InsightCard';
 import TrendChart from '@/components/TrendChart';
 import CategoryChart from '@/components/CategoryChart';
+import LineTrendChart from '@/components/LineTrendChart';
 import MonthEndBanner from '@/components/MonthEndBanner';
+import { dailyTrend, weeklyTrend } from '@/lib/trends';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -97,6 +99,18 @@ export default function DashboardPage() {
       <div className="card">
         <h2 style={{ marginTop: 0 }}>Budget Status</h2>
         <BudgetAlerts statuses={statuses} />
+      </div>
+
+      {/* Daily + Weekly expense trends — side by side on desktop, stacked on mobile */}
+      <div className="grid cols-2 chart-grid">
+        <div className="card chart-card">
+          <h2 style={{ marginTop: 0 }}>Daily Spend — Past 7 Days</h2>
+          <LineTrendChart data={dailyTrend(expenses, 7)} />
+        </div>
+        <div className="card chart-card">
+          <h2 style={{ marginTop: 0 }}>Weekly Spend — Past 5 Weeks</h2>
+          <LineTrendChart data={weeklyTrend(expenses, 5)} />
+        </div>
       </div>
 
       {/* Charts — side by side on desktop, stacked on mobile */}

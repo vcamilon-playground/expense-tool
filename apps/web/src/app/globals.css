@@ -459,6 +459,22 @@ h3 { font-size: 15px; margin: 16px 0 8px; }
 }
 .collapse-header:hover .collapse-chevron { color: var(--text); }
 
+/* Inline per-amount privacy eye (income page) */
+.amount-eye {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--muted);
+  line-height: 0;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.amount-eye:hover { color: var(--accent); }
+
 /* ── Grid ── */
 .grid { display: grid; gap: 12px; }
 .grid > * { min-width: 0; }
