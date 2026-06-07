@@ -22,7 +22,7 @@ export default function SummaryCards({
     { label: 'This Year', value: year.total, count: year.count },
   ];
   return (
-    <div className="grid cols-4">
+    <div className="grid cols-4 stat-grid">
       {items.map((item) => (
         <div key={item.label} className="card stat">
           <div className="label">{item.label}</div>

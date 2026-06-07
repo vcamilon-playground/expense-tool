@@ -327,7 +327,7 @@ export default function IncomePage() {
       {loadError && <p style={{ color: 'var(--bad)', marginBottom: 12 }}>{loadError}</p>}
 
       {/* Summary */}
-      <div className="grid cols-4">
+      <div className="grid cols-4 stat-grid">
         <div className="stat card">
           <div className="label muted">Bank Total</div>
           <div className="value">{displayAmount(totalBank, amountsVisible)}</div>

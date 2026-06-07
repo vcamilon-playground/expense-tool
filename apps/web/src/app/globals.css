@@ -954,6 +954,9 @@ button.btn-sm {
   .grid.cols-3,
   .grid.cols-4 { grid-template-columns: 1fr; }
 
+  /* Summary/stat cards stay two-up on mobile to use the width. */
+  .grid.stat-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
   .stat .value { font-size: 22px; }
   .row > label { flex: 1 1 100%; }
 

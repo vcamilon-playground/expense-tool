@@ -231,7 +231,7 @@ export default function ReportsPage() {
         )}
       </div>
 
-      <div className="grid cols-3">
+      <div className="grid cols-3 stat-grid">
         <div className="card stat">
           <div className="label">Total</div>
           <div className="value">{formatMoney(summary.total)}</div>
