@@ -45,6 +45,7 @@ test.describe('Auth — authenticated access', () => {
   test('dashboard is accessible when logged in', async ({ page }) => {
     await page.goto('/');
     await expect(page).not.toHaveURL('/login');
-    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    // The Home page has no <h1>; the header greeting confirms an authenticated session.
+    await expect(page.locator('.site-welcome')).toBeVisible();
   });
 });
