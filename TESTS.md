@@ -79,7 +79,7 @@ cd apps/e2e && npx playwright show-report
 | File | Type | What it covers |
 |---|---|---|
 | `tests/auth.spec.ts` | Smoke | Login page UI, register page UI, unauthenticated redirect, authenticated dashboard access |
-| `tests/navigation.spec.ts` | Smoke | Nav links, active state, brand link, sidebar collapse, mobile hamburger, profile menu, logout/switch-user modals |
+| `tests/navigation.spec.ts` | Smoke | Desktop sidebar links + active state + profile card + footer; desktop logout/switch-user via sidebar buttons; mobile bottom tab bar navigation + active state + header-avatar profile popup |
 | `tests/dashboard.spec.ts` | Smoke | Page heading, four KPI stat cards, Budget Status, Category Chart, 6-month Trend, Upcoming Charges sections |
 | `tests/expenses.spec.ts` | Smoke | Page load, Add Expense modal, required fields, inline validation errors, search/filter, delete modal, month group collapse, column sorting, List/Calendar view toggle + month navigation |
 | `tests/recurring.spec.ts` | Smoke | Page load, Add Recurring modal, required fields, inline validation errors, payment confirmation flow, delete modal, column sorting |
@@ -118,48 +118,26 @@ cd apps/e2e && npx playwright show-report
 
 ### `navigation.spec.ts` — Navigation
 
-**Navigation**
-- brand link navigates to dashboard
-- nav links navigate to correct pages
+**Navigation — desktop sidebar**
+- nav links navigate to correct pages (Home, Income, Expenses, Recurring, Budgets, Reports, Settings)
 - active nav link is highlighted on expenses page
 - active nav link is highlighted on reports page
+- profile card shows the user name and handle
 - footer is visible on all pages
-- user info block is visible in sidebar
 
-**Navigation — logout/switch-user modals**
-- profile menu opens when avatar is clicked
-- profile menu closes when clicking outside
-- profile menu contains Settings, Switch User, Log Out
-- logout button opens confirmation modal
-- switch user button opens confirmation modal
+**Navigation — logout / switch-user (desktop)** — direct sidebar buttons (no popup on desktop)
+- sidebar Log Out button opens confirmation modal
+- sidebar Switch User button opens confirmation modal
 - logout modal cancel button closes it without logging out
 - switch user modal cancel button closes it
 - clicking overlay backdrop closes logout modal
 
-**Navigation — sidebar collapse**
-- collapse button is visible on desktop
-- clicking collapse adds collapsed class to sidebar
-- nav labels are hidden when collapsed
-- expand button restores the sidebar
-- nav links still navigate in collapsed mode
-- brand text is visible when expanded
-- brand text is hidden when collapsed
-- collapse state persists across page navigations
-- theme toggle is visible in expanded sidebar
-- theme toggle is visible in collapsed sidebar
-
-**Navigation — mobile hamburger**
-- theme toggle is visible in mobile top bar
-- hamburger toggle opens and closes the nav menu
-- clicking a nav link in mobile menu closes it
-- nav link text is readable when mobile menu is open
-- collapse button is not visible on mobile
-- all nav links are accessible from mobile hamburger menu
-- profile avatar is not visible in mobile top bar
-- profile entry is visible in hamburger dropdown
-- profile entry shows user name and handle in hamburger dropdown
-- logout button is visible after opening profile menu on mobile
-- switch user button is visible after opening profile menu on mobile
+**Navigation — mobile bottom tab bar** (`viewport: 390×844`)
+- sidebar is hidden and the bottom tab bar is shown on mobile
+- bottom tabs navigate to correct pages
+- active bottom tab is highlighted on expenses page
+- header avatar opens the profile popup with Settings, Switch User, Log Out
+- Log Out from the profile popup opens the confirmation modal
 
 ---
 
@@ -167,7 +145,7 @@ cd apps/e2e && npx playwright show-report
 
 **Dashboard**
 - page title is correct
-- all page sections render correctly *(h1, 4 KPI cards, Budget Status, Category Chart, 6-Month Trend, Upcoming Charges)*
+- all page sections render correctly *(header greeting, 4 KPI cards, Budget Status, Category Chart, 6-Month Trend, Upcoming Charges)*
 - month-end reminder banner is conditional on days remaining in month
 
 **Dashboard — Upcoming Charges column sorting**
@@ -204,6 +182,54 @@ cd apps/e2e && npx playwright show-report
 - Date, Category, Merchant and Amount headers are sortable
 - Amount sort activates and toggles direction
 - clicking a different header moves the active indicator
+
+**Expenses — List / Calendar view**
+- view toggle shows List and Calendar buttons with List active by default
+- switching to Calendar shows the grid and month navigation
+- calendar month navigation changes the displayed month
+- switching back to List hides the calendar grid
+
+---
+
+### `income.spec.ts` — Income
+
+**Income page**
+- page renders heading, add button, and four summary cards
+- amounts are hidden by default and the eye toggle reveals them
+- Add Source modal opens with type, name, and balance fields
+- selecting Cash on Hand hides the name field
+- empty required fields show inline errors
+- type select options are capitalised
+
+---
+
+### `notifications.spec.ts` — Notifications
+
+**Notifications page**
+- page renders heading and the Add Reminder button
+- Add Reminder form opens with title, repeat, and date fields
+- repeat options include one-time and recurring cadences
+- submitting an empty reminder shows an inline error
+- the Add Reminder button toggles the form open and closed
+
+---
+
+### `site-header.spec.ts` — Site header
+
+**Site header**
+- shows a time-based greeting with the user first name
+- theme pill toggles the `data-theme` attribute (resets to light)
+- notification bell links to the notifications page
+
+---
+
+### `pwa.spec.ts` — PWA (unauthenticated)
+
+**PWA**
+- web manifest is public and valid *(name, display: standalone, icons)*
+- apple touch icon is a public image
+- app icon SVG is public
+- service worker script is public
 
 ---
 
@@ -312,13 +338,11 @@ cd apps/e2e && npx playwright show-report
 - checking the toggle shows the enabled note and unchecking hides it
 - toggle persists across page reload after saving
 
-**Settings — profile menu access (desktop)**
-- avatar is visible in sidebar and opens profile menu with Settings link
-- profile menu trigger remains visible in collapsed sidebar
+**Settings — access (desktop)**
+- profile card is visible and the sidebar Settings link navigates to /settings
 
-**Settings — profile menu access (mobile)**
-- profile menu trigger is visible in hamburger dropdown on mobile
-- clicking avatar on mobile opens profile menu and Settings navigates to /settings
+**Settings — access (mobile)**
+- header avatar opens the profile popup and Settings navigates to /settings
 
 ---
 
@@ -366,6 +390,26 @@ cd apps/e2e && npx playwright show-report
 
 **Settings — deleting a category does not delete linked expenses**
 - expense survives category deletion and still shows the original category name
+
+---
+
+### `income.regression.spec.ts` — Income CRUD & transfer
+
+**Income — CRUD**
+- create, edit, and delete a bank source
+
+**Income — transfer between sources**
+- transferring moves the balance from one source to another
+- transfer rejects an amount greater than the source balance
+
+---
+
+### `notifications.regression.spec.ts` — Reminders CRUD
+
+**Notifications — reminders CRUD**
+- create a one-time reminder, see it listed, and delete it
+- marking a due one-time reminder Done removes it
+- marking a due recurring reminder Done advances its next date
 
 ---
 
@@ -459,8 +503,8 @@ Cleanup helpers are exported from `tests/helpers/supabase.ts` and call the Supab
 2. Add a corresponding page object in `tests/pages/<Feature>Page.ts` extending `BasePage`. All locators are methods — no raw `page.locator()` calls in spec files.
 3. Use `waitForLoad()` from `BasePage` after navigation — never `waitForLoadState('networkidle')`.
 4. Scope locators to their container: `dialog.getByRole('button', ...)` not `page.getByRole('button', ...)`.
-5. Use `exact: true` on nav link locators to avoid matching the brand link.
-6. New navbar/sidebar controls need tests in **both** the desktop describe block and the mobile hamburger describe block.
+5. Use `exact: true` on nav link locators to avoid partial matches (e.g. "Expenses" vs other link text).
+6. New navbar/sidebar controls need tests in **both** the desktop sidebar describe block and the mobile bottom-tab-bar describe block.
 
 ---
 

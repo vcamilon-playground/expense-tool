@@ -150,10 +150,10 @@ All locators and actions are centralised in `apps/e2e/tests/pages/`:
 | File | Covers |
 |---|---|
 | `BasePage.ts` | `page: Page`, `waitForLoad()` |
-| `NavBar.ts` | `toggle`, `navLinks`, `openIfMobile()`, `mobileProfile()`, `openProfileMenu()`, `settingsLink()`, `profileMenu()`, `settingsMenuItem()` | **Note:** mobile nav is now a bottom tab bar — `openIfMobile()` / `mobileProfile()` / `toggle` methods target the old hamburger and need updating |
+| `NavBar.ts` | Desktop sidebar: `nav()`, `link()` (scoped to "Sidebar navigation"), `profileCard()`, `userName()`, `userHandle()`, `sidebarSwitchUserButton()`, `sidebarLogoutButton()`. Mobile: `bottomNav()`, `bottomTab()`, `headerAvatar()`, `openMobileProfileMenu()`, `profileMenu()`, `settingsMenuItem()`/`switchUserMenuItem()`/`logoutMenuItem()`. Shared: `logoutModal()`, `switchUserModal()`, `footer()`. Site header: `greeting()`, `themePill()`, `themePillButton()`, `notifBell()`, `notifBadge()` |
 | `LoginPage.ts` | `goto()`, `usernameInput()`, `passwordInput()`, `submitButton()` |
 | `DashboardPage.ts` | `goto()`, `heading()`, `statLabel()`, section headings |
-| `ExpensesPage.ts` | `goto()`, `openAddModal()`, `fillForm()`, `submitAdd()`, `editRow()`, `deleteRow()` |
+| `ExpensesPage.ts` | `goto()`, `openAddModal()`, `fillForm()`, `submitAdd()`, `editRow()`, `deleteRow()`; List/Calendar: `viewToggle()`, `listViewButton()`, `calendarViewButton()`, `calendarGrid()`, `calendarMonthLabel()`, `calendarPrevButton()`, `calendarNextButton()` |
 | `RecurringPage.ts` | `goto()`, `openAddModal()`, `fillForm()`, `fillAmount()`, `editRow()`, `deleteRow()`, `dueBadge()`, `confirmPaymentButton()`, `confirmModal()`, `confirmYesButton()`, `confirmNoButton()`, `reminderModal()`, `reminderOkButton()`, `payEarlyButton()`, `earlyPayModal()`, `earlyPayConfirmButton()`, `earlyPayCancelButton()` |
 | `ReportsPage.ts` | `goto()`, `periodSelect()`, `exportCsvButton()`, `selectPeriod()` |
 | `BudgetsPage.ts` | `goto()`, `addBudgetButton()`, `openAddModal()`, `dialog()`, `saveBudgetButton()`, `monthlyLimitInput()`, `categorySelect()` — add/edit is a modal |
@@ -167,7 +167,7 @@ All locators and actions are centralised in `apps/e2e/tests/pages/`:
 - Keep `expect()` calls in the spec file — page objects contain interactions only.
 - Never use `waitForLoadState('networkidle')` — Next.js keeps connections open. Use `waitForLoad()` instead.
 - Scope locators to dialogs: `expenses.dialog().getByRole('button', { name: '...' })`.
-- Use `exact: true` on nav link locators to avoid the brand link matching "Expenses".
+- Use `exact: true` on nav link locators to avoid partial matches (e.g. "Expenses" vs other link text); scope to the "Sidebar navigation" nav via `NavBar.link()`.
 - **`toBeVisible()` is blind to CSS color and contrast.** An element with white text on a white background passes `toBeVisible()` because it is DOM-visible. When the bug could be a color or contrast issue (text on a colored background, elements hidden by matching fg/bg), use `evaluate()` to read the computed style instead:
   ```ts
   const color = await locator.evaluate(el => window.getComputedStyle(el).color);
@@ -190,18 +190,15 @@ Regression specs write real rows to the production database. Cleanup rules:
 
 ### Mobile viewport handling
 
-**On desktop (>640px):** `nav.sidenav` is a collapsible left sidebar. Profile avatar and ThemeToggle live in the sidebar's nav-bottom section.
+**On desktop (>640px):** `nav.sidenav` is a fixed left sidebar with a **profile card at the top** (avatar + name + handle), the nav links (Home, Income, Expenses, Recurring, Budgets, Reports, Settings), and **Switch User / Log Out** buttons at the bottom. There is no popup on desktop — Settings is a direct link. The greeting, theme pill, and notification bell live in the **site header** (`.site-header`) above the page content, not in the sidebar.
 
-**On mobile (≤640px):** The sidebar is hidden (`display: none`). A fixed **bottom tab bar** (`.bottom-nav`) is shown instead with 4 tabs + a raised FAB button:
-- Tabs: Home (Dashboard), Expenses, [+ FAB → /expenses], Reports, Profile
-- The Profile tab opens the profile popup (positioned above the bar at `bottom: 72px`). The popup includes mobile-only items: ThemeToggle, Budgets, and Recurring (since those lack dedicated bottom tabs).
-- The hamburger toggle (`.nav-toggle`) is still in the DOM but hidden by CSS on mobile.
-
-> **⚠ NavBar.ts POM pending update:** `openIfMobile()`, `mobileProfile()`, and `toggle()` target the old hamburger pattern and will not work on mobile viewports until the page object is updated.
+**On mobile (≤640px):** The sidebar is hidden (`display: none`). A fixed **bottom tab bar** (`.bottom-nav`) is shown instead with **6 tabs** (no FAB): Home, Income, Expenses, Budgets, Recurring, Reports.
+- The profile popup is opened by tapping the **avatar in the site header** (`.header-avatar`, mobile-only), which dispatches an `open-profile-menu` event the NavBar listens for. The popup contains Settings, Switch User, Log Out.
+- The hamburger toggle (`.nav-toggle`) is still in the DOM but hidden by CSS on both desktop and mobile (legacy, unused).
 
 **Cross-viewport coverage rule:** Whenever a navbar or sidebar element is added, removed, or restyled, tests must cover **both** viewports:
-- Desktop tests live in the `Navigation — sidebar collapse` describe block (no `test.use` override → default 1280px).
-- Mobile tests live in the `Navigation — mobile bottom tab bar` describe block (`test.use({ viewport: { width: 390, height: 844 } })`). Note: the old "mobile hamburger" describe block needs to be replaced.
+- Desktop tests live in the `Navigation — desktop sidebar` and `Navigation — logout / switch-user (desktop)` describe blocks (no `test.use` override → default 1280px).
+- Mobile tests live in the `Navigation — mobile bottom tab bar` describe block (`test.use({ viewport: { width: 390, height: 844 } })`).
 
 For every new control in the sidebar, ask two questions:
 1. Is there a desktop test asserting it is **visible**?
@@ -337,6 +334,8 @@ Do NOT run the full smoke suite locally. Run only the spec file(s) whose page or
 | `apps/web/src/app/notifications/` or `NotificationsPage.ts` | `tests/notifications.spec.ts` |
 | `apps/web/src/app/login/` or `apps/web/src/app/register/` or `LoginPage.ts` | `tests/auth.spec.ts` |
 | `apps/web/src/components/NavBar.tsx` or `NavBar.ts` | `tests/navigation.spec.ts` |
+| `apps/web/src/components/SiteHeader.tsx` (greeting, theme pill, bell) | `tests/site-header.spec.ts` |
+| `apps/web/src/app/manifest.ts`, `apple-icon.tsx`, `public/sw.js`, `src/middleware.ts` (PWA) | `tests/pwa.spec.ts` |
 | Shared component used across multiple pages | all spec files that use it |
 | `packages/shared/` logic only | unit tests only — no smoke needed |
 | API routes, DB lib, cron, config | no smoke needed |
@@ -561,11 +560,11 @@ When adding tests for a new feature:
 
 | Problem | Fix |
 |---|---|
-| `getByRole('link', { name: 'Expenses' })` matches brand link | Add `exact: true` |
+| `getByRole('link', { name: 'Expenses' })` matches multiple links | Add `exact: true` and scope to the sidebar nav (`NavBar.link()`) |
 | `getByRole('button', { name: 'Add Expense' })` matches two elements | Scope to `dialog.getByRole(...)` |
 | `.stat` count is wrong | Use `.stat .label` with `.filter({ hasText: '...' })` — MonthEndBanner also renders `.stat` |
 | `getByLabel('Period')` doesn't find select | Label uses implicit association. Use `locator('label').filter({ hasText: 'Period' }).locator('select')` |
-| Nav links not found on mobile | On mobile the sidebar is hidden — use the bottom tab bar (`.bottom-nav`) instead. `openIfMobile()` targets the old hamburger and needs updating. |
+| Nav links not found on mobile | On mobile the sidebar is hidden — use `NavBar.bottomTab(label)` (the `.bottom-nav` tab bar) instead of `link()`. |
 | Profile avatar not found on mobile | Avatar is in the bottom tab bar's Profile tab (`.bottom-nav-avatar`). Click the Profile tab to open the popup. |
 | Element is invisible due to matching fg/bg color but `toBeVisible()` passes | Use `evaluate(el => getComputedStyle(el).color)` to assert the computed color is not the same as the background |
 | `.field-error` shows in wrong color inside a modal | `.modal p` has higher specificity — `.field-error` uses `color: var(--bad) !important` to override |
