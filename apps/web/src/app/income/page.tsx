@@ -31,6 +31,26 @@ function sourceLabel(s: IncomeSource): string {
   return s.type === 'cash' ? 'Cash on Hand' : (s.name ?? typeLabel[s.type]);
 }
 
+const AMOUNT_MASK = '••••••';
+
+function displayAmount(amount: number, visible: boolean): string {
+  return visible ? formatMoney(amount) : AMOUNT_MASK;
+}
+
+const EyeIcon = () => (
+  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+);
+
 export default function IncomePage() {
   const { user } = useAuth();
   const [sources, setSources] = useState<IncomeSource[]>([]);
@@ -54,6 +74,21 @@ export default function IncomePage() {
   const [transferError, setTransferError] = useState<string | null>(null);
   const [transferring, setTransferring] = useState(false);
   const [cashExpanded, setCashExpanded] = useState(true);
+
+  // Privacy: amounts hidden by default; preference persisted per device.
+  const [amountsVisible, setAmountsVisible] = useState(false);
+
+  useEffect(() => {
+    setAmountsVisible(localStorage.getItem('income-amounts-visible') === 'true');
+  }, []);
+
+  function toggleAmounts() {
+    setAmountsVisible((v) => {
+      const next = !v;
+      localStorage.setItem('income-amounts-visible', String(next));
+      return next;
+    });
+  }
 
   async function reload() {
     if (!user) return;
@@ -267,7 +302,16 @@ export default function IncomePage() {
 
       <div className="row" style={{ justifyContent: 'space-between', marginBottom: 4 }}>
         <h1 style={{ margin: 0 }}>Income</h1>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button
+            className="ghost"
+            style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
+            onClick={toggleAmounts}
+            aria-label={amountsVisible ? 'Hide amounts' : 'Show amounts'}
+            title={amountsVisible ? 'Hide amounts' : 'Show amounts'}
+          >
+            {amountsVisible ? <EyeOffIcon /> : <EyeIcon />}
+          </button>
           <button className="primary" style={{ width: 'auto' }} onClick={openAddForm}>
             + Add Source
           </button>
@@ -286,19 +330,19 @@ export default function IncomePage() {
       <div className="grid cols-4">
         <div className="stat card">
           <div className="label muted">Bank Total</div>
-          <div className="value">{formatMoney(totalBank)}</div>
+          <div className="value">{displayAmount(totalBank, amountsVisible)}</div>
         </div>
         <div className="stat card">
           <div className="label muted">E-Wallet Total</div>
-          <div className="value">{formatMoney(totalEwallet)}</div>
+          <div className="value">{displayAmount(totalEwallet, amountsVisible)}</div>
         </div>
         <div className="stat card">
           <div className="label muted">Cash on Hand</div>
-          <div className="value">{formatMoney(totalCash)}</div>
+          <div className="value">{displayAmount(totalCash, amountsVisible)}</div>
         </div>
         <div className="stat card">
           <div className="label muted">Grand Total</div>
-          <div className="value" style={{ color: 'var(--accent)' }}>{formatMoney(grandTotal)}</div>
+          <div className="value" style={{ color: 'var(--accent)' }}>{displayAmount(grandTotal, amountsVisible)}</div>
         </div>
       </div>
 
@@ -369,6 +413,7 @@ export default function IncomePage() {
         emptyText="No bank accounts added yet."
         onEdit={startEdit}
         onDelete={setPendingDelete}
+        amountsVisible={amountsVisible}
       />
 
       {/* E-Wallets */}
@@ -379,6 +424,7 @@ export default function IncomePage() {
         emptyText="No e-wallets added yet."
         onEdit={startEdit}
         onDelete={setPendingDelete}
+        amountsVisible={amountsVisible}
       />
 
       {/* Cash on Hand */}
@@ -391,7 +437,7 @@ export default function IncomePage() {
         >
           <h2 style={{ margin: 0 }}>💵 Cash on Hand</h2>
           <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span className="muted" style={{ fontSize: 14, fontWeight: 600 }}>{formatMoney(totalCash)}</span>
+            <span className="muted" style={{ fontSize: 14, fontWeight: 600 }}>{displayAmount(totalCash, amountsVisible)}</span>
             <span className="collapse-chevron" aria-hidden="true">{cashExpanded ? '▾' : '▸'}</span>
           </span>
         </button>
@@ -401,7 +447,7 @@ export default function IncomePage() {
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginTop: 12 }}>
               <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>
-                {formatMoney(cashSource.balance)}
+                {displayAmount(cashSource.balance, amountsVisible)}
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button className="btn-sm" onClick={() => startEdit(cashSource)}>Edit Balance</button>
@@ -416,7 +462,7 @@ export default function IncomePage() {
 }
 
 function IncomeSection({
-  title, icon, sources, emptyText, onEdit, onDelete,
+  title, icon, sources, emptyText, onEdit, onDelete, amountsVisible,
 }: {
   title: string;
   icon: string;
@@ -424,6 +470,7 @@ function IncomeSection({
   emptyText: string;
   onEdit: (s: IncomeSource) => void;
   onDelete: (s: IncomeSource) => void;
+  amountsVisible: boolean;
 }) {
   const [expanded, setExpanded] = useState(true);
   const total = sources.reduce((sum, s) => sum + s.balance, 0);
@@ -438,7 +485,7 @@ function IncomeSection({
       >
         <h2 style={{ margin: 0 }}>{icon} {title}</h2>
         <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span className="muted" style={{ fontSize: 14, fontWeight: 600 }}>{formatMoney(total)}</span>
+          <span className="muted" style={{ fontSize: 14, fontWeight: 600 }}>{displayAmount(total, amountsVisible)}</span>
           <span className="collapse-chevron" aria-hidden="true">{expanded ? '▾' : '▸'}</span>
         </span>
       </button>
@@ -459,7 +506,7 @@ function IncomeSection({
                 {sources.map((s) => (
                   <tr key={s.id}>
                     <td style={{ fontWeight: 500 }}>{s.name}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 600 }}>{formatMoney(s.balance)}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 600 }}>{displayAmount(s.balance, amountsVisible)}</td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                         <button className="btn-sm" onClick={() => onEdit(s)}>Edit</button>
