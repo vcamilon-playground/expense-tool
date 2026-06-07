@@ -136,4 +136,33 @@ export class ExpensesPage extends BasePage {
   activeSortIcon(): Locator {
     return this.page.locator('th.sortable .sort-active');
   }
+
+  // ── List / Calendar view toggle ──
+  viewToggle(): Locator {
+    return this.page.locator('.view-toggle');
+  }
+
+  listViewButton(): Locator {
+    return this.viewToggle().getByRole('button', { name: 'List' });
+  }
+
+  calendarViewButton(): Locator {
+    return this.viewToggle().getByRole('button', { name: 'Calendar' });
+  }
+
+  calendarGrid(): Locator {
+    return this.page.locator('.cal-grid');
+  }
+
+  calendarMonthLabel(): Locator {
+    return this.page.locator('.cal-month-label');
+  }
+
+  calendarPrevButton(): Locator {
+    return this.page.locator('.cal-nav').getByRole('button', { name: /Prev/ });
+  }
+
+  calendarNextButton(): Locator {
+    return this.page.locator('.cal-nav').getByRole('button', { name: /Next/ });
+  }
 }

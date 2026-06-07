@@ -219,3 +219,44 @@ test.describe('Expenses — column sorting', () => {
     await expect(expenses.sortableHeader('Amount').locator('.sort-active')).toHaveCount(0);
   });
 });
+
+test.describe('Expenses — List / Calendar view', () => {
+  let expenses!: ExpensesPage;
+
+  test.beforeEach(async ({ page }) => {
+    expenses = new ExpensesPage(page);
+    await expenses.goto();
+  });
+
+  test('view toggle shows List and Calendar buttons with List active by default', async () => {
+    await expect(expenses.viewToggle()).toBeVisible();
+    await expect(expenses.listViewButton()).toBeVisible();
+    await expect(expenses.calendarViewButton()).toBeVisible();
+    // List is the default view — its button uses the primary style.
+    await expect(expenses.listViewButton()).toHaveClass(/primary/);
+    await expect(expenses.calendarGrid()).toHaveCount(0);
+  });
+
+  test('switching to Calendar shows the grid and month navigation', async () => {
+    await expenses.calendarViewButton().click();
+    await expect(expenses.calendarGrid()).toBeVisible();
+    await expect(expenses.calendarMonthLabel()).toBeVisible();
+    await expect(expenses.calendarPrevButton()).toBeVisible();
+    await expect(expenses.calendarNextButton()).toBeVisible();
+  });
+
+  test('calendar month navigation changes the displayed month', async () => {
+    await expenses.calendarViewButton().click();
+    const before = await expenses.calendarMonthLabel().textContent();
+    await expenses.calendarNextButton().click();
+    const after = await expenses.calendarMonthLabel().textContent();
+    expect(before).not.toBe(after);
+  });
+
+  test('switching back to List hides the calendar grid', async () => {
+    await expenses.calendarViewButton().click();
+    await expect(expenses.calendarGrid()).toBeVisible();
+    await expenses.listViewButton().click();
+    await expect(expenses.calendarGrid()).toHaveCount(0);
+  });
+});

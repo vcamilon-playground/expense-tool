@@ -11,7 +11,12 @@ export async function middleware(request: NextRequest) {
     PUBLIC_PATHS.some((p) => pathname === p) ||
     pathname.startsWith('/api/auth/') ||
     pathname.startsWith('/_next/') ||
-    pathname.startsWith('/favicon');
+    pathname.startsWith('/favicon') ||
+    // PWA assets must be reachable before login so install works on /login.
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/sw.js' ||
+    pathname.startsWith('/icon') ||
+    pathname.startsWith('/apple-icon');
 
   const token = request.cookies.get(SESSION_COOKIE)?.value;
 

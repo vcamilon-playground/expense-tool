@@ -81,13 +81,15 @@ cd apps/e2e && npx playwright show-report
 | `tests/auth.spec.ts` | Smoke | Login page UI, register page UI, unauthenticated redirect, authenticated dashboard access |
 | `tests/navigation.spec.ts` | Smoke | Nav links, active state, brand link, sidebar collapse, mobile hamburger, profile menu, logout/switch-user modals |
 | `tests/dashboard.spec.ts` | Smoke | Page heading, four KPI stat cards, Budget Status, Category Chart, 6-month Trend, Upcoming Charges sections |
-| `tests/expenses.spec.ts` | Smoke | Page load, Add Expense modal, required fields, inline validation errors, search/filter, delete modal, month group collapse, column sorting |
+| `tests/expenses.spec.ts` | Smoke | Page load, Add Expense modal, required fields, inline validation errors, search/filter, delete modal, month group collapse, column sorting, List/Calendar view toggle + month navigation |
 | `tests/recurring.spec.ts` | Smoke | Page load, Add Recurring modal, required fields, inline validation errors, payment confirmation flow, delete modal, column sorting |
 | `tests/reports.spec.ts` | Smoke | Page load, period select, preset/date-range mode toggle, compare period, column sorting |
 | `tests/budgets.spec.ts` | Smoke | Page load, form labels, edit/cancel flow, inline validation errors, column sorting |
 | `tests/settings.spec.ts` | Smoke | Session expiry, profile section, global save/cancel, navigation guard, change password, theme colours, categories, past-edit toggle, profile menu |
 | `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + eye toggle, Add Source modal fields, cash hides name field, inline validation |
 | `tests/notifications.spec.ts` | Smoke | Page load, Add Reminder form (title/repeat/date), repeat cadence options, empty-title validation, form open/close toggle |
+| `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, theme pill toggles data-theme, notification bell links to /notifications |
+| `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
 | `tests/expenses.regression.spec.ts` | Regression | Create/edit/delete expense; past-month lock with allow-past-edit off and on |
 | `tests/budgets.regression.spec.ts` | Regression | Edit overall budget and verify updated limit |
 | `tests/recurring.regression.spec.ts` | Regression | Create/edit/delete recurring expense; confirm YES adds expense + advances date; confirm NO advances date without adding expense |

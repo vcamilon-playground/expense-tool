@@ -98,6 +98,27 @@ export class NavBar {
     return this.page.getByRole('dialog', { name: /confirm switch user/i });
   }
 
+  // ── Site header (greeting, theme pill, notification bell) ─────────────────
+  greeting(): Locator {
+    return this.page.locator('.site-welcome');
+  }
+
+  themePill(): Locator {
+    return this.page.locator('.theme-toggle-pill');
+  }
+
+  themePillButton(mode: 'light' | 'dark'): Locator {
+    return this.themePill().getByRole('button', { name: mode === 'light' ? 'Light mode' : 'Dark mode' });
+  }
+
+  notifBell(): Locator {
+    return this.page.locator('.site-notif-btn');
+  }
+
+  notifBadge(): Locator {
+    return this.page.locator('.notif-badge');
+  }
+
   // ── Footer ────────────────────────────────────────────────────────────────
   footer(): Locator {
     return this.page.locator('footer.site-footer');
