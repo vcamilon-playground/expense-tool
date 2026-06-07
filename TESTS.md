@@ -86,10 +86,14 @@ cd apps/e2e && npx playwright show-report
 | `tests/reports.spec.ts` | Smoke | Page load, period select, preset/date-range mode toggle, compare period, column sorting |
 | `tests/budgets.spec.ts` | Smoke | Page load, form labels, edit/cancel flow, inline validation errors, column sorting |
 | `tests/settings.spec.ts` | Smoke | Session expiry, profile section, global save/cancel, navigation guard, change password, theme colours, categories, past-edit toggle, profile menu |
+| `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + eye toggle, Add Source modal fields, cash hides name field, inline validation |
+| `tests/notifications.spec.ts` | Smoke | Page load, Add Reminder form (title/repeat/date), repeat cadence options, empty-title validation, form open/close toggle |
 | `tests/expenses.regression.spec.ts` | Regression | Create/edit/delete expense; past-month lock with allow-past-edit off and on |
 | `tests/budgets.regression.spec.ts` | Regression | Edit overall budget and verify updated limit |
 | `tests/recurring.regression.spec.ts` | Regression | Create/edit/delete recurring expense; confirm YES adds expense + advances date; confirm NO advances date without adding expense |
 | `tests/settings.regression.spec.ts` | Regression | Add category with custom icon; add category without icon uses default; deleting category does not delete linked expenses |
+| `tests/income.regression.spec.ts` | Regression | Create/edit/delete a bank source; transfer moves balance between sources; transfer rejects an over-balance amount |
+| `tests/notifications.regression.spec.ts` | Regression | Create/delete a reminder; mark a due one-time reminder Done (removed); mark a due recurring reminder Done (date advances) |
 
 ---
 

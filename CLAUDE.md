@@ -156,8 +156,10 @@ All locators and actions are centralised in `apps/e2e/tests/pages/`:
 | `ExpensesPage.ts` | `goto()`, `openAddModal()`, `fillForm()`, `submitAdd()`, `editRow()`, `deleteRow()` |
 | `RecurringPage.ts` | `goto()`, `openAddModal()`, `fillForm()`, `fillAmount()`, `editRow()`, `deleteRow()`, `dueBadge()`, `confirmPaymentButton()`, `confirmModal()`, `confirmYesButton()`, `confirmNoButton()`, `reminderModal()`, `reminderOkButton()`, `payEarlyButton()`, `earlyPayModal()`, `earlyPayConfirmButton()`, `earlyPayCancelButton()` |
 | `ReportsPage.ts` | `goto()`, `periodSelect()`, `exportCsvButton()`, `selectPeriod()` |
-| `BudgetsPage.ts` | `goto()`, `saveBudgetButton()`, `monthlyLimitInput()` |
-| `SettingsPage.ts` | `goto()`, `heading()`, `firstNameInput()`, `saveChangesButton()`, `cancelChangesButton()`, `unsavedBar()`, `sessionTimeoutRadio()`, `colorSwatch()`, `pastEditToggle()`, `changePasswordHeading()`, `updatePasswordButton()`, `navGuardModal()` |
+| `BudgetsPage.ts` | `goto()`, `addBudgetButton()`, `openAddModal()`, `dialog()`, `saveBudgetButton()`, `monthlyLimitInput()`, `categorySelect()` — add/edit is a modal |
+| `SettingsPage.ts` | `goto()`, `heading()`, `firstNameInput()`, `lastNameInput()` (label-scoped), `avatarUrlInput()`, `saveChangesButton()`, `cancelChangesButton()`, `unsavedBar()`, `sessionTimeoutRadio()`, `colorSwatch()`, `pastEditToggle()`, `changePasswordHeading()`, `updatePasswordButton()`, `navGuardModal()` |
+| `IncomePage.ts` | `goto()`, `addSourceButton()`, `openAddModal()`, `typeSelect()`, `nameInput()`, `balanceInput()`, `addBankSource()`, `row()`, `editButton()`, `deleteRow()`, `privacyToggle()`, `summaryValue()`, `openTransfer()`, `transferFromSelect()`, `transferToSelect()`, `transferAmountInput()`, `transferSubmit()` |
+| `NotificationsPage.ts` | `goto()`, `addReminderButton()`, `openForm()`, `titleInput()`, `repeatSelect()`, `dateInput()`, `addReminder()`, `yourRemindersHeading()`, `reminderRow()`, `deleteReminderButton()`, `doneButton()` |
 
 **Rules for writing tests:**
 - Import and instantiate the relevant page object at the top of the test or in `beforeEach`.
@@ -178,6 +180,8 @@ Regression specs write real rows to the production database. Cleanup rules:
 
 - **Expenses**: tagged with `merchant = 'E2E-TEST'`. Cleaned by `cleanup.expenses()`.
 - **Recurring**: tagged with `name = 'E2E Test Subscription'`. Cleaned by `cleanup.recurring()`.
+- **Income sources**: tagged with a `name` starting `E2E` (e.g. `E2E Alpha Bank`). Cleaned by `cleanup.incomeSources()`; seed via `seed.incomeSource(name, balance)`.
+- **Reminders**: tagged with a `title` starting `E2E` (e.g. `E2E Test Reminder`). Cleaned by `cleanup.reminders()`; seed via `seed.reminder(title, cadence, remind_date)`.
 - Always call cleanup in both `beforeAll` (remove leftovers) and `afterAll` (remove what this run created).
 - `cleanup` is exported from `tests/helpers/supabase.ts` and calls the Supabase REST API directly.
 - Cleanup requires `SUPABASE_URL` and `SUPABASE_ANON_KEY` env vars. If unset, it warns and skips.
@@ -329,6 +333,8 @@ Do NOT run the full smoke suite locally. Run only the spec file(s) whose page or
 | `apps/web/src/app/reports/` or `ReportsPage.ts` | `tests/reports.spec.ts` |
 | `apps/web/src/app/` (dashboard) or `DashboardPage.ts` | `tests/dashboard.spec.ts` |
 | `apps/web/src/app/settings/` or `SettingsPage.ts` | `tests/settings.spec.ts` |
+| `apps/web/src/app/income/` or `IncomePage.ts` | `tests/income.spec.ts` |
+| `apps/web/src/app/notifications/` or `NotificationsPage.ts` | `tests/notifications.spec.ts` |
 | `apps/web/src/app/login/` or `apps/web/src/app/register/` or `LoginPage.ts` | `tests/auth.spec.ts` |
 | `apps/web/src/components/NavBar.tsx` or `NavBar.ts` | `tests/navigation.spec.ts` |
 | Shared component used across multiple pages | all spec files that use it |
@@ -354,6 +360,8 @@ Regression tests hit the real database and are slow. Only run the spec(s) whose 
 | `apps/web/src/app/budgets/` or `BudgetsPage.ts` | `tests/budgets.regression.spec.ts` |
 | `apps/web/src/app/recurring/` or `RecurringPage.ts` | `tests/recurring.regression.spec.ts` |
 | `apps/web/src/app/settings/` or `SettingsPage.ts` | `tests/settings.regression.spec.ts` |
+| `apps/web/src/app/income/` or `IncomePage.ts` | `tests/income.regression.spec.ts` |
+| `apps/web/src/app/notifications/` or `NotificationsPage.ts` | `tests/notifications.regression.spec.ts` |
 | Shared component used across pages | all regression specs |
 | Docs, styles, or config only | skip regression |
 

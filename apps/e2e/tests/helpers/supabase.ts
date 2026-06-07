@@ -121,6 +121,9 @@ export const E2E_RECURRING_NAME = 'E2E Test Subscription';
 export const E2E_BUDGET_LIMIT = 99999.99;
 export const E2E_BUDGET_LIMIT_EDITED = 88888.88;
 export const E2E_CATEGORY_NAME = 'E2E Test Category';
+export const E2E_INCOME_NAME = 'E2E Alpha Bank';
+export const E2E_INCOME_NAME_2 = 'E2E Beta Bank';
+export const E2E_REMINDER_TITLE = 'E2E Test Reminder';
 
 export const cleanup = {
   expenses: () => {
@@ -156,6 +159,20 @@ export const cleanup = {
       ? `name=like.E2E*&user_id=eq.${uid}`
       : 'name=like.E2E*';
     return del('categories', filter);
+  },
+  incomeSources: () => {
+    const uid = loadE2EUserId();
+    const filter = uid
+      ? `name=like.E2E*&user_id=eq.${uid}`
+      : 'name=like.E2E*';
+    return del('income_sources', filter);
+  },
+  reminders: () => {
+    const uid = loadE2EUserId();
+    const filter = uid
+      ? `title=like.E2E*&user_id=eq.${uid}`
+      : 'title=like.E2E*';
+    return del('reminders', filter);
   },
 };
 
@@ -242,6 +259,25 @@ export const seed = {
   budget: () => {
     const uid = loadE2EUserId();
     return post('budgets', { user_id: uid, monthly_limit: E2E_BUDGET_LIMIT, category_id: null });
+  },
+  incomeSource: (name: string, balance: number) => {
+    const uid = loadE2EUserId();
+    return postReturn<{ id: string; balance: number }>('income_sources', {
+      user_id: uid,
+      type: 'bank',
+      name,
+      balance,
+    });
+  },
+  reminder: (title: string, cadence: 'once' | 'weekly' | 'monthly' | 'yearly', remind_date: string) => {
+    const uid = loadE2EUserId();
+    return postReturn<{ id: string; remind_date: string }>('reminders', {
+      user_id: uid,
+      title,
+      cadence,
+      remind_date,
+      active: true,
+    });
   },
   categoryWithExpense: async () => {
     const uid = loadE2EUserId();
