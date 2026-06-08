@@ -222,6 +222,7 @@ test.describe('Settings — Categories section', () => {
   });
 
   test('submitting with empty name keeps the list unchanged', async () => {
+    await expect(settings.categoryRow('Groceries')).toBeVisible();
     const before = await settings.page.locator('.card').filter({ hasText: 'Categories' }).locator('.cat-chip').count();
     await settings.addCategoryButton().click();
     const after = await settings.page.locator('.card').filter({ hasText: 'Categories' }).locator('.cat-chip').count();
