@@ -2,20 +2,38 @@ name: E2E Tests
 
 on:
   deployment_status:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'URL to test against'
+        required: false
+        default: 'https://expense-tool-web.vercel.app'
+      suite:
+        description: 'Which suite to run'
+        type: choice
+        required: true
+        default: 'both'
+        options:
+          - both
+          - smoke
+          - regression
 
 jobs:
   e2e-smoke:
     name: Playwright — smoke tests
-    if: github.event.deployment_status.state == 'success'
+    if: |
+      (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.suite == 'smoke' || inputs.suite == 'both'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: Print deployment info
+      - name: Print run info
         run: |
+          echo "trigger:     ${{ github.event_name }}"
           echo "environment: ${{ github.event.deployment.environment }}"
           echo "ref:         ${{ github.event.deployment.ref }}"
-          echo "target_url:  ${{ github.event.deployment_status.target_url }}"
+          echo "base_url:    ${{ github.event.deployment_status.target_url || inputs.base_url }}"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,7 +58,7 @@ jobs:
         run: npx playwright test --project=chromium
         working-directory: apps/e2e
         env:
-          BASE_URL: ${{ github.event.deployment_status.target_url }}
+          BASE_URL: ${{ github.event.deployment_status.target_url || inputs.base_url }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
@@ -62,16 +80,19 @@ jobs:
 
   e2e-regression:
     name: Playwright — regression tests
-    if: github.event.deployment_status.state == 'success'
+    if: |
+      (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.suite == 'regression' || inputs.suite == 'both'))
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - name: Print deployment info
+      - name: Print run info
         run: |
+          echo "trigger:     ${{ github.event_name }}"
           echo "environment: ${{ github.event.deployment.environment }}"
           echo "ref:         ${{ github.event.deployment.ref }}"
-          echo "target_url:  ${{ github.event.deployment_status.target_url }}"
+          echo "base_url:    ${{ github.event.deployment_status.target_url || inputs.base_url }}"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -101,7 +122,7 @@ jobs:
           tests/settings.regression.spec.ts
         working-directory: apps/e2e
         env:
-          BASE_URL: ${{ github.event.deployment_status.target_url }}
+          BASE_URL: ${{ github.event.deployment_status.target_url || inputs.base_url }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           E2E_USERNAME: ${{ secrets.E2E_USERNAME }}

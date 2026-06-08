@@ -458,10 +458,18 @@ Seed/cleanup helpers in `tests/helpers/supabase.ts` read `user_id` from `e2e-use
 
 Tests trigger automatically via GitHub Actions (`.github/workflows/e2e.yml`).
 
-**Trigger:** `deployment_status` event — Vercel fires this after every successful deployment.  
-**Condition:** `github.event.deployment_status.state == 'success'`
+**Triggers:**
+- `deployment_status` event — Vercel fires this after every successful deployment. Condition: `github.event.deployment_status.state == 'success'`. Both jobs run against the just-deployed URL (`deployment_status.target_url`).
+- `workflow_dispatch` — run the suite manually from the **Actions** tab. Two inputs:
+  - **base_url** — URL to test against (defaults to the production alias `https://expense-tool-web.vercel.app`).
+  - **suite** — `both` (default), `smoke`, or `regression`. Only the selected job(s) run.
 
-Two jobs run **in parallel**:
+**Running manually:**
+1. Repo → **Actions** tab → **E2E Tests** workflow → **Run workflow**.
+2. Pick the branch, optionally override **base_url**, and choose **suite**.
+3. Click **Run workflow**. Or from the CLI: `gh workflow run e2e.yml -f suite=smoke -f base_url=https://expense-tool-web.vercel.app`.
+
+Two jobs run **in parallel** (on a `deployment_status` event both always run; on manual dispatch only the selected suite runs):
 
 | Job | Specs | Timeout | Artifact |
 |---|---|---|---|

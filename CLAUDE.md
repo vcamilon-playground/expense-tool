@@ -208,9 +208,10 @@ Failure to answer both questions is what allows a feature that works on desktop 
 
 ### CI/CD
 
-- Trigger: `deployment_status` event — Vercel fires this after every successful deployment.
-- Condition: `github.event.deployment_status.state == 'success'`
-- Two jobs run **in parallel** on every deployment:
+- Triggers:
+  - `deployment_status` event — Vercel fires this after every successful deployment (condition: `github.event.deployment_status.state == 'success'`). Both jobs run against `deployment_status.target_url`.
+  - `workflow_dispatch` — manual run from the Actions tab (or `gh workflow run e2e.yml -f suite=<both|smoke|regression> -f base_url=<url>`). Inputs: `base_url` (defaults to the production alias `https://expense-tool-web.vercel.app`) and `suite` (`both`/`smoke`/`regression` — only the selected job runs).
+- Two jobs run **in parallel** on every deployment (manual dispatch runs only the selected suite):
   - `e2e-smoke` — smoke specs only (`SMOKE_ONLY=1`), 15-minute timeout.
   - `e2e-regression` — all `*.regression.spec.ts` files, 20-minute timeout.
 - Both jobs run Chromium only. Local runs add Firefox and Pixel 5 (mobile Chrome).
