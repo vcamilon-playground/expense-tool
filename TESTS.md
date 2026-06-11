@@ -101,6 +101,8 @@ cd apps/e2e && npx playwright show-report
 
 ## Test Catalogue
 
+> **This catalogue is a point-in-time snapshot for human readers.** The spec files in `apps/e2e/tests/` are the source of truth — when they and this list disagree, trust the specs. The `e2e-author` agent (`.claude/agents/e2e-author.md`) owns the rules for writing and updating tests.
+
 ### `auth.spec.ts` — Login & Register
 
 **Login page**
