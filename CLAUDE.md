@@ -37,7 +37,7 @@ Multi-user expense tracking tool with custom authentication. Each user's data is
 ├── .github/
 │   └── workflows/e2e.yml  — CI: runs Playwright after every successful Vercel deploy
 ├── .claude/
-│   └── agents/            — Focused subagents (change-shipper, e2e-author, e2e-healer, docs-sync)
+│   └── agents/            — Focused subagents (QA loop: test-scenario-designer, manual-tester, qa-reviewer · then e2e-author, docs-sync, change-shipper, e2e-healer)
 ├── CLAUDE.md             — This file (lean reference + router)
 ├── CODING_STANDARDS.md   — Naming, TypeScript, form, CSS, and test conventions
 └── TESTS.md              — E2E test suite documentation
@@ -53,16 +53,21 @@ Multi-user expense tracking tool with custom authentication. Each user's data is
 - **Freeware-first** — stick to free tiers; introduce no paid services.
 - Sync with `main` (`git pull origin main`) before starting fresh work.
 
-**Delegate the detailed workflows to the focused agents** (each carries the full procedure so this file stays small):
+**Delegate the detailed workflows to the focused agents** (each carries the full procedure so this file stays small). For any feature, bug fix, or UI change, run them **in this order**:
 
-| When you are… | Use agent | It owns |
+| Step | Use agent | It owns |
 |---|---|---|
-| Landing a finished change (review → typecheck → unit → targeted E2E → version bump → commit/push) | `change-shipper` | The full pre-commit gate and commit/push workflow |
-| Writing or updating Playwright tests / page objects for a feature, fix, or UI change | `e2e-author` | Page Object Model, coverage requirements (smoke/regression/negative), cross-viewport rules, cleanup tagging, locator pitfalls |
-| Fixing failing CI E2E tests | `e2e-healer` | Find the failed run, app-first diagnosis, fix page object vs spec, verify, commit |
-| Syncing docs after a change | `docs-sync` | README / TESTS / CODING_STANDARDS / CLAUDE update criteria |
+| 1. Design test scenarios for the change (positive / negative / edge / exploratory) | `test-scenario-designer` | A scoped, numbered scenario list for the manual tester |
+| 2. Manually execute those scenarios on the running app via Playwright MCP | `manual-tester` | Live-browser exploratory/manual QA; Pass/Fail/Blocked with evidence (no spec files) |
+| 3. Review steps 1–2, loop back on gaps/findings until approved | `qa-reviewer` | Coverage + execution review; verdict APPROVED / NEEDS_REWORK |
+| 4. Write/update the automated Playwright tests for the change | `e2e-author` | Page Object Model, coverage (smoke/regression/negative), cross-viewport, cleanup tagging, locator pitfalls |
+| 5. Sync the docs | `docs-sync` | README / TESTS / CODING_STANDARDS / CLAUDE update criteria |
+| 6. Verify and ship (review → typecheck → unit → targeted E2E → version bump → commit/push) | `change-shipper` | The full pre-commit gate and commit/push workflow |
+| (any time) Fix failing CI E2E tests | `e2e-healer` | Find the failed run, app-first diagnosis, fix page object vs spec, verify, commit |
 
-A typical change: implement it → `e2e-author` for tests → `docs-sync` for docs → `change-shipper` to verify and ship. The agents may also auto-trigger from their descriptions; you can invoke them explicitly.
+**The manual-QA loop (steps 1–3) runs first, on the live change.** Subagents cannot spawn each other, so **you (the main thread) orchestrate the loop:** invoke `test-scenario-designer`, pass its list to `manual-tester`, pass both to `qa-reviewer`. If the verdict is `NEEDS_REWORK`, act on its findings — re-invoke `test-scenario-designer` to add missed scenarios, `manual-tester` to re-run, and **fix any app defects it flags** — then re-invoke `qa-reviewer`. Repeat until `APPROVED`, then proceed to steps 4→6.
+
+This QA loop applies to app behaviour/UI changes. Skip it (go straight to docs-sync / change-shipper) for docs-only, test-only, or CI/config-only changes. Agents may also auto-trigger from their descriptions; you can always invoke them explicitly.
 
 ---
 
@@ -173,9 +178,10 @@ Key variables: `var(--bad)` for errors, `var(--muted)` for secondary text, `var(
 1. Add or update types in `packages/shared/src/types.ts`.
 2. Add DB functions in `apps/web/src/lib/db.ts` — each accepts `userId: string`.
 3. Build the page in `apps/web/src/app/<route>/page.tsx`. Read `const { user } = useAuth()` at the top; return early if null. If it fetches data, wire `refreshKey` into the load effect (see Live data refresh above).
-4. Tests → use the **`e2e-author`** agent (page object, smoke, regression, negative).
-5. Docs → use the **`docs-sync`** agent.
-6. Ship → use the **`change-shipper`** agent.
+4. Manual QA loop → **`test-scenario-designer`** → **`manual-tester`** (Playwright MCP) → **`qa-reviewer`**; loop until APPROVED (fix any defects it finds).
+5. Automated tests → use the **`e2e-author`** agent (page object, smoke, regression, negative).
+6. Docs → use the **`docs-sync`** agent.
+7. Ship → use the **`change-shipper`** agent.
 
 ---
 
