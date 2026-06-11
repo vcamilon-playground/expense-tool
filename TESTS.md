@@ -483,7 +483,10 @@ Two jobs run **in parallel** (on a `deployment_status` event both always run; on
 To view results after a deployment:
 1. Go to the repo → **Actions** tab → find the **E2E Tests** workflow run.
 2. Each job shows pass/fail independently.
-3. Download the `playwright-report-smoke-*` or `playwright-report-regression-*` artifact for the full HTML report with traces and screenshots.
+3. The run **summary page** shows a per-job markdown report (passed / failed / skipped counts, duration, and a collapsible error block for each failed test) — no download needed for a quick overview.
+4. Download the `playwright-report-smoke-*` or `playwright-report-regression-*` artifact for the full HTML report with traces and screenshots.
+
+**Test summary on the run page:** each job runs `node scripts/github-summary.js "<Smoke|Regression> tests"` (a `if: always()` step) which parses `test-results.json` (written by the JSON reporter) and appends a markdown table plus failed-test details to `$GITHUB_STEP_SUMMARY`. The step is dependency-free — it reuses the same parsing as `scripts/generate-dashboard.js`.
 
 When tests fail, use the **`playwright-test-healer`** Playwright agent to diagnose and fix. It runs the failing tests in a live browser, inspects the broken selector or assertion, edits the page object, and re-runs until green.
 

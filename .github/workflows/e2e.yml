@@ -66,6 +66,11 @@ jobs:
           SMOKE_ONLY: '1'
           CI: true
 
+      - name: Write test summary
+        if: always()
+        run: node scripts/github-summary.js "Smoke tests"
+        working-directory: apps/e2e
+
       - name: Upload smoke test report
         uses: actions/upload-artifact@v4
         if: always()
@@ -128,6 +133,11 @@ jobs:
           E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
           E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
           CI: true
+
+      - name: Write test summary
+        if: always()
+        run: node scripts/github-summary.js "Regression tests"
+        working-directory: apps/e2e
 
       - name: Upload regression test report
         uses: actions/upload-artifact@v4
