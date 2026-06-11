@@ -5,12 +5,14 @@ import type { Budget, Category } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
 import { deleteBudget, listBudgets, listCategories, updateBudget, upsertBudget } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 import DeleteModal from '@/components/DeleteModal';
 import FormModal from '@/components/FormModal';
 
 export default function BudgetsPage() {
   const { user } = useAuth();
+  const { refreshKey } = useDataRefresh();
   const [categories, setCategories] = useState<Category[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [categoryId, setCategoryId] = useState('');
@@ -40,7 +42,7 @@ export default function BudgetsPage() {
         setLoading(false);
       }
     })();
-  }, [user]);
+  }, [user, refreshKey]);
 
   function handleEdit(b: Budget) {
     setEditing(b);

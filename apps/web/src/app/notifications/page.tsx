@@ -12,6 +12,7 @@ import {
   updateReminder,
 } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import { errorMessage } from '@/lib/errors';
 import {
   type AppNotification,
@@ -66,6 +67,7 @@ const cadenceLabel: Record<ReminderCadence, string> = {
 
 export default function NotificationsPage() {
   const { user } = useAuth();
+  const { refreshKey } = useDataRefresh();
   const [recurring, setRecurring] = useState<RecurringExpense[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,7 +98,7 @@ export default function NotificationsPage() {
     reload()
       .catch((e) => setLoadError(errorMessage(e, 'Failed to load')))
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [user, refreshKey]);
 
   function dismissIncomeReminder() {
     localStorage.setItem(reminderKey, 'dismissed');

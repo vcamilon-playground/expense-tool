@@ -14,6 +14,7 @@ import {
 } from '@expense/shared';
 import { listBudgets, listCategories, listExpenses, listRecurring } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 import SummaryCards from '@/components/SummaryCards';
 import BudgetAlerts from '@/components/BudgetAlerts';
@@ -26,6 +27,7 @@ import { dailyTrend, weeklyTrend } from '@/lib/trends';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { refreshKey } = useDataRefresh();
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -53,7 +55,7 @@ export default function DashboardPage() {
         setLoading(false);
       }
     })();
-  }, [user]);
+  }, [user, refreshKey]);
 
   const { sortCol: upSortCol, sortDir: upSortDir, handleSort: upHandleSort } =
     useSortState<'name' | 'amount' | 'due_date' | 'cadence'>('due_date', 'asc');

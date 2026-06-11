@@ -123,8 +123,9 @@ if (!user || loading) return <p className="muted">Loading…</p>;
 | Rule |
 |---|
 | Every page reads `const { user } = useAuth()` and returns the loading state if null. |
+| A page that fetches data also reads `const { refreshKey } = useDataRefresh()` and adds `refreshKey` to its load-effect deps (`}, [user, refreshKey]);`) so it refetches when the app resumes after a long idle period. |
 | No server components that fetch data — all Supabase calls are client-side. |
-| No new React context providers without a strong reason; `AuthContext` and `NavigationGuardContext` cover the current needs. |
+| No new React context providers without a strong reason; `AuthContext`, `NavigationGuardContext`, and `DataRefreshContext` cover the current needs. |
 | Shared UI components go in `apps/web/src/components/`. Only extract a component if it is used in two or more places. |
 | Page-specific logic stays in the page file — don't create a component for something used once. |
 

@@ -15,6 +15,7 @@ import {
   updateRecurring,
 } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import DeleteModal from '@/components/DeleteModal';
 import FormModal from '@/components/FormModal';
 
@@ -36,6 +37,7 @@ const empty: RecurringInput = {
 
 export default function RecurringPage() {
   const { user } = useAuth();
+  const { refreshKey } = useDataRefresh();
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<RecurringExpense[]>([]);
   const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
@@ -85,7 +87,7 @@ export default function RecurringPage() {
         setLoading(false);
       }
     })();
-  }, [user]);
+  }, [user, refreshKey]);
 
   function startEdit(r: RecurringExpense) {
     setEditingId(r.id);

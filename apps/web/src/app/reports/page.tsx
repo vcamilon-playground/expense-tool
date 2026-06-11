@@ -12,6 +12,7 @@ import {
 } from '@expense/shared';
 import { listCategories, listExpenses } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 
 type ViewMode = 'preset' | 'custom';
@@ -73,6 +74,7 @@ function changePct(current: number, prev: number): string {
 
 export default function ReportsPage() {
   const { user } = useAuth();
+  const { refreshKey } = useDataRefresh();
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [period, setPeriod] = useState<ReportPeriod>('month');
@@ -98,7 +100,7 @@ export default function ReportsPage() {
         setLoading(false);
       }
     })();
-  }, [user]);
+  }, [user, refreshKey]);
 
   const summary = useMemo(
     () =>

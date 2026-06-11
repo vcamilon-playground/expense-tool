@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { DataRefreshProvider } from '@/contexts/DataRefreshContext';
 import { NavigationGuardProvider } from '@/contexts/NavigationGuardContext';
 import ConditionalLayout from '@/components/ConditionalLayout';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
@@ -33,7 +34,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <NavigationGuardProvider>
           <AuthProvider>
-            <ConditionalLayout>{children}</ConditionalLayout>
+            <DataRefreshProvider>
+              <ConditionalLayout>{children}</ConditionalLayout>
+            </DataRefreshProvider>
           </AuthProvider>
         </NavigationGuardProvider>
         <ServiceWorkerRegister />

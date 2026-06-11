@@ -169,6 +169,10 @@ after each Vercel deploy.
   reminders. **Reminders** can be one-time (removed when marked Done) or
   recurring (weekly / monthly / yearly — advances to the next occurrence).
 - **Settings** — profile editing, password change, theme, category management.
+- **Live data refresh** — every module refetches its data when you open it
+  (navigating between pages always shows current data), and any page left open
+  in a backgrounded tab or minimised PWA refetches automatically when you return
+  to it after more than five minutes away, so stale numbers are never shown.
 
 ## Versioning
 

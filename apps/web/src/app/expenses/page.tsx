@@ -17,9 +17,11 @@ import ExpenseList from '@/components/ExpenseList';
 import FormModal from '@/components/FormModal';
 import MonthEndBanner from '@/components/MonthEndBanner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDataRefresh } from '@/contexts/DataRefreshContext';
 
 export default function ExpensesPage() {
   const { user } = useAuth();
+  const { refreshKey } = useDataRefresh();
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
@@ -56,7 +58,7 @@ export default function ExpensesPage() {
         setLoading(false);
       }
     })();
-  }, [user]);
+  }, [user, refreshKey]);
 
   function closeModal() {
     setShowAdd(false);

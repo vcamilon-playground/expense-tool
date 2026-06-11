@@ -151,6 +151,10 @@ cd apps/e2e && npx playwright show-report
 **Dashboard — Upcoming Charges column sorting**
 - sortable headers present and Due Date toggles direction
 
+**Dashboard — refresh on resume after idle**
+- refetches data when resumed after a long background period *(uses `page.clock` to simulate the tab being hidden > 5 min, then asserts a fresh `/rest/v1/expenses` request fires on return)*
+- does not refetch after a brief background period *(hidden < 5 min → no refetch)*
+
 ---
 
 ### `expenses.spec.ts` — Expenses

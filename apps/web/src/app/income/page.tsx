@@ -11,6 +11,7 @@ import {
   updateIncomeSource,
 } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import { errorMessage } from '@/lib/errors';
 import DeleteModal from '@/components/DeleteModal';
 import FormModal from '@/components/FormModal';
@@ -74,6 +75,7 @@ function AmountWithEye({ amount, visible, onToggle }: { amount: number; visible:
 
 export default function IncomePage() {
   const { user } = useAuth();
+  const { refreshKey } = useDataRefresh();
   const [sources, setSources] = useState<IncomeSource[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -138,7 +140,7 @@ export default function IncomePage() {
         setLoading(false);
       }
     })();
-  }, [user]);
+  }, [user, refreshKey]);
 
   function startEdit(s: IncomeSource) {
     setEditingId(s.id);

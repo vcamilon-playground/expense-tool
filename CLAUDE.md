@@ -22,7 +22,7 @@ Multi-user expense tracking tool with custom authentication. Each user's data is
 │   │   └── src/
 │   │       ├── app/                  — Next.js pages (one directory per route)
 │   │       ├── components/           — Shared UI components
-│   │       ├── contexts/             — React context providers (AuthContext, NavigationGuardContext)
+│   │       ├── contexts/             — React context providers (AuthContext, NavigationGuardContext, DataRefreshContext)
 │   │       └── lib/                  — DB access, auth helpers, AI providers, utilities
 │   ├── mobile/       @expense/mobile  — Expo app
 │   └── e2e/          @expense/e2e     — Playwright test suite
@@ -102,6 +102,7 @@ ANTHROPIC_API_KEY=      # required when AI_PROVIDER=anthropic (paid)
 - DB functions live in `apps/web/src/lib/db.ts`. Every function accepts `userId: string`. All Supabase calls go through here — never call `supabase` directly in components or pages.
 - `formatMoney(amount, currency?)` from `@expense/shared` formats with `Intl.NumberFormat`.
 - The web app is `'use client'` throughout — no server components fetch data.
+- **Live data refresh** — `DataRefreshContext` (`contexts/DataRefreshContext.tsx`) provides a `refreshKey` that bumps when the app returns to the foreground after being hidden for ≥ 5 min (`STALE_AFTER_MS` in `lib/data-refresh.ts`; the pure `shouldRefreshOnResume` decision is unit-tested). Every data page reads `const { refreshKey } = useDataRefresh()` and adds `refreshKey` to its load-effect deps (e.g. `}, [user, refreshKey]);`) so it refetches on resume. Navigating between modules already refetches because App Router remounts each page. When adding a new data page, wire `refreshKey` into its load effect the same way (Settings is intentionally excluded so a resume never clobbers unsaved profile edits).
 
 ### Form pattern (mandatory)
 

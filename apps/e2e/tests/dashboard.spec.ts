@@ -51,6 +51,50 @@ test.describe('Dashboard', () => {
   });
 });
 
+test.describe('Dashboard — refresh on resume after idle', () => {
+  async function setVisibility(page: import('@playwright/test').Page, state: 'hidden' | 'visible') {
+    await page.evaluate((value) => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => value });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, state);
+  }
+
+  test('refetches data when resumed after a long background period', async ({ page }) => {
+    await page.clock.install();
+    const dashboard = new DashboardPage(page);
+    await dashboard.goto();
+
+    let refetches = 0;
+    page.on('request', (req) => {
+      if (req.url().includes('/rest/v1/expenses')) refetches += 1;
+    });
+
+    await setVisibility(page, 'hidden');
+    await page.clock.fastForward(6 * 60 * 1000); // past the 5-minute staleness threshold
+    await setVisibility(page, 'visible');
+
+    await expect.poll(() => refetches).toBeGreaterThan(0);
+  });
+
+  test('does not refetch after a brief background period', async ({ page }) => {
+    await page.clock.install();
+    const dashboard = new DashboardPage(page);
+    await dashboard.goto();
+
+    let refetches = 0;
+    page.on('request', (req) => {
+      if (req.url().includes('/rest/v1/expenses')) refetches += 1;
+    });
+
+    await setVisibility(page, 'hidden');
+    await page.clock.fastForward(60 * 1000); // under the 5-minute threshold
+    await setVisibility(page, 'visible');
+
+    await page.waitForTimeout(500);
+    expect(refetches).toBe(0);
+  });
+});
+
 test.describe('Dashboard — Upcoming Charges column sorting', () => {
   let dashboard!: DashboardPage;
 
