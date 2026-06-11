@@ -230,6 +230,36 @@ export const seed = {
       receipt_url: null,
     });
   },
+  receiptExpense: (merchant: string) => {
+    const uid = loadE2EUserId();
+    return post('expenses', {
+      user_id: uid,
+      amount: 250,
+      currency: 'PHP',
+      occurred_at: new Date().toISOString().slice(0, 10),
+      source: 'receipt',
+      merchant,
+      description: 'E2E grid receipt pill test',
+      conversion_rate: null,
+      category_id: null,
+      receipt_url: null,
+    });
+  },
+  overseasExpense: (merchant: string) => {
+    const uid = loadE2EUserId();
+    return post('expenses', {
+      user_id: uid,
+      amount: 10,
+      currency: 'USD',
+      occurred_at: new Date().toISOString().slice(0, 10),
+      source: 'manual',
+      merchant,
+      description: 'E2E grid conversion test',
+      conversion_rate: 56,
+      category_id: null,
+      receipt_url: null,
+    });
+  },
   recurring: () => {
     const uid = loadE2EUserId();
     return post('recurring_expenses', {

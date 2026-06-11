@@ -81,7 +81,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/auth.spec.ts` | Smoke | Login page UI, register page UI, unauthenticated redirect, authenticated dashboard access |
 | `tests/navigation.spec.ts` | Smoke | Desktop sidebar links + active state + profile card + footer; desktop logout/switch-user via sidebar buttons; mobile bottom tab bar navigation + active state + header-avatar profile popup |
 | `tests/dashboard.spec.ts` | Smoke | Page heading, four KPI stat cards, Budget Status, Category Chart, 6-month Trend, Upcoming Charges sections |
-| `tests/expenses.spec.ts` | Smoke | Page load, Add Expense modal, required fields, inline validation errors, search/filter, delete modal, month group collapse, column sorting, List/Calendar view toggle + month navigation |
+| `tests/expenses.spec.ts` | Smoke | Page load, Add Expense modal, required fields, inline validation errors, search/filter, delete modal, month group collapse, column sorting, List/Grid/Calendar view toggle + Grid cards + month navigation |
 | `tests/recurring.spec.ts` | Smoke | Page load, Add Recurring modal, required fields, inline validation errors, payment confirmation flow, delete modal, column sorting |
 | `tests/reports.spec.ts` | Smoke | Page load, period select, preset/date-range mode toggle, compare period, column sorting |
 | `tests/budgets.spec.ts` | Smoke | Page load, form labels, edit/cancel flow, inline validation errors, column sorting |
@@ -91,6 +91,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, theme pill toggles data-theme, notification bell links to /notifications |
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
 | `tests/expenses.regression.spec.ts` | Regression | Create/edit/delete expense; past-month lock with allow-past-edit off and on |
+| `tests/expenses-grid.regression.spec.ts` | Regression | Grid cards render category/amount/merchant/description; receipt pill and ≈PHP conversion; search narrows cards; edit/delete from a card; past-month lock with allow-past-edit off and on |
 | `tests/budgets.regression.spec.ts` | Regression | Edit overall budget and verify updated limit |
 | `tests/recurring.regression.spec.ts` | Regression | Create/edit/delete recurring expense; confirm YES adds expense + advances date; confirm NO advances date without adding expense |
 | `tests/settings.regression.spec.ts` | Regression | Add category with custom icon; add category without icon uses default; deleting category does not delete linked expenses |
@@ -189,11 +190,13 @@ cd apps/e2e && npx playwright show-report
 - Amount sort activates and toggles direction
 - clicking a different header moves the active indicator
 
-**Expenses — List / Calendar view**
-- view toggle shows List and Calendar buttons with List active by default
+**Expenses — List / Grid / Calendar view**
+- view toggle shows List, Grid, and Calendar buttons with List active by default
+- switching to Grid shows the card grid (`.expense-grid`)
+- Grid cards show category, amount, merchant, and a receipt pill where applicable
 - switching to Calendar shows the grid and month navigation
 - calendar month navigation changes the displayed month
-- switching back to List hides the calendar grid
+- switching back to List hides the calendar grid and the card grid
 
 ---
 
@@ -363,6 +366,28 @@ cd apps/e2e && npx playwright show-report
 
 **Expenses — past-month lock (allow-past-edit enabled)**
 - past-month expense shows Edit and Delete when allow-past-edit is on
+
+---
+
+### `expenses-grid.regression.spec.ts` — Expenses Grid view
+
+**Expenses Grid — card rendering**
+- a card renders category, amount, merchant and description fields
+- a receipt-sourced expense shows the green receipt pill
+- a manual expense shows no receipt pill
+- an overseas expense shows the approximate PHP conversion
+
+**Expenses Grid — search and filter**
+- search narrows the grid to matching cards
+- a search that matches nothing shows the no-match message, not the grid empty state
+
+**Expenses Grid — edit and delete from a card**
+- Edit on a card opens the Edit Expense modal and saves changes
+- Delete on a card confirms and removes the card
+
+**Expenses Grid — past-month lock (allow-past-edit disabled / enabled)**
+- a past-month card shows the lock icon and no Edit or Delete buttons
+- a past-month card shows Edit and Delete when allow-past-edit is on
 
 ---
 

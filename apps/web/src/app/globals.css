@@ -768,6 +768,60 @@ button.btn-sm {
 .view-toggle button.btn-sm { height: 30px; border-radius: 6px; }
 .view-toggle button.ghost.btn-sm:hover:not(:disabled) { background: var(--border); }
 
+/* ── Expense Grid view ── */
+.expense-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.expense-grid-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.expense-grid-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.expense-grid-cat { font-weight: 600; font-size: 13px; }
+
+.expense-grid-amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.expense-grid-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.expense-grid-desc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.expense-grid-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
 /* ── Expense Calendar ── */
 .cal-nav {
   display: flex;

@@ -13,6 +13,7 @@ import {
 } from '@/lib/db';
 import ExpenseCalendar from '@/components/ExpenseCalendar';
 import ExpenseForm from '@/components/ExpenseForm';
+import ExpenseGrid from '@/components/ExpenseGrid';
 import ExpenseList from '@/components/ExpenseList';
 import FormModal from '@/components/FormModal';
 import MonthEndBanner from '@/components/MonthEndBanner';
@@ -32,7 +33,7 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [allowPastEdit, setAllowPastEdit] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'calendar'>('list');
 
   async function reload() {
     if (!user) return;
@@ -135,6 +136,10 @@ export default function ExpensesPage() {
               onClick={() => setViewMode('list')}
             >List</button>
             <button
+              className={viewMode === 'grid' ? 'primary btn-sm' : 'ghost btn-sm'}
+              onClick={() => setViewMode('grid')}
+            >Grid</button>
+            <button
               className={viewMode === 'calendar' ? 'primary btn-sm' : 'ghost btn-sm'}
               onClick={() => setViewMode('calendar')}
             >Calendar</button>
@@ -175,6 +180,14 @@ export default function ExpensesPage() {
           />
         ) : filteredExpenses.length === 0 && (search || categoryFilter) ? (
           <p className="muted">No expenses match your search.</p>
+        ) : viewMode === 'grid' ? (
+          <ExpenseGrid
+            expenses={filteredExpenses}
+            categories={categories}
+            onEdit={(e) => setEditing(e)}
+            onDelete={handleDelete}
+            allowPastEdit={allowPastEdit}
+          />
         ) : (
           <ExpenseList
             expenses={filteredExpenses}

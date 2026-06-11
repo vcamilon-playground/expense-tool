@@ -137,17 +137,91 @@ export class ExpensesPage extends BasePage {
     return this.page.locator('th.sortable .sort-active');
   }
 
-  // ── List / Calendar view toggle ──
+  // ── List / Grid / Calendar view toggle ──
   viewToggle(): Locator {
     return this.page.locator('.view-toggle');
+  }
+
+  viewToggleButtons(): Locator {
+    return this.viewToggle().getByRole('button');
   }
 
   listViewButton(): Locator {
     return this.viewToggle().getByRole('button', { name: 'List' });
   }
 
+  gridViewButton(): Locator {
+    return this.viewToggle().getByRole('button', { name: 'Grid' });
+  }
+
   calendarViewButton(): Locator {
     return this.viewToggle().getByRole('button', { name: 'Calendar' });
+  }
+
+  // ── Grid view ──
+  grid(): Locator {
+    return this.page.locator('.expense-grid');
+  }
+
+  gridCards(): Locator {
+    return this.page.locator('.expense-grid-card');
+  }
+
+  gridCard(text: string): Locator {
+    return this.gridCards().filter({ hasText: text });
+  }
+
+  gridCardCategory(text: string): Locator {
+    return this.gridCard(text).locator('.expense-grid-cat');
+  }
+
+  gridCardAmount(text: string): Locator {
+    return this.gridCard(text).locator('.expense-grid-amount');
+  }
+
+  gridCardMeta(text: string): Locator {
+    return this.gridCard(text).locator('.expense-grid-meta');
+  }
+
+  gridCardDescription(text: string): Locator {
+    return this.gridCard(text).locator('.expense-grid-desc');
+  }
+
+  gridCardReceiptPill(text: string): Locator {
+    return this.gridCard(text).locator('.pill.ok');
+  }
+
+  gridCardEditButton(text: string): Locator {
+    return this.gridCard(text).getByRole('button', { name: 'Edit' });
+  }
+
+  gridCardDeleteButton(text: string): Locator {
+    return this.gridCard(text).getByRole('button', { name: 'Delete' });
+  }
+
+  gridCardLockIcon(text: string): Locator {
+    return this.gridCard(text).locator('[title*="edited or deleted"]');
+  }
+
+  async openGrid(): Promise<void> {
+    await this.gridViewButton().click();
+    await expect(this.grid()).toBeVisible();
+  }
+
+  async editGridCard(text: string): Promise<void> {
+    await this.gridCardEditButton(text).click();
+    await expect(this.dialog().getByRole('heading', { name: 'Edit Expense' })).toBeVisible();
+  }
+
+  async openGridDeleteModal(text: string): Promise<void> {
+    await this.gridCardDeleteButton(text).click();
+    await expect(this.deleteDialog()).toBeVisible();
+  }
+
+  async deleteGridCard(text: string): Promise<void> {
+    await this.openGridDeleteModal(text);
+    await this.deleteYesButton().click();
+    await expect(this.deleteDialog()).toBeHidden();
   }
 
   calendarGrid(): Locator {

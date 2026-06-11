@@ -220,7 +220,7 @@ test.describe('Expenses — column sorting', () => {
   });
 });
 
-test.describe('Expenses — List / Calendar view', () => {
+test.describe('Expenses — List / Grid / Calendar view', () => {
   let expenses!: ExpensesPage;
 
   test.beforeEach(async ({ page }) => {
@@ -228,13 +228,50 @@ test.describe('Expenses — List / Calendar view', () => {
     await expenses.goto();
   });
 
-  test('view toggle shows List and Calendar buttons with List active by default', async () => {
+  test('view toggle shows List, Grid and Calendar buttons with List active by default', async () => {
     await expect(expenses.viewToggle()).toBeVisible();
     await expect(expenses.listViewButton()).toBeVisible();
+    await expect(expenses.gridViewButton()).toBeVisible();
     await expect(expenses.calendarViewButton()).toBeVisible();
     // List is the default view — its button uses the primary style.
     await expect(expenses.listViewButton()).toHaveClass(/primary/);
+    await expect(expenses.gridViewButton()).not.toHaveClass(/primary/);
+    await expect(expenses.calendarViewButton()).not.toHaveClass(/primary/);
     await expect(expenses.calendarGrid()).toHaveCount(0);
+    await expect(expenses.grid()).toHaveCount(0);
+  });
+
+  test('view toggle renders three buttons in List, Grid, Calendar order with Grid in the middle', async () => {
+    await expect(expenses.viewToggleButtons()).toHaveCount(3);
+    await expect(expenses.viewToggleButtons().nth(0)).toHaveText('List');
+    await expect(expenses.viewToggleButtons().nth(1)).toHaveText('Grid');
+    await expect(expenses.viewToggleButtons().nth(2)).toHaveText('Calendar');
+  });
+
+  test('switching to Grid activates the Grid button and shows the card grid', async () => {
+    await expenses.gridViewButton().click();
+    await expect(expenses.gridViewButton()).toHaveClass(/primary/);
+    await expect(expenses.listViewButton()).not.toHaveClass(/primary/);
+    // The grid container shows when at least one expense exists; otherwise the
+    // empty-state message renders. Either way the calendar and table are hidden.
+    await expect(expenses.calendarGrid()).toHaveCount(0);
+    await expect(expenses.page.locator('.expense-table')).toHaveCount(0);
+  });
+
+  test('switching from Grid back to List hides the grid', async () => {
+    await expenses.gridViewButton().click();
+    await expect(expenses.gridViewButton()).toHaveClass(/primary/);
+    await expenses.listViewButton().click();
+    await expect(expenses.grid()).toHaveCount(0);
+    await expect(expenses.listViewButton()).toHaveClass(/primary/);
+  });
+
+  test('Grid view shows the no-match page message when a search matches nothing', async () => {
+    await expenses.gridViewButton().click();
+    await expenses.searchInput().fill('zzznomatch999');
+    await expect(expenses.page.getByText('No expenses match your search.')).toBeVisible();
+    // The grid's own "No expenses yet." empty state must NOT show while filtering.
+    await expect(expenses.page.getByText('No expenses yet.')).toHaveCount(0);
   });
 
   test('switching to Calendar shows the grid and month navigation', async () => {
@@ -258,5 +295,25 @@ test.describe('Expenses — List / Calendar view', () => {
     await expect(expenses.calendarGrid()).toBeVisible();
     await expenses.listViewButton().click();
     await expect(expenses.calendarGrid()).toHaveCount(0);
+  });
+});
+
+test.describe('Expenses — Grid view on mobile', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  let expenses!: ExpensesPage;
+
+  test.beforeEach(async ({ page }) => {
+    expenses = new ExpensesPage(page);
+    await expenses.goto();
+  });
+
+  test('the three-way toggle and Grid view are reachable at a mobile viewport', async () => {
+    await expect(expenses.viewToggleButtons()).toHaveCount(3);
+    await expect(expenses.gridViewButton()).toBeVisible();
+    await expenses.gridViewButton().click();
+    await expect(expenses.gridViewButton()).toHaveClass(/primary/);
+    await expect(expenses.calendarGrid()).toHaveCount(0);
+    await expect(expenses.page.locator('.expense-table')).toHaveCount(0);
   });
 });
