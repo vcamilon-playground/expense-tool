@@ -830,6 +830,17 @@ button.btn-sm {
   margin-top: 16px;
 }
 
+.grid-more-btn {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: transparent;
+  font-weight: 600;
+}
+.grid-more-btn:hover:not(:disabled) {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+}
+
 /* ── Expense Calendar ── */
 .cal-nav {
   display: flex;

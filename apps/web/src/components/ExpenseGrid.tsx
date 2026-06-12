@@ -108,8 +108,7 @@ export default function ExpenseGrid({
       {remaining > 0 && (
         <div className="expense-grid-more">
           <button
-            className="ghost"
-            style={{ width: 'auto' }}
+            className="grid-more-btn"
             onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
           >
             Load More… ({remaining} more)

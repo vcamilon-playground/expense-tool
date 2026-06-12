@@ -159,6 +159,25 @@ test.describe('Expenses Grid — Load More pagination', () => {
     await expect(expenses.gridCards()).toHaveCount(SEED_COUNT);
     await expect(expenses.gridLoadMoreButton()).toHaveCount(0);
   });
+
+  test('Load More button uses the theme accent for text and border', async ({ page }) => {
+    const expenses = new ExpensesPage(page);
+    await expenses.goto();
+    await expenses.openGrid();
+
+    await expect(expenses.gridLoadMoreButton()).toBeVisible();
+    const styles = await expenses.gridLoadMoreButton().evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return { color: computed.color, borderColor: computed.borderColor };
+    });
+
+    // grid-more-btn renders the accent (#3b6fd4) for both text and border.
+    expect(styles.color).toBe('rgb(59, 111, 212)');
+    expect(styles.borderColor).toBe('rgb(59, 111, 212)');
+    // Guard against a regression to the old neutral ghost look.
+    expect(styles.borderColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(styles.borderColor).not.toBe('transparent');
+  });
 });
 
 test.describe('Expenses Grid — past-month lock (allow-past-edit disabled)', () => {

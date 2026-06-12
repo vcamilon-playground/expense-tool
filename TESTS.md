@@ -91,7 +91,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, theme pill toggles data-theme, notification bell links to /notifications |
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
 | `tests/expenses.regression.spec.ts` | Regression | Create/edit/delete expense; past-month lock with allow-past-edit off and on |
-| `tests/expenses-grid.regression.spec.ts` | Regression | Grid cards render category/amount/merchant/description; receipt pill and ≈PHP conversion; search narrows cards; edit/delete from a card; past-month lock with allow-past-edit off and on |
+| `tests/expenses-grid.regression.spec.ts` | Regression | Grid cards render category/amount/merchant/description; receipt pill and ≈PHP conversion; search narrows cards; edit/delete from a card; Load More pagination (20-per-page, accent-styled button); past-month lock with allow-past-edit off and on |
 | `tests/budgets.regression.spec.ts` | Regression | Edit overall budget and verify updated limit |
 | `tests/recurring.regression.spec.ts` | Regression | Create/edit/delete recurring expense; confirm YES adds expense + advances date; confirm NO advances date without adding expense |
 | `tests/settings.regression.spec.ts` | Regression | Add category with custom icon; add category without icon uses default; deleting category does not delete linked expenses |
@@ -384,6 +384,11 @@ cd apps/e2e && npx playwright show-report
 **Expenses Grid — edit and delete from a card**
 - Edit on a card opens the Edit Expense modal and saves changes
 - Delete on a card confirms and removes the card
+
+**Expenses Grid — Load More pagination**
+- shows one page of 20 cards with a visible Load More button
+- clicking Load More reveals the remaining cards and hides the button
+- Load More button uses the theme accent for text and border
 
 **Expenses Grid — past-month lock (allow-past-edit disabled / enabled)**
 - a past-month card shows the lock icon and no Edit or Delete buttons
