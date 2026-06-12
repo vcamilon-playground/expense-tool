@@ -771,7 +771,9 @@ button.btn-sm {
 /* ── Expense Grid view ── */
 .expense-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  /* Cap at 5 columns so a 20-card page reads as a clean 5×4, while still
+     wrapping to fewer columns on narrow screens. */
+  grid-template-columns: repeat(auto-fill, minmax(max(220px, (100% - 4 * 12px) / 5), 1fr));
   gap: 12px;
 }
 
