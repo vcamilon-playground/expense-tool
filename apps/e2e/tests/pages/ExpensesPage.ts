@@ -203,6 +203,10 @@ export class ExpensesPage extends BasePage {
     return this.gridCard(text).locator('[title*="edited or deleted"]');
   }
 
+  gridLoadMoreButton(): Locator {
+    return this.page.locator('.expense-grid-more button');
+  }
+
   async openGrid(): Promise<void> {
     await this.gridViewButton().click();
     await expect(this.grid()).toBeVisible();

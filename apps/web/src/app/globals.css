@@ -822,6 +822,12 @@ button.btn-sm {
   padding-top: 4px;
 }
 
+.expense-grid-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
 /* ── Expense Calendar ── */
 .cal-nav {
   display: flex;

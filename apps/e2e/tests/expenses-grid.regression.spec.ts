@@ -126,6 +126,41 @@ test.describe('Expenses Grid — edit and delete from a card', () => {
   });
 });
 
+test.describe('Expenses Grid — Load More pagination', () => {
+  const SEED_COUNT = 25; // > PAGE_SIZE (20): one Load More click reveals the rest
+
+  test.beforeAll(async () => {
+    await cleanup.expenses();
+    await seed.manyExpenses(SEED_COUNT);
+  });
+
+  test.afterAll(async () => {
+    await cleanup.expenses();
+  });
+
+  test('shows one page of 20 cards with a visible Load More button', async ({ page }) => {
+    const expenses = new ExpensesPage(page);
+    await expenses.goto();
+    await expenses.openGrid();
+
+    await expect(expenses.gridCards()).toHaveCount(20);
+    await expect(expenses.gridLoadMoreButton()).toBeVisible();
+    await expect(expenses.gridLoadMoreButton()).toContainText(`${SEED_COUNT - 20} more`);
+  });
+
+  test('clicking Load More reveals the remaining cards and hides the button', async ({ page }) => {
+    const expenses = new ExpensesPage(page);
+    await expenses.goto();
+    await expenses.openGrid();
+
+    await expect(expenses.gridCards()).toHaveCount(20);
+    await expenses.gridLoadMoreButton().click();
+
+    await expect(expenses.gridCards()).toHaveCount(SEED_COUNT);
+    await expect(expenses.gridLoadMoreButton()).toHaveCount(0);
+  });
+});
+
 test.describe('Expenses Grid — past-month lock (allow-past-edit disabled)', () => {
   test.beforeAll(async () => {
     await cleanup.expenses();

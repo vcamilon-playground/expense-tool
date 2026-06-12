@@ -95,7 +95,7 @@ async function postReturn<T>(table: string, data: Record<string, unknown>): Prom
   return rows[0]!;
 }
 
-async function post(table: string, data: Record<string, unknown>): Promise<void> {
+async function post(table: string, data: Record<string, unknown> | Record<string, unknown>[]): Promise<void> {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     console.warn(`[seed] skipped ${table} — SUPABASE_URL/SUPABASE_ANON_KEY not set`);
     return;
@@ -229,6 +229,23 @@ export const seed = {
       category_id: null,
       receipt_url: null,
     });
+  },
+  manyExpenses: (count: number, merchantPrefix = E2E_MERCHANT) => {
+    const uid = loadE2EUserId();
+    const occurred_at = new Date().toISOString().slice(0, 10);
+    const rows = Array.from({ length: count }, (_, i) => ({
+      user_id: uid,
+      amount: i + 1,
+      currency: 'PHP',
+      occurred_at,
+      source: 'manual',
+      merchant: `${merchantPrefix}-${String(i).padStart(3, '0')}`,
+      description: 'E2E grid pagination test',
+      conversion_rate: null,
+      category_id: null,
+      receipt_url: null,
+    }));
+    return post('expenses', rows);
   },
   receiptExpense: (merchant: string) => {
     const uid = loadE2EUserId();

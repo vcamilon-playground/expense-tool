@@ -196,7 +196,7 @@ Each command bumps `apps/web/package.json`, commits `chore(release): vX.Y.Z`, cr
 | `npm run dev:mobile` | Start Expo (scan QR in Expo Go) |
 | `npm run typecheck` | Type-check all three workspaces |
 | `npm run build:shared` | Build the shared package |
-| `npm run test:unit` | Vitest unit tests for `packages/shared/` (~400 ms) |
+| `npm run test:unit` | Vitest unit tests for `packages/shared/` + `apps/web/src/lib` logic (~1 s) |
 | `npm run test:e2e` | Full Playwright smoke suite (auto-starts dev server) |
 | `npm run test:e2e:ui` | Open Playwright UI mode |
 | `npm run install:browsers` | Download Playwright browser binaries (run once after clone) |

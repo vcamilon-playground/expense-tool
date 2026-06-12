@@ -64,6 +64,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/dashboard.spec.ts` | Dashboard heading, KPI stat cards, Budget Status / Category Chart / Trend sections |
 | `tests/expenses.spec.ts` | Page load, Add Expense modal open/close, required fields, Escape key, backdrop dismiss |
 | `tests/expenses.regression.spec.ts` | Full CRUD: create → verify → edit → verify → delete → verify; cleans up via API |
+| `tests/expenses-grid.regression.spec.ts` | Grid view: card field rendering (category, amount, merchant, description, receipt pill, overseas PHP conversion), search/filter, edit & delete from a card, past-month lock, and **Load More pagination** (first 20 cards, "Load More…" reveals 20 more per click); cleans up via API |
 | `tests/recurring.spec.ts` | Page load, Add Recurring modal, required fields, cadence dropdown capitalization |
 | `tests/recurring.regression.spec.ts` | Full CRUD: create → verify → edit → verify → delete → verify; cleans up via API |
 | `tests/reports.spec.ts` | Page load, Period select, export buttons (CSV/Excel/PDF), period change updates range |
