@@ -5,7 +5,13 @@ import {
   type MonthlyInsight,
   type ReceiptExtraction,
 } from '@expense/shared';
-import { RECEIPT_SYSTEM, INSIGHT_SYSTEM, currentMonth, tryParseJSON } from './prompts';
+import {
+  RECEIPT_SYSTEM,
+  INSIGHT_SYSTEM,
+  buildInsightInput,
+  insightUserMessage,
+  tryParseJSON,
+} from './prompts';
 
 const MODEL = 'claude-opus-4-7';
 
@@ -42,32 +48,21 @@ export async function extractReceiptAnthropic(
 }
 
 export async function generateInsightsAnthropic(expenses: Expense[]): Promise<MonthlyInsight> {
-  const month = currentMonth();
-  const thisMonth = expenses.filter((e) => e.occurred_at.startsWith(month));
+  const { month, thisMonth, compact, total } = buildInsightInput(expenses);
   if (thisMonth.length === 0) {
     return emptyInsight(month);
   }
-  const compact = thisMonth.map((e) => ({
-    date: e.occurred_at,
-    amount: e.amount,
-    currency: e.currency,
-    category_id: e.category_id,
-    merchant: e.merchant,
-    description: e.description,
-  }));
 
   const msg = await client().messages.create({
     model: MODEL,
     max_tokens: 900,
     system: INSIGHT_SYSTEM,
-    messages: [
-      { role: 'user', content: `Current month: ${month}\nExpenses:\n${JSON.stringify(compact)}` },
-    ],
+    messages: [{ role: 'user', content: insightUserMessage(month, total, compact) }],
   });
   const text = msg.content.map((c) => (c.type === 'text' ? c.text : '')).join('').trim();
   const parsed = tryParseJSON<MonthlyInsight>(text);
   if (!parsed) throw new Error(`Failed to parse Anthropic output: ${text.slice(0, 200)}`);
-  return parsed;
+  return { ...parsed, month, total };
 }
 
 function emptyInsight(month: string): MonthlyInsight {

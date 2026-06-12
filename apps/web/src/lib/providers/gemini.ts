@@ -5,7 +5,13 @@ import {
   type MonthlyInsight,
   type ReceiptExtraction,
 } from '@expense/shared';
-import { RECEIPT_SYSTEM, INSIGHT_SYSTEM, currentMonth, tryParseJSON } from './prompts';
+import {
+  RECEIPT_SYSTEM,
+  INSIGHT_SYSTEM,
+  buildInsightInput,
+  insightUserMessage,
+  tryParseJSON,
+} from './prompts';
 
 const MODEL = 'gemini-2.0-flash';
 
@@ -38,32 +44,21 @@ export async function extractReceiptGemini(
 }
 
 export async function generateInsightsGemini(expenses: Expense[]): Promise<MonthlyInsight> {
-  const month = currentMonth();
-  const thisMonth = expenses.filter((e) => e.occurred_at.startsWith(month));
+  const { month, thisMonth, compact, total } = buildInsightInput(expenses);
   if (thisMonth.length === 0) {
     return emptyInsight(month);
   }
-  const compact = thisMonth.map((e) => ({
-    date: e.occurred_at,
-    amount: e.amount,
-    currency: e.currency,
-    category_id: e.category_id,
-    merchant: e.merchant,
-    description: e.description,
-  }));
 
   const model = client().getGenerativeModel({
     model: MODEL,
     systemInstruction: INSIGHT_SYSTEM,
     generationConfig: { responseMimeType: 'application/json' },
   });
-  const result = await model.generateContent(
-    `Current month: ${month}\nExpenses:\n${JSON.stringify(compact)}`,
-  );
+  const result = await model.generateContent(insightUserMessage(month, total, compact));
   const text = result.response.text().trim();
   const parsed = tryParseJSON<MonthlyInsight>(text);
   if (!parsed) throw new Error(`Failed to parse Gemini output: ${text.slice(0, 200)}`);
-  return parsed;
+  return { ...parsed, month, total };
 }
 
 function emptyInsight(month: string): MonthlyInsight {

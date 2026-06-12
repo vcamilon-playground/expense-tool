@@ -5,7 +5,13 @@ import {
   type MonthlyInsight,
   type ReceiptExtraction,
 } from '@expense/shared';
-import { RECEIPT_SYSTEM, INSIGHT_SYSTEM, currentMonth, tryParseJSON } from './prompts';
+import {
+  RECEIPT_SYSTEM,
+  INSIGHT_SYSTEM,
+  buildInsightInput,
+  insightUserMessage,
+  tryParseJSON,
+} from './prompts';
 
 const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 const TEXT_MODEL = 'llama-3.3-70b-versatile';
@@ -49,32 +55,23 @@ export async function extractReceiptGroq(
 }
 
 export async function generateInsightsGroq(expenses: Expense[]): Promise<MonthlyInsight> {
-  const month = currentMonth();
-  const thisMonth = expenses.filter((e) => e.occurred_at.startsWith(month));
+  const { month, thisMonth, compact, total } = buildInsightInput(expenses);
   if (thisMonth.length === 0) {
     return emptyInsight(month);
   }
-  const compact = thisMonth.map((e) => ({
-    date: e.occurred_at,
-    amount: e.amount,
-    currency: e.currency,
-    category_id: e.category_id,
-    merchant: e.merchant,
-    description: e.description,
-  }));
 
   const completion = await client().chat.completions.create({
     model: TEXT_MODEL,
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: INSIGHT_SYSTEM },
-      { role: 'user', content: `Current month: ${month}\nExpenses:\n${JSON.stringify(compact)}` },
+      { role: 'user', content: insightUserMessage(month, total, compact) },
     ],
   });
   const text = completion.choices[0]?.message?.content?.trim() ?? '';
   const parsed = tryParseJSON<MonthlyInsight>(text);
   if (!parsed) throw new Error(`Failed to parse Groq output: ${text.slice(0, 200)}`);
-  return parsed;
+  return { ...parsed, month, total };
 }
 
 function emptyInsight(month: string): MonthlyInsight {
