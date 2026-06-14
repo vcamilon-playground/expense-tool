@@ -31,6 +31,59 @@ const EMAIL_HTML = () => `
 const SMS_BODY = () =>
   `📊 It is time to review your ${monthLabel()} monthly expenses and insights. Please visit the Expense Web Tool for analysis: ${SITE_URL}`;
 
+const RESET_EMAIL_HTML = (resetUrl: string, firstName?: string) => `
+<!DOCTYPE html>
+<html>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a2233;max-width:520px;margin:0 auto;padding:24px">
+  <h2 style="color:#3b6fd4;margin:0 0 16px">🔑 Reset your password</h2>
+  <p>Hi${firstName ? ` ${firstName}` : ''},</p>
+  <p>We received a request to reset your <strong>Expense Tool</strong> password. Click the button below to choose a new one. This link expires in 1 hour.</p>
+  <a href="${resetUrl}" style="display:inline-block;margin:16px 0;padding:12px 24px;background:#3b6fd4;color:white;text-decoration:none;border-radius:8px;font-weight:600">
+    Reset password →
+  </a>
+  <p style="color:#6b7a99;font-size:12px;margin-top:32px;border-top:1px solid #cdd5e0;padding-top:12px">
+    If you didn't request this, you can safely ignore this email — your password won't change.
+  </p>
+</body>
+</html>`;
+
+// Sends a password-reset link. Returns { skipped: true } when Resend is not
+// configured so the caller can still respond generically (no account enumeration).
+export async function sendPasswordResetEmail(
+  to: string,
+  resetUrl: string,
+  firstName?: string,
+): Promise<{ skipped?: boolean }> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM ?? 'Expense Tool <onboarding@resend.dev>';
+
+  if (!apiKey) {
+    console.warn('[notify:reset] Skipped — RESEND_API_KEY not configured');
+    return { skipped: true };
+  }
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from,
+      to,
+      subject: '🔑 Reset your Expense Tool password',
+      html: RESET_EMAIL_HTML(resetUrl, firstName),
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Resend ${res.status}: ${body}`);
+  }
+
+  return {};
+}
+
 export async function sendMonthlyReminderEmail(): Promise<{ skipped?: boolean }> {
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.NOTIFY_EMAIL_TO;

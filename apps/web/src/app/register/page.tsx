@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { isValidEmail } from '@expense/shared';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 
@@ -11,6 +12,7 @@ export default function RegisterPage() {
     first_name: '',
     last_name: '',
     username: '',
+    email: '',
     password: '',
     confirm_password: '',
     birth_date: '',
@@ -66,6 +68,7 @@ export default function RegisterPage() {
     if (!form.first_name.trim()) newErrors.first_name = 'First name is required';
     if (!form.last_name.trim()) newErrors.last_name = 'Last name is required';
     if (!form.username.trim()) newErrors.username = 'Username is required';
+    if (form.email.trim() && !isValidEmail(form.email)) newErrors.email = 'Enter a valid email address';
     if (!form.password) newErrors.password = 'Password is required';
     else if (form.password.length < 8) newErrors.password = 'Must be at least 8 characters';
     if (!form.confirm_password) newErrors.confirm_password = 'Please confirm your password';
@@ -84,6 +87,7 @@ export default function RegisterPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: form.username,
+          email: form.email.trim() || null,
           password: form.password,
           first_name: form.first_name,
           last_name: form.last_name,
@@ -214,6 +218,24 @@ export default function RegisterPage() {
               required
             />
             {fieldErrors.username && <p className="field-error">{fieldErrors.username}</p>}
+          </label>
+
+          <label>
+            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>
+              Email{' '}
+              <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>
+                (optional — used for password reset)
+              </span>
+            </div>
+            <input
+              type="email"
+              autoComplete="email"
+              value={form.email}
+              onChange={(e) => set('email', e.target.value)}
+              placeholder="jane@example.com"
+              aria-invalid={!!fieldErrors.email}
+            />
+            {fieldErrors.email && <p className="field-error">{fieldErrors.email}</p>}
           </label>
 
           <label>

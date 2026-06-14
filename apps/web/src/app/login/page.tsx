@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ identifier, password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -54,13 +54,13 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <label>
-            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Username</div>
+            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Username or email</div>
             <input
               type="text"
               autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="your_username"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="your_username or you@example.com"
               required
               autoFocus
             />
@@ -95,8 +95,10 @@ export default function LoginPage() {
           </Link>
         </p>
 
-        <p className="muted" style={{ textAlign: 'center', fontSize: 12, marginTop: 8 }}>
-          Forgot your password? Ask an admin to reset it in Supabase.
+        <p style={{ textAlign: 'center', fontSize: 13, marginTop: 8 }}>
+          <Link href="/forgot-password" style={{ color: 'var(--accent)', fontWeight: 500 }}>
+            Forgot your password?
+          </Link>
         </p>
       </div>
     </div>

@@ -695,6 +695,7 @@ button.btn-sm {
 }
 .banner-warn   { background: rgba(200, 122, 21, 0.08); border: 1px solid var(--warn); color: var(--warn); }
 .banner-danger { background: rgba(192, 57, 43, 0.08); border: 1px solid var(--bad);  color: var(--bad); }
+.banner-success { background: rgba(42, 157, 92, 0.08); border: 1px solid var(--ok); color: var(--ok); }
 
 /* ── Modal (delete / generic) ── */
 .modal-overlay {

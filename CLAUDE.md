@@ -6,7 +6,7 @@ only when needed — keep this file lean.
 
 ## Project Overview
 
-Multi-user expense tracking tool with custom authentication. Each user's data is fully isolated. No Supabase Auth — a custom `users` table with bcrypt-hashed passwords and JWT session cookies is used instead.
+Multi-user expense tracking tool with custom authentication. Each user's data is fully isolated. No Supabase Auth — a custom `users` table with bcrypt-hashed passwords and JWT session cookies is used instead. Email is optional but unique; users log in with username **or** email, and can reset a forgotten password via an emailed single-use token (`reset_token_hash` + `reset_token_expires_at`, SHA-256-hashed, 1-hour expiry; sent through Resend via `lib/notify.ts`). Reset pages live at `/forgot-password` and `/reset-password` (both public in `middleware.ts`).
 
 **Stack:**
 - **Web app** — Next.js 14 App Router, TypeScript, Recharts, deployed on Vercel. Installable as a **PWA** (web manifest at `src/app/manifest.ts`, maskable `public/icon.svg`, iOS icon via `src/app/apple-icon.tsx`, service worker `public/sw.js` registered by `ServiceWorkerRegister`). The SW is network-first and never caches `/api/*` or Supabase; PWA appearance/theme-color/safe-area live in `layout.tsx` `metadata`/`viewport` exports.
@@ -92,7 +92,7 @@ Tables in Supabase Postgres:
 
 | Table | Key columns |
 |---|---|
-| `users` | `id`, `username`, `first_name`, `last_name`, `password_hash`, `avatar_url`, `birth_date` |
+| `users` | `id`, `username`, `email` (optional, unique), `first_name`, `last_name`, `password_hash`, `avatar_url`, `birth_date`, `reset_token_hash`, `reset_token_expires_at` |
 | `categories` | `id`, `user_id`, `name`, `icon`, `active` |
 | `expenses` | `id`, `user_id`, `amount`, `currency`, `conversion_rate`, `category_id`, `merchant`, `description`, `occurred_at`, `receipt_url`, `source` |
 | `budgets` | `id`, `user_id`, `category_id` (null = overall), `monthly_limit` |
@@ -117,6 +117,9 @@ AUTH_SECRET=            # JWT signing secret — min 32 chars, generate with: op
 AI_PROVIDER=gemini      # or "anthropic"
 GOOGLE_API_KEY=         # required when AI_PROVIDER=gemini (free tier)
 ANTHROPIC_API_KEY=      # required when AI_PROVIDER=anthropic (paid)
+RESEND_API_KEY=         # optional — enables password-reset emails + monthly reminder (Resend free tier)
+RESEND_FROM=            # optional sender; default onboarding@resend.dev only delivers to your own Resend email until a domain is verified
+NEXT_PUBLIC_SITE_URL=   # optional — base URL used in reset links (falls back to the request origin)
 ```
 
 ---

@@ -101,6 +101,7 @@ export type ReminderInput = Omit<Reminder, 'id' | 'user_id' | 'created_at'>;
 export type User = {
   id: string;
   username: string;
+  email?: string | null;
   first_name: string;
   last_name: string;
   profile_picture_url: string | null;

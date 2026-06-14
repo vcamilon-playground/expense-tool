@@ -79,6 +79,7 @@ cd apps/e2e && npx playwright show-report
 | File | Type | What it covers |
 |---|---|---|
 | `tests/auth.spec.ts` | Smoke | Login page UI, register page UI, unauthenticated redirect, authenticated dashboard access |
+| `tests/password-reset.spec.ts` | Smoke | Login links to forgot-password, register offers optional email field, forgot-password form renders, reset-password rejects a missing token |
 | `tests/navigation.spec.ts` | Smoke | Desktop sidebar links + active state + profile card + footer; desktop logout/switch-user via sidebar buttons; mobile bottom tab bar navigation + active state + header-avatar profile popup |
 | `tests/dashboard.spec.ts` | Smoke | Page heading, four KPI stat cards, Budget Status, Category Chart, 6-month Trend, Upcoming Charges sections |
 | `tests/expenses.spec.ts` | Smoke | Page load, Add Expense modal, required fields, inline validation errors, search/filter, delete modal, month group collapse, column sorting, List/Grid/Calendar view toggle + Grid cards + month navigation |
@@ -97,6 +98,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/settings.regression.spec.ts` | Regression | Add category with custom icon; add category without icon uses default; deleting category does not delete linked expenses |
 | `tests/income.regression.spec.ts` | Regression | Create/edit/delete a bank source; transfer moves balance between sources; transfer rejects an over-balance amount |
 | `tests/notifications.regression.spec.ts` | Regression | Create/delete a reminder; mark a due one-time reminder Done (removed); mark a due recurring reminder Done (date advances) |
+| `tests/password-reset.regression.spec.ts` | Regression | Forgot-password rejects an invalid email inline; returns a generic success for any valid email (no account enumeration); reset-password rejects mismatched passwords inline and an invalid/expired token |
 
 ---
 
@@ -108,7 +110,7 @@ cd apps/e2e && npx playwright show-report
 
 **Login page**
 - redirects to /login when not authenticated
-- login page renders all required elements *(heading, username, password, sign-in button, register link)*
+- login page renders all required elements *(heading, username-or-email, password, sign-in button, register link)*
 - invalid credentials show an error
 
 **Register page**
@@ -116,6 +118,22 @@ cd apps/e2e && npx playwright show-report
 
 **Auth — authenticated access**
 - dashboard is accessible when logged in
+
+---
+
+### `password-reset.spec.ts` / `password-reset.regression.spec.ts` — Email registration & password reset
+
+**Smoke**
+- login page links to the forgot-password page
+- register page offers an optional email field
+- forgot-password page renders its form *(heading, email input, submit, back-to-sign-in)*
+- reset-password page rejects a missing token
+
+**Regression**
+- forgot-password rejects an invalid email inline (no request sent)
+- forgot-password returns a generic success for any valid email *(no account enumeration)*
+- reset-password rejects mismatched passwords inline
+- reset-password rejects an invalid/expired token
 
 ---
 

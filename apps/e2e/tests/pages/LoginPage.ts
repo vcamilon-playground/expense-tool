@@ -33,4 +33,8 @@ export class LoginPage extends BasePage {
   registerLink(): Locator {
     return this.page.getByRole('link', { name: /create one/i });
   }
+
+  forgotPasswordLink(): Locator {
+    return this.page.getByRole('link', { name: /forgot your password/i });
+  }
 }

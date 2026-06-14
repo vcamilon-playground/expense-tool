@@ -1,21 +1,30 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { looksLikeEmail, normalizeEmail } from '@expense/shared';
 import { supabase } from '@/lib/supabase';
 import { signSession, checkAuthSecret, SESSION_COOKIE } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
     checkAuthSecret();
-    const { username, password } = await req.json();
-    if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
+    const body = await req.json();
+    // `identifier` accepts a username or an email; `username` is kept for
+    // backward compatibility with older clients.
+    const identifier: string = (body.identifier ?? body.username ?? '').trim();
+    const password: string = body.password;
+    if (!identifier || !password) {
+      return NextResponse.json(
+        { error: 'Username or email and password are required' },
+        { status: 400 },
+      );
     }
 
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, username, first_name, last_name, profile_picture_url, birth_date, password_hash')
-      .eq('username', username.trim().toLowerCase())
-      .single();
+    const cols = 'id, username, first_name, last_name, profile_picture_url, birth_date, password_hash';
+    const query = looksLikeEmail(identifier)
+      ? supabase.from('users').select(cols).ilike('email', normalizeEmail(identifier))
+      : supabase.from('users').select(cols).eq('username', identifier.toLowerCase());
+
+    const { data: user, error } = await query.single();
 
     if (error || !user) {
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });

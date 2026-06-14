@@ -15,7 +15,7 @@ All TypeScript. Free-tier friendly (Supabase + Anthropic).
 | Web | Next.js 14 (App Router), Recharts |
 | Mobile | Expo + React Native |
 | Shared | `@expense/shared` TS package (types, categories, report math) |
-| DB / Storage | Supabase (Postgres + Storage) — free tier, custom auth (no email) |
+| DB / Storage | Supabase (Postgres + Storage) — free tier, custom auth (optional email) |
 | AI | **Google Gemini** (`gemini-2.0-flash`, free tier) — default. Anthropic Claude (`claude-opus-4-7`) optional via env switch. |
 | Mono | npm workspaces |
 
@@ -96,6 +96,13 @@ AUTH_SECRET=your-random-secret-here
 AI_PROVIDER=gemini
 GOOGLE_API_KEY=AIza...
 ANTHROPIC_API_KEY=
+
+# Optional — enables "forgot password" reset emails and the monthly reminder.
+# Resend free tier; the default onboarding@resend.dev sender only delivers to
+# your own Resend account email until you verify a domain and set RESEND_FROM.
+RESEND_API_KEY=
+RESEND_FROM=Expense Tool <onboarding@resend.dev>
+NEXT_PUBLIC_SITE_URL=https://your-app.vercel.app
 ```
 
 ### Mobile app — `apps/mobile/.env`
@@ -140,7 +147,7 @@ after each Vercel deploy.
 
 ## Features
 
-- **Multi-user auth** — register with first name, last name, username, password, profile picture (optional), birth date (optional). Login, logout, and switch-user from the sidebar. No email required. If a password is forgotten, reset it via Supabase SQL editor.
+- **Multi-user auth** — register with first name, last name, username, password, and an optional email (plus profile picture and birth date). Log in with either username **or** email. Logout and switch-user from the sidebar. Forgot a password? Request a reset link by email (a time-limited, single-use token) and set a new one — no admin needed when an email is on file.
 - **Dashboard** — totals for today / this week / this month / this year,
   category breakdown (pie), budget status bars, daily spend trend (past 7 days)
   and weekly spend trend (past 5 weeks) line charts, 6-month trend, monthly AI
@@ -256,7 +263,7 @@ Restart `npm run dev:web` after changing. The API responses include a
   field; if it's `low` you'll see `null`s — fall back to manual entry.
 - The free Supabase tier gives 500 MB DB + 1 GB Storage, which is enough
   for years of personal expenses and thousands of receipt images.
-- Auth uses a custom `users` table (not Supabase Auth). Passwords are bcrypt-hashed server-side. Sessions are JWT cookies (30-day expiry). RLS is still disabled — the anon key has full access, so keep your Supabase URL and key private.
-- Forgot-password flow: an admin must run `UPDATE users SET password_hash = '...' WHERE username = '...'` in Supabase SQL editor with a new bcrypt hash.
+- Auth uses a custom `users` table (not Supabase Auth). Passwords are bcrypt-hashed server-side. Sessions are JWT cookies (30-day expiry). Login accepts a username or an email. RLS is still disabled — the anon key has full access, so keep your Supabase URL and key private.
+- Forgot-password flow: the user requests a link from `/forgot-password`; a single-use, SHA-256-hashed token (1-hour expiry) is stored on the user row and emailed via Resend, and `/reset-password?token=…` sets the new password. Requires an email on the account and `RESEND_API_KEY` configured. Users without an email can still be reset manually via `UPDATE users SET password_hash = '...' WHERE username = '...'` in the Supabase SQL editor.
 - Each user's data (expenses, budgets, categories, recurring) is isolated by `user_id` filtered in every query.
 - The dashboard uses Recharts for the category breakdown chart and trend charts.

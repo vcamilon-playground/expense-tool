@@ -19,6 +19,13 @@ create table if not exists users (
 alter table users add column if not exists accent_color text not null default 'default';
 alter table users add column if not exists theme text not null default 'light';
 
+-- Add email + password-reset columns (run once; safe to re-run).
+-- email is optional but unique when present — used for login and password reset.
+alter table users add column if not exists email text;
+create unique index if not exists users_email_lower_key on users (lower(email)) where email is not null;
+alter table users add column if not exists reset_token_hash text;
+alter table users add column if not exists reset_token_expires_at timestamptz;
+
 -- ---------- categories ----------
 create table if not exists categories (
   id uuid primary key default gen_random_uuid(),

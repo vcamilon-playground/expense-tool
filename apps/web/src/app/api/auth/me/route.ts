@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   // Try with preference columns first; fall back to basic query if migration hasn't been run yet
   const { data: user, error } = await supabase
     .from('users')
-    .select('id, username, first_name, last_name, profile_picture_url, birth_date, accent_color, theme')
+    .select('id, username, email, first_name, last_name, profile_picture_url, birth_date, accent_color, theme')
     .eq('id', payload.sub)
     .single();
 

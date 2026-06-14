@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { isValidEmail, normalizeEmail } from '@expense/shared';
 import { SESSION_COOKIE, verifySession } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
@@ -11,7 +12,8 @@ export async function PATCH(req: NextRequest) {
     const payload = await verifySession(token);
     if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { first_name, last_name, birth_date, profile_picture_url, accent_color, theme } = await req.json();
+    const { first_name, last_name, birth_date, profile_picture_url, accent_color, theme, email } =
+      await req.json();
 
     // Core profile fields — always exist in the schema.
     const corePatch: Record<string, unknown> = {};
@@ -20,10 +22,30 @@ export async function PATCH(req: NextRequest) {
     if (birth_date !== undefined) corePatch.birth_date = birth_date || null;
     if (profile_picture_url !== undefined) corePatch.profile_picture_url = profile_picture_url || null;
 
-    // Appearance fields — only exist once the migration has been run.
+    // Migrated columns — only exist once the matching migration has been run,
+    // so they share the graceful fallback below.
     const appearancePatch: Record<string, unknown> = {};
     if (accent_color !== undefined) appearancePatch.accent_color = accent_color;
     if (theme !== undefined) appearancePatch.theme = theme;
+
+    if (email !== undefined) {
+      const cleanEmail = email ? normalizeEmail(email) : null;
+      if (cleanEmail && !isValidEmail(cleanEmail)) {
+        return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 });
+      }
+      if (cleanEmail) {
+        const { data: taken } = await supabase
+          .from('users')
+          .select('id')
+          .ilike('email', cleanEmail)
+          .neq('id', payload.sub)
+          .single();
+        if (taken) {
+          return NextResponse.json({ error: 'Email is already registered' }, { status: 409 });
+        }
+      }
+      appearancePatch.email = cleanEmail;
+    }
 
     const cols = 'id, username, first_name, last_name, profile_picture_url, birth_date';
 

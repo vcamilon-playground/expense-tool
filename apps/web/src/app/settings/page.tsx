@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Category } from '@expense/shared';
+import { isValidEmail, type Category } from '@expense/shared';
 import { createCategory, deleteCategory, listCategories } from '@/lib/db';
 import { useAuth, type SessionTimeout } from '@/contexts/AuthContext';
 import { useNavigationGuard } from '@/contexts/NavigationGuardContext';
@@ -24,6 +24,7 @@ const accents: { value: Accent; label: string; color: string }[] = [
 type Draft = {
   first_name: string;
   last_name: string;
+  email: string;
   birth_date: string;
   avatarFile: File | null;
   avatarPreview: string | null;
@@ -33,10 +34,11 @@ type Draft = {
   allowPastEdit: boolean;
 };
 
-function makeDraft(user: { first_name: string; last_name: string; birth_date: string | null; profile_picture_url: string | null }, accent: Accent, sessionTimeout: SessionTimeout, allowPastEdit: boolean): Draft {
+function makeDraft(user: { first_name: string; last_name: string; email?: string | null; birth_date: string | null; profile_picture_url: string | null }, accent: Accent, sessionTimeout: SessionTimeout, allowPastEdit: boolean): Draft {
   return {
     first_name: user.first_name,
     last_name: user.last_name,
+    email: user.email ?? '',
     birth_date: user.birth_date ?? '',
     avatarFile: null,
     avatarPreview: user.profile_picture_url,
@@ -110,6 +112,7 @@ export default function SettingsPage() {
   const isDirty = draft !== null && savedRef.current !== null && (
     draft.first_name !== savedRef.current.first_name ||
     draft.last_name !== savedRef.current.last_name ||
+    draft.email !== savedRef.current.email ||
     draft.birth_date !== savedRef.current.birth_date ||
     draft.avatarFile !== null ||
     draft.avatarPreview !== savedRef.current.avatarPreview ||
@@ -121,6 +124,12 @@ export default function SettingsPage() {
   // ── Global save ───────────────────────────────────────────────────────────
   const handleGlobalSave = useCallback(async () => {
     if (!user || !draft) return;
+
+    if (draft.email.trim() && !isValidEmail(draft.email)) {
+      setGlobalErr('Enter a valid email address');
+      return;
+    }
+
     setSaving(true);
     setGlobalErr(null);
 
@@ -152,6 +161,7 @@ export default function SettingsPage() {
         body: JSON.stringify({
           first_name: draft.first_name,
           last_name: draft.last_name,
+          email: draft.email.trim() || null,
           birth_date: draft.birth_date || null,
           profile_picture_url: profilePictureUrl,
           accent_color: draft.accent,
@@ -412,6 +422,19 @@ export default function SettingsPage() {
             />
           </label>
         </div>
+
+        <label style={{ display: 'block', marginBottom: 12 }}>
+          <div className="muted" style={{ fontSize: 13, marginBottom: 4 }}>
+            Email <span style={{ fontWeight: 400 }}>(optional — enables password reset)</span>
+          </div>
+          <input
+            type="email"
+            autoComplete="email"
+            value={draft.email}
+            onChange={(e) => setDraft((d) => d ? { ...d, email: e.target.value } : d)}
+            placeholder="you@example.com"
+          />
+        </label>
 
         <label style={{ display: 'block', marginBottom: 12 }}>
           <div className="muted" style={{ fontSize: 13, marginBottom: 4 }}>
