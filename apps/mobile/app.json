@@ -11,12 +11,14 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.expensetool.app",
       "infoPlist": {
         "NSCameraUsageDescription": "Used to scan receipts.",
         "NSPhotoLibraryUsageDescription": "Used to upload receipt photos."
       }
     },
     "android": {
+      "package": "com.expensetool.app",
       "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
     },
     "plugins": [
