@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 export class SettingsPage extends BasePage {
@@ -42,6 +42,21 @@ export class SettingsPage extends BasePage {
 
   saveChangesButton(): Locator {
     return this.page.locator('.settings-save-bar').getByRole('button', { name: /save changes/i });
+  }
+
+  // The "Settings saved successfully." confirmation appears only once the save
+  // has fully completed (DB write + localStorage write-through). It is the
+  // reliable "save done" signal — the unsaved bar hides slightly earlier, so
+  // asserting on the bar alone races the localStorage write-through.
+  savedBanner(): Locator {
+    return this.page.getByText('Settings saved successfully.');
+  }
+
+  // Click Save and wait for the success confirmation, so subsequent reloads
+  // observe the fully-persisted state.
+  async saveAndWaitForSaved(): Promise<void> {
+    await this.saveChangesButton().click();
+    await expect(this.savedBanner()).toBeVisible();
   }
 
   cancelChangesButton(): Locator {

@@ -38,12 +38,11 @@ test.describe('Settings — Session Expiry section', () => {
 
   test('selected timeout persists across page reload after saving', async () => {
     await settings.sessionTimeoutRadio('30').check();
-    await settings.saveChangesButton().click();
-    await expect(settings.unsavedBar()).not.toBeVisible();
+    await settings.saveAndWaitForSaved();
     await settings.goto();
     await expect(settings.sessionTimeoutRadio('30')).toBeChecked();
     await settings.sessionTimeoutRadio('never').check();
-    await settings.saveChangesButton().click();
+    await settings.saveAndWaitForSaved();
   });
 });
 
@@ -238,12 +237,11 @@ test.describe('Settings — past expense editing toggle', () => {
 
   test('toggle persists across page reload after saving', async () => {
     await settings.pastEditToggle().check();
-    await settings.saveChangesButton().click();
-    await expect(settings.unsavedBar()).not.toBeVisible();
+    await settings.saveAndWaitForSaved();
     await settings.goto();
     await expect(settings.pastEditToggle()).toBeChecked();
     await settings.pastEditToggle().uncheck();
-    await settings.saveChangesButton().click();
+    await settings.saveAndWaitForSaved();
   });
 });
 

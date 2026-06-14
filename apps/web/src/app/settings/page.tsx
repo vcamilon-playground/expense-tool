@@ -86,9 +86,16 @@ export default function SettingsPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Initialise draft once user + localStorage are ready ──────────────────
+  // ── Initialise draft once per user ────────────────────────────────────────
+  // Build the draft only when the user identity first appears or actually
+  // changes (switch-user). A background refresh that returns a NEW user object
+  // with the same id must NOT rebuild the draft, or it would clobber the user's
+  // unsaved edits mid-interaction (which also detaches the sticky save bar and
+  // races the save's own localStorage write-through).
+  const initialisedUserIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!user) return;
+    if (!user || initialisedUserIdRef.current === user.id) return;
+    initialisedUserIdRef.current = user.id;
 
     const savedAccentVal = ((user.accent_color ?? localStorage.getItem('accent')) as Accent | null) ?? 'default';
     const savedSessionTimeout = (localStorage.getItem('session-timeout') as SessionTimeout | null) ?? 'never';
@@ -98,15 +105,18 @@ export default function SettingsPage() {
     setDraft(initialDraft);
     savedRef.current = initialDraft;
 
+    listCategories(user.id).then(setCategories);
+  }, [user]);
+
+  // Track dark mode independently of the draft lifecycle.
+  useEffect(() => {
     setIsDark(document.documentElement.getAttribute('data-theme') === 'dark');
     const observer = new MutationObserver(() => {
       setIsDark(document.documentElement.getAttribute('data-theme') === 'dark');
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
-    listCategories(user.id).then(setCategories);
     return () => observer.disconnect();
-  }, [user]);
+  }, []);
 
   // ── Dirty detection ───────────────────────────────────────────────────────
   const isDirty = draft !== null && savedRef.current !== null && (
