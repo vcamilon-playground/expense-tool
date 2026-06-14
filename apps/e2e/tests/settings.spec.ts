@@ -47,31 +47,12 @@ test.describe('Settings — Session Expiry section', () => {
   });
 });
 
-test.describe('Settings — Profile section', () => {
-  let settings!: SettingsPage;
-
-  test.beforeEach(async ({ page }) => {
-    settings = new SettingsPage(page);
-    await settings.goto();
-  });
-
-  test('profile section renders with heading and pre-filled name inputs', async () => {
-    await expect(settings.profileHeading()).toBeVisible();
-    await expect(settings.firstNameInput()).toHaveValue('E2E');
-    await expect(settings.lastNameInput()).toHaveValue('Tester');
-  });
-});
-
 test.describe('Settings — global save / cancel', () => {
   let settings!: SettingsPage;
 
   test.beforeEach(async ({ page }) => {
     settings = new SettingsPage(page);
     await settings.goto();
-    await expect(settings.unsavedBar()).not.toBeVisible();
-  });
-
-  test('unsaved changes bar is hidden on load', async () => {
     await expect(settings.unsavedBar()).not.toBeVisible();
   });
 
@@ -90,14 +71,12 @@ test.describe('Settings — global save / cancel', () => {
     await expect(settings.firstNameInput()).toHaveValue(original);
   });
 
-  test('changing session timeout shows unsaved bar', async () => {
+  test('changing session timeout or theme color shows the unsaved bar', async () => {
     await settings.sessionTimeoutRadio('30').check();
     await expect(settings.unsavedBar()).toBeVisible();
     await settings.cancelChangesButton().click();
     await expect(settings.sessionTimeoutRadio('never')).toBeChecked();
-  });
 
-  test('changing theme color shows unsaved bar', async () => {
     await settings.colorSwatch('Green').click();
     await expect(settings.unsavedBar()).toBeVisible();
     await settings.cancelChangesButton().click();
@@ -145,11 +124,6 @@ test.describe('Settings — Change Password section', () => {
     await settings.goto();
   });
 
-  test('change password section renders with heading and button', async () => {
-    await expect(settings.changePasswordHeading()).toBeVisible();
-    await expect(settings.updatePasswordButton()).toBeVisible();
-  });
-
   test('submitting with wrong current password shows error', async ({ page }) => {
     const pwCard = page.locator('.card').filter({ hasText: 'Change Password' });
     await pwCard.locator('input[type="password"]').nth(0).fill('wrongpassword');
@@ -168,14 +142,30 @@ test.describe('Settings page', () => {
     await settings.goto();
   });
 
-  test('page renders with heading, theme section, swatches, and light mode note', async () => {
+  test('all profile-page sections render (profile, theme, categories, change password)', async () => {
+    // Profile
     await expect(settings.heading()).toHaveText('Settings');
+    await expect(settings.profileHeading()).toBeVisible();
+    await expect(settings.firstNameInput()).toHaveValue('E2E');
+    await expect(settings.lastNameInput()).toHaveValue('Tester');
+    // Theme
     await expect(settings.themeColorHeading()).toBeVisible();
     for (const label of ['Default', 'Yellow', 'Green', 'Red', 'Orange', 'Violet']) {
       await expect(settings.colorSwatch(label)).toBeVisible();
     }
     await expect(settings.lightModeNote()).toBeVisible();
     await expect(settings.darkModeBanner()).toHaveCount(0);
+    // Categories
+    await expect(settings.categoriesHeading()).toBeVisible();
+    await expect(settings.addCategoryButton()).toBeVisible();
+    await expect(settings.addCategoryNameInput()).toBeVisible();
+    await expect(settings.addCategoryIconInput()).toBeVisible();
+    await expect(settings.categoryRow('Groceries')).toBeVisible();
+    await expect(settings.categoryRow('Dining')).toBeVisible();
+    await expect(settings.categoryDeleteButton('Groceries')).toBeVisible();
+    // Change Password
+    await expect(settings.changePasswordHeading()).toBeVisible();
+    await expect(settings.updatePasswordButton()).toBeVisible();
   });
 
   test('Default swatch is active on first visit', async ({ page }) => {
@@ -209,16 +199,6 @@ test.describe('Settings — Categories section', () => {
   test.beforeEach(async ({ page }) => {
     settings = new SettingsPage(page);
     await settings.goto();
-  });
-
-  test('categories section renders with form inputs and existing entries', async () => {
-    await expect(settings.categoriesHeading()).toBeVisible();
-    await expect(settings.addCategoryButton()).toBeVisible();
-    await expect(settings.addCategoryNameInput()).toBeVisible();
-    await expect(settings.addCategoryIconInput()).toBeVisible();
-    await expect(settings.categoryRow('Groceries')).toBeVisible();
-    await expect(settings.categoryRow('Dining')).toBeVisible();
-    await expect(settings.categoryDeleteButton('Groceries')).toBeVisible();
   });
 
   test('submitting with empty name keeps the list unchanged', async () => {

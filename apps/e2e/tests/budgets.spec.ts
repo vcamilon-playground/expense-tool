@@ -71,14 +71,11 @@ test.describe('Budgets — column sorting', () => {
     await budgets.goto();
   });
 
-  test('Category and Monthly Limit headers are sortable', async ({ page }) => {
+  test('Category and Monthly Limit headers are sortable; Monthly Limit toggles direction', async ({ page }) => {
     if (await page.locator('table').count() === 0) return;
     await expect(budgets.sortableHeader('Category')).toBeVisible();
     await expect(budgets.sortableHeader('Monthly Limit')).toBeVisible();
-  });
 
-  test('Monthly Limit sort activates and toggles direction', async ({ page }) => {
-    if (await page.locator('table').count() === 0) return;
     await budgets.sortableHeader('Monthly Limit').click();
     await expect(budgets.sortableHeader('Monthly Limit').locator('.sort-active')).toBeVisible();
     const first = await budgets.sortableHeader('Monthly Limit').locator('.sort-active').textContent();

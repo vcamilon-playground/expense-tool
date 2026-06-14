@@ -21,7 +21,7 @@ test.describe('Expenses Grid — card rendering', () => {
     await expenses.goto();
   });
 
-  test('a card renders category, amount, merchant and description fields', async ({ page }) => {
+  test('a receipt card renders its fields and the green receipt pill', async ({ page }) => {
     const expenses = new ExpensesPage(page);
     await expenses.openGrid();
 
@@ -32,11 +32,7 @@ test.describe('Expenses Grid — card rendering', () => {
     await expect(expenses.gridCardAmount(RECEIPT_MERCHANT)).toContainText('250');
     await expect(expenses.gridCardMeta(RECEIPT_MERCHANT)).toContainText(RECEIPT_MERCHANT);
     await expect(expenses.gridCardDescription(RECEIPT_MERCHANT)).toContainText('E2E grid receipt pill test');
-  });
 
-  test('a receipt-sourced expense shows the green receipt pill', async ({ page }) => {
-    const expenses = new ExpensesPage(page);
-    await expenses.openGrid();
     const pill = expenses.gridCardReceiptPill(RECEIPT_MERCHANT);
     await expect(pill).toHaveText('receipt');
     // The .ok pill must not render fg=bg (invisible) — assert a real colour.
@@ -44,15 +40,10 @@ test.describe('Expenses Grid — card rendering', () => {
     expect(color).not.toBe('rgba(0, 0, 0, 0)');
   });
 
-  test('a manual expense shows no receipt pill', async ({ page }) => {
+  test('an overseas manual card shows the ≈PHP conversion and no receipt pill', async ({ page }) => {
     const expenses = new ExpensesPage(page);
     await expenses.openGrid();
     await expect(expenses.gridCardReceiptPill(OVERSEAS_MERCHANT)).toHaveCount(0);
-  });
-
-  test('an overseas expense shows the approximate PHP conversion', async ({ page }) => {
-    const expenses = new ExpensesPage(page);
-    await expenses.openGrid();
     const amount = expenses.gridCardAmount(OVERSEAS_MERCHANT);
     // 10 USD × 56 = 560 PHP.
     await expect(amount).toContainText('≈');
@@ -138,7 +129,7 @@ test.describe('Expenses Grid — Load More pagination', () => {
     await cleanup.expenses();
   });
 
-  test('shows one page of 20 cards with a visible Load More button', async ({ page }) => {
+  test('shows one page of 20 cards with an accent-styled Load More button', async ({ page }) => {
     const expenses = new ExpensesPage(page);
     await expenses.goto();
     await expenses.openGrid();
@@ -146,6 +137,17 @@ test.describe('Expenses Grid — Load More pagination', () => {
     await expect(expenses.gridCards()).toHaveCount(20);
     await expect(expenses.gridLoadMoreButton()).toBeVisible();
     await expect(expenses.gridLoadMoreButton()).toContainText(`${SEED_COUNT - 20} more`);
+
+    // grid-more-btn renders the accent (#3b6fd4) for both text and border.
+    const styles = await expenses.gridLoadMoreButton().evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return { color: computed.color, borderColor: computed.borderColor };
+    });
+    expect(styles.color).toBe('rgb(59, 111, 212)');
+    expect(styles.borderColor).toBe('rgb(59, 111, 212)');
+    // Guard against a regression to the old neutral ghost look.
+    expect(styles.borderColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(styles.borderColor).not.toBe('transparent');
   });
 
   test('clicking Load More reveals the remaining cards and hides the button', async ({ page }) => {
@@ -158,25 +160,6 @@ test.describe('Expenses Grid — Load More pagination', () => {
 
     await expect(expenses.gridCards()).toHaveCount(SEED_COUNT);
     await expect(expenses.gridLoadMoreButton()).toHaveCount(0);
-  });
-
-  test('Load More button uses the theme accent for text and border', async ({ page }) => {
-    const expenses = new ExpensesPage(page);
-    await expenses.goto();
-    await expenses.openGrid();
-
-    await expect(expenses.gridLoadMoreButton()).toBeVisible();
-    const styles = await expenses.gridLoadMoreButton().evaluate((el) => {
-      const computed = window.getComputedStyle(el);
-      return { color: computed.color, borderColor: computed.borderColor };
-    });
-
-    // grid-more-btn renders the accent (#3b6fd4) for both text and border.
-    expect(styles.color).toBe('rgb(59, 111, 212)');
-    expect(styles.borderColor).toBe('rgb(59, 111, 212)');
-    // Guard against a regression to the old neutral ghost look.
-    expect(styles.borderColor).not.toBe('rgba(0, 0, 0, 0)');
-    expect(styles.borderColor).not.toBe('transparent');
   });
 });
 

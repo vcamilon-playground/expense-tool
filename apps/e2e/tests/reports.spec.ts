@@ -89,16 +89,15 @@ test.describe('Reports — By Category column sorting', () => {
     }
   });
 
-  test('Total is active by default and clicking Category moves the indicator', async ({ page }) => {
+  test('Total active by default; Category moves the indicator; Total toggles direction', async ({ page }) => {
     if (await reports.byCategoryTable().count() === 0) return;
     await expect(reports.sortableHeader('Total').locator('.sort-active')).toBeVisible();
     await reports.sortableHeader('Category').click();
     await expect(reports.sortableHeader('Category').locator('.sort-active')).toBeVisible();
     await expect(reports.sortableHeader('Total').locator('.sort-active')).toHaveCount(0);
-  });
 
-  test('clicking Total twice toggles sort direction', async ({ page }) => {
-    if (await reports.byCategoryTable().count() === 0) return;
+    // Re-activate Total, then click again to toggle its direction.
+    await reports.sortableHeader('Total').click();
     const first = await reports.sortableHeader('Total').locator('.sort-active').textContent();
     await reports.sortableHeader('Total').click();
     const second = await reports.sortableHeader('Total').locator('.sort-active').textContent();

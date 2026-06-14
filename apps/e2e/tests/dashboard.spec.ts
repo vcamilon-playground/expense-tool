@@ -9,11 +9,8 @@ test.describe('Dashboard', () => {
     await dashboard.goto();
   });
 
-  test('page title is correct', async ({ page }) => {
+  test('page title is correct and all sections render', async ({ page }) => {
     await expect(page).toHaveTitle(/Expense Tool/i);
-  });
-
-  test('all page sections render correctly', async () => {
     await expect(dashboard.greeting()).toBeVisible();
     await expect(dashboard.greeting()).toContainText('E2E');
     await expect(dashboard.stats()).toHaveCount(4);

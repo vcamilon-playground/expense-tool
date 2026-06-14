@@ -10,12 +10,9 @@ test.describe('Expenses page', () => {
     await expenses.goto();
   });
 
-  test('page renders with heading and add button', async () => {
+  test('page renders heading, add button, and search/filter controls', async () => {
     await expect(expenses.heading()).toHaveText('Expenses');
     await expect(expenses.addButton()).toHaveText('+ Add Expense');
-  });
-
-  test('search and filter controls are present', async () => {
     await expect(expenses.searchInput()).toBeVisible();
     await expect(expenses.categoryFilterSelect()).toBeVisible();
     await expect(expenses.categoryFilterSelect()).toHaveValue('');
@@ -48,31 +45,25 @@ test.describe('Expenses page', () => {
     await expect(expenses.dialog()).toBeHidden();
   });
 
-  test('submitting empty form keeps modal open and shows inline errors', async () => {
+  test('submitting an empty or negative amount keeps modal open and shows inline error', async () => {
     await expenses.openAddModal();
     const dialog = expenses.dialog();
+    const amountError = dialog.locator('label').filter({ hasText: 'Amount' }).locator('.field-error');
+
     await dialog.locator('input[type="number"]').fill('');
     await dialog.getByRole('button', { name: 'Add Expense' }).click();
     await expect(dialog).toBeVisible();
-    await expect(dialog.locator('label').filter({ hasText: 'Amount' }).locator('.field-error')).toBeVisible();
-  });
+    await expect(amountError).toBeVisible();
 
-  test('submitting with negative amount keeps modal open and shows inline error', async () => {
-    await expenses.openAddModal();
-    const dialog = expenses.dialog();
     await dialog.locator('input[type="number"]').fill('-1');
     await dialog.getByRole('button', { name: 'Add Expense' }).click();
     await expect(dialog).toBeVisible();
-    await expect(dialog.locator('label').filter({ hasText: 'Amount' }).locator('.field-error')).toBeVisible();
+    await expect(amountError).toBeVisible();
   });
 
-  test('typing in search filters to no results message when nothing matches', async () => {
+  test('searching with no matches shows the no-results message; clearing restores the list', async () => {
     await expenses.searchInput().fill('zzznomatch999');
     await expect(expenses.page.getByText('No expenses match your search.')).toBeVisible();
-  });
-
-  test('clearing search restores the expense list', async () => {
-    await expenses.searchInput().fill('zzznomatch999');
     await expenses.searchInput().fill('');
     await expect(expenses.page.getByText('No expenses match your search.')).not.toBeVisible();
   });
@@ -106,21 +97,17 @@ test.describe('Expenses — delete confirmation modal', () => {
     await expect(expenses.deleteXButton()).toBeVisible();
   });
 
-  test('X button closes the modal without deleting the record', async () => {
+  test('X, "No, keep it", and backdrop each close the modal without deleting', async () => {
     await expenses.openDeleteModal(SMOKE_MERCHANT);
     await expenses.deleteXButton().click();
     await expect(expenses.deleteDialog()).toBeHidden();
     await expect(expenses.row(SMOKE_MERCHANT)).toBeVisible();
-  });
 
-  test('No, keep it button closes the modal without deleting the record', async () => {
     await expenses.openDeleteModal(SMOKE_MERCHANT);
     await expenses.deleteNoButton().click();
     await expect(expenses.deleteDialog()).toBeHidden();
     await expect(expenses.row(SMOKE_MERCHANT)).toBeVisible();
-  });
 
-  test('clicking the backdrop closes the modal without deleting the record', async () => {
     await expenses.openDeleteModal(SMOKE_MERCHANT);
     await expenses.modalOverlay().click({ position: { x: 5, y: 5 } });
     await expect(expenses.deleteDialog()).toBeHidden();
@@ -136,16 +123,13 @@ test.describe('Expenses — month group collapse behaviour', () => {
     await expenses.goto();
   });
 
-  test('current month group is expanded by default', async () => {
-    const label = expenses.currentMonthLabel();
-    const group = expenses.monthGroup(label);
-    if (await group.count() === 0) return;
-    await expect(expenses.monthGroupHeader(label)).toHaveAttribute('aria-expanded', 'true');
-    await expect(expenses.monthGroupBody(label)).toBeVisible();
-  });
-
-  test('past month groups are collapsed by default', async () => {
+  test('default expansion state: current month expanded, past months collapsed', async () => {
     const currentLabel = expenses.currentMonthLabel();
+    const group = expenses.monthGroup(currentLabel);
+    if ((await group.count()) > 0) {
+      await expect(expenses.monthGroupHeader(currentLabel)).toHaveAttribute('aria-expanded', 'true');
+      await expect(expenses.monthGroupBody(currentLabel)).toBeVisible();
+    }
     const allGroups = expenses.page.locator('.date-group');
     const total = await allGroups.count();
     for (let i = 0; i < total; i++) {
@@ -157,11 +141,12 @@ test.describe('Expenses — month group collapse behaviour', () => {
     }
   });
 
-  test('clicking a collapsed month header expands it', async () => {
+  test('toggling a month header expands a collapsed group and collapses an expanded one', async () => {
     const currentLabel = expenses.currentMonthLabel();
+
+    // Expand a collapsed past-month group, if any exist.
     const allGroups = expenses.page.locator('.date-group');
     const total = await allGroups.count();
-    let tested = false;
     for (let i = 0; i < total; i++) {
       const header = allGroups.nth(i).locator('.date-group-header');
       const text = await header.textContent();
@@ -169,20 +154,17 @@ test.describe('Expenses — month group collapse behaviour', () => {
       await header.click();
       await expect(header).toHaveAttribute('aria-expanded', 'true');
       await expect(allGroups.nth(i).locator('.date-group-body')).toBeVisible();
-      tested = true;
       break;
     }
-    if (!tested) test.skip();
-  });
 
-  test('clicking an expanded month header collapses it', async () => {
-    const label = expenses.currentMonthLabel();
-    const group = expenses.monthGroup(label);
-    if (await group.count() === 0) return;
-    const header = expenses.monthGroupHeader(label);
-    await header.click();
-    await expect(header).toHaveAttribute('aria-expanded', 'false');
-    await expect(expenses.monthGroupBody(label)).toBeHidden();
+    // Collapse the expanded current-month group, if present.
+    const group = expenses.monthGroup(currentLabel);
+    if ((await group.count()) > 0) {
+      const header = expenses.monthGroupHeader(currentLabel);
+      await header.click();
+      await expect(header).toHaveAttribute('aria-expanded', 'false');
+      await expect(expenses.monthGroupBody(currentLabel)).toBeHidden();
+    }
   });
 });
 
@@ -201,7 +183,7 @@ test.describe('Expenses — column sorting', () => {
     }
   });
 
-  test('Amount sort activates and toggles direction', async ({ page }) => {
+  test('Amount sort toggles direction and a different header moves the active indicator', async ({ page }) => {
     if (await page.locator('.expense-table').count() === 0) return;
     await expenses.sortableHeader('Amount').click();
     await expect(expenses.sortableHeader('Amount').locator('.sort-active')).toBeVisible();
@@ -209,11 +191,7 @@ test.describe('Expenses — column sorting', () => {
     await expenses.sortableHeader('Amount').click();
     const second = await expenses.sortableHeader('Amount').locator('.sort-active').textContent();
     expect(first).not.toBe(second);
-  });
 
-  test('clicking a different header moves the active indicator', async ({ page }) => {
-    if (await page.locator('.expense-table').count() === 0) return;
-    await expenses.sortableHeader('Amount').click();
     await expenses.sortableHeader('Merchant').click();
     await expect(expenses.sortableHeader('Merchant').locator('.sort-active')).toBeVisible();
     await expect(expenses.sortableHeader('Amount').locator('.sort-active')).toHaveCount(0);
@@ -228,11 +206,12 @@ test.describe('Expenses — List / Grid / Calendar view', () => {
     await expenses.goto();
   });
 
-  test('view toggle shows List, Grid and Calendar buttons with List active by default', async () => {
+  test('view toggle shows List, Grid, Calendar in order with List active by default', async () => {
     await expect(expenses.viewToggle()).toBeVisible();
-    await expect(expenses.listViewButton()).toBeVisible();
-    await expect(expenses.gridViewButton()).toBeVisible();
-    await expect(expenses.calendarViewButton()).toBeVisible();
+    await expect(expenses.viewToggleButtons()).toHaveCount(3);
+    await expect(expenses.viewToggleButtons().nth(0)).toHaveText('List');
+    await expect(expenses.viewToggleButtons().nth(1)).toHaveText('Grid');
+    await expect(expenses.viewToggleButtons().nth(2)).toHaveText('Calendar');
     // List is the default view — its button uses the primary style.
     await expect(expenses.listViewButton()).toHaveClass(/primary/);
     await expect(expenses.gridViewButton()).not.toHaveClass(/primary/);
@@ -241,14 +220,7 @@ test.describe('Expenses — List / Grid / Calendar view', () => {
     await expect(expenses.grid()).toHaveCount(0);
   });
 
-  test('view toggle renders three buttons in List, Grid, Calendar order with Grid in the middle', async () => {
-    await expect(expenses.viewToggleButtons()).toHaveCount(3);
-    await expect(expenses.viewToggleButtons().nth(0)).toHaveText('List');
-    await expect(expenses.viewToggleButtons().nth(1)).toHaveText('Grid');
-    await expect(expenses.viewToggleButtons().nth(2)).toHaveText('Calendar');
-  });
-
-  test('switching to Grid activates the Grid button and shows the card grid', async () => {
+  test('switching to Grid shows the grid, switching back to List hides it', async () => {
     await expenses.gridViewButton().click();
     await expect(expenses.gridViewButton()).toHaveClass(/primary/);
     await expect(expenses.listViewButton()).not.toHaveClass(/primary/);
@@ -256,11 +228,7 @@ test.describe('Expenses — List / Grid / Calendar view', () => {
     // empty-state message renders. Either way the calendar and table are hidden.
     await expect(expenses.calendarGrid()).toHaveCount(0);
     await expect(expenses.page.locator('.expense-table')).toHaveCount(0);
-  });
 
-  test('switching from Grid back to List hides the grid', async () => {
-    await expenses.gridViewButton().click();
-    await expect(expenses.gridViewButton()).toHaveClass(/primary/);
     await expenses.listViewButton().click();
     await expect(expenses.grid()).toHaveCount(0);
     await expect(expenses.listViewButton()).toHaveClass(/primary/);
@@ -274,12 +242,15 @@ test.describe('Expenses — List / Grid / Calendar view', () => {
     await expect(expenses.page.getByText('No expenses yet.')).toHaveCount(0);
   });
 
-  test('switching to Calendar shows the grid and month navigation', async () => {
+  test('switching to Calendar shows the grid and nav, switching back to List hides it', async () => {
     await expenses.calendarViewButton().click();
     await expect(expenses.calendarGrid()).toBeVisible();
     await expect(expenses.calendarMonthLabel()).toBeVisible();
     await expect(expenses.calendarPrevButton()).toBeVisible();
     await expect(expenses.calendarNextButton()).toBeVisible();
+
+    await expenses.listViewButton().click();
+    await expect(expenses.calendarGrid()).toHaveCount(0);
   });
 
   test('calendar month navigation changes the displayed month', async () => {
@@ -288,13 +259,6 @@ test.describe('Expenses — List / Grid / Calendar view', () => {
     await expenses.calendarNextButton().click();
     const after = await expenses.calendarMonthLabel().textContent();
     expect(before).not.toBe(after);
-  });
-
-  test('switching back to List hides the calendar grid', async () => {
-    await expenses.calendarViewButton().click();
-    await expect(expenses.calendarGrid()).toBeVisible();
-    await expenses.listViewButton().click();
-    await expect(expenses.calendarGrid()).toHaveCount(0);
   });
 });
 

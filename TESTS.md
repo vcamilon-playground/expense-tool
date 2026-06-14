@@ -141,17 +141,14 @@ cd apps/e2e && npx playwright show-report
 
 **Navigation — desktop sidebar**
 - nav links navigate to correct pages (Home, Income, Expenses, Recurring, Budgets, Reports, Settings)
-- active nav link is highlighted on expenses page
-- active nav link is highlighted on reports page
+- active nav link is highlighted on the current page *(expenses and reports)*
 - profile card shows the user name and handle
 - footer is visible on all pages
 
 **Navigation — logout / switch-user (desktop)** — direct sidebar buttons (no popup on desktop)
 - sidebar Log Out button opens confirmation modal
 - sidebar Switch User button opens confirmation modal
-- logout modal cancel button closes it without logging out
-- switch user modal cancel button closes it
-- clicking overlay backdrop closes logout modal
+- logout and switch-user modals close via Cancel and backdrop without acting
 
 **Navigation — mobile bottom tab bar** (`viewport: 390×844`)
 - sidebar is hidden and the bottom tab bar is shown on mobile
@@ -165,8 +162,7 @@ cd apps/e2e && npx playwright show-report
 ### `dashboard.spec.ts` — Dashboard
 
 **Dashboard**
-- page title is correct
-- all page sections render correctly *(header greeting, 4 KPI cards, Budget Status, Daily + Weekly spend charts, Category Chart, 6-Month Trend, Upcoming Charges)*
+- page title is correct and all sections render *(header greeting, 4 KPI cards, Budget Status, Daily + Weekly spend charts, Category Chart, 6-Month Trend, Upcoming Charges)*
 - month-end reminder banner is conditional on days remaining in month
 
 **Dashboard — Upcoming Charges column sorting**
@@ -181,40 +177,32 @@ cd apps/e2e && npx playwright show-report
 ### `expenses.spec.ts` — Expenses
 
 **Expenses page**
-- page renders with heading and add button
-- search and filter controls are present
+- page renders heading, add button, and search/filter controls
 - clicking Add Expense opens the modal with correct heading
 - required fields have required attribute in modal
 - modal closes on Cancel, Escape, and backdrop click
-- submitting empty form keeps modal open and shows inline errors
-- submitting with negative amount keeps modal open and shows inline error
-- typing in search filters to no results message when nothing matches
-- clearing search restores the expense list
+- submitting an empty or negative amount keeps modal open and shows inline error
+- searching with no matches shows the no-results message; clearing restores the list
 
 **Expenses — delete confirmation modal**
 - delete modal renders with correct content and buttons *(heading, message, Yes/No/X buttons)*
-- X button closes the modal without deleting the record
-- No, keep it button closes the modal without deleting the record
-- clicking the backdrop closes the modal without deleting the record
+- X, "No, keep it", and backdrop each close the modal without deleting
 
 **Expenses — month group collapse behaviour**
-- current month group is expanded by default
-- past month groups are collapsed by default
-- clicking a collapsed month header expands it
-- clicking an expanded month header collapses it
+- default expansion state: current month expanded, past months collapsed
+- toggling a month header expands a collapsed group and collapses an expanded one
 
 **Expenses — column sorting**
 - Date, Category, Merchant and Amount headers are sortable
-- Amount sort activates and toggles direction
-- clicking a different header moves the active indicator
+- Amount sort toggles direction and a different header moves the active indicator
 
 **Expenses — List / Grid / Calendar view**
-- view toggle shows List, Grid, and Calendar buttons with List active by default
-- switching to Grid shows the card grid (`.expense-grid`)
-- Grid cards show category, amount, merchant, and a receipt pill where applicable
-- switching to Calendar shows the grid and month navigation
+- view toggle shows List, Grid, Calendar in order with List active by default
+- switching to Grid shows the grid, switching back to List hides it
+- Grid view shows the no-match page message when a search matches nothing
+- switching to Calendar shows the grid and nav, switching back to List hides it
 - calendar month navigation changes the displayed month
-- switching back to List hides the calendar grid and the card grid
+- the three-way toggle and Grid view are reachable at a mobile viewport
 
 ---
 
@@ -224,10 +212,9 @@ cd apps/e2e && npx playwright show-report
 - page renders heading, add button, and four summary cards
 - amounts are hidden by default and the (global) eye toggle reveals them
 - each summary card has its own eye that reveals only that card
-- Add Source modal opens with type, name, and balance fields
+- Add Source modal opens with type, name, balance fields and capitalised type options
 - selecting Cash on Hand hides the name field
 - empty required fields show inline errors
-- type select options are capitalised
 
 ---
 
@@ -235,8 +222,7 @@ cd apps/e2e && npx playwright show-report
 
 **Notifications page**
 - page renders heading and the Add Reminder button
-- Add Reminder form opens with title, repeat, and date fields
-- repeat options include one-time and recurring cadences
+- Add Reminder form opens with title, repeat, date fields and cadence options
 - submitting an empty reminder shows an inline error
 - the Add Reminder button toggles the form open and closed
 
@@ -271,18 +257,15 @@ cd apps/e2e && npx playwright show-report
 - submitting with zero amount shows inline error below amount field
 
 **Recurring Expenses — payment confirmation flow**
-- due badge is visible on an item whose charge date has arrived
-- Confirm Payment button is visible for a due item
+- a due item shows the Due badge and a Confirm Payment button
 - clicking Confirm Payment opens confirmation modal with item details
 - confirmation modal closes on X button without advancing the date
 - clicking No opens reminder modal with OK button
-- reminder modal does not close on backdrop click
-- reminder modal does not close on Escape key
+- reminder modal is not dismissible by backdrop click or Escape key
 
 **Recurring Expenses — delete confirmation modal**
 - delete modal renders with correct content and buttons *(heading, message, Yes/No/X buttons)*
-- X button closes the modal without deleting the record
-- No, keep it button closes the modal without deleting the record
+- X and "No, keep it" each close the modal without deleting the record
 
 **Recurring Expenses — pay now button**
 - Pay Now button is visible and opens confirmation modal with item details *(button present for future-dated items, Confirm Payment absent, modal has heading/name/confirm/cancel)*
@@ -306,8 +289,7 @@ cd apps/e2e && npx playwright show-report
 
 **Reports — By Category column sorting**
 - Category, Count, Total and % headers are sortable
-- Total is active by default and clicking Category moves the indicator
-- clicking Total twice toggles sort direction
+- Total active by default; Category moves the indicator; Total toggles direction
 
 ---
 
@@ -320,8 +302,7 @@ cd apps/e2e && npx playwright show-report
 - invalid Monthly Limit values show inline error *(empty and negative)*
 
 **Budgets — column sorting**
-- Category and Monthly Limit headers are sortable
-- Monthly Limit sort activates and toggles direction
+- Category and Monthly Limit headers are sortable; Monthly Limit toggles direction
 
 ---
 
@@ -332,15 +313,10 @@ cd apps/e2e && npx playwright show-report
 - selecting an option checks it and switching back to Never unchecks it
 - selected timeout persists across page reload after saving
 
-**Settings — Profile section**
-- profile section renders with heading and pre-filled name inputs
-
 **Settings — global save / cancel**
-- unsaved changes bar is hidden on load
 - editing first name shows the unsaved changes bar
 - Cancel reverts the first name to its original value
-- changing session timeout shows unsaved bar
-- changing theme color shows unsaved bar
+- changing session timeout or theme color shows the unsaved bar
 
 **Settings — navigation guard**
 - navigating away with unsaved changes shows the guard modal
@@ -348,17 +324,15 @@ cd apps/e2e && npx playwright show-report
 - "Leave without saving" navigates away and discards changes
 
 **Settings — Change Password section**
-- change password section renders with heading and button
 - submitting with wrong current password shows error
 
 **Settings page**
-- page renders with heading, theme section, swatches, and light mode note *(all 6 swatches, no dark mode banner)*
+- all profile-page sections render (profile, theme, categories, change password) *(name inputs, all 6 swatches + light-mode note, category form + rows, change-password heading/button)*
 - Default swatch is active on first visit
 - clicking a color swatch marks it as active
 - dark mode shows warning banner instead of note
 
 **Settings — Categories section**
-- categories section renders with form inputs and existing entries *(heading, Add button, name/icon inputs, Groceries, Dining, Delete button)*
 - submitting with empty name keeps the list unchanged
 
 **Settings — past expense editing toggle**
@@ -390,10 +364,8 @@ cd apps/e2e && npx playwright show-report
 ### `expenses-grid.regression.spec.ts` — Expenses Grid view
 
 **Expenses Grid — card rendering**
-- a card renders category, amount, merchant and description fields
-- a receipt-sourced expense shows the green receipt pill
-- a manual expense shows no receipt pill
-- an overseas expense shows the approximate PHP conversion
+- a receipt card renders its fields and the green receipt pill *(category, amount, merchant, description + receipt pill)*
+- an overseas manual card shows the ≈PHP conversion and no receipt pill
 
 **Expenses Grid — search and filter**
 - search narrows the grid to matching cards
@@ -404,9 +376,8 @@ cd apps/e2e && npx playwright show-report
 - Delete on a card confirms and removes the card
 
 **Expenses Grid — Load More pagination**
-- shows one page of 20 cards with a visible Load More button
+- shows one page of 20 cards with an accent-styled Load More button *(count, label, accent text + border colour)*
 - clicking Load More reveals the remaining cards and hides the button
-- Load More button uses the theme accent for text and border
 
 **Expenses Grid — past-month lock (allow-past-edit disabled / enabled)**
 - a past-month card shows the lock icon and no Edit or Delete buttons

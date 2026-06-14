@@ -44,12 +44,16 @@ test.describe('Income page', () => {
     await expect(income.summaryValue('Grand Total')).toContainText('••••••');
   });
 
-  test('Add Source modal opens with type, name, and balance fields', async () => {
+  test('Add Source modal opens with type, name, balance fields and capitalised type options', async () => {
     await income.openAddModal();
     await expect(income.typeSelect()).toBeVisible();
     await expect(income.nameInput()).toBeVisible();
     await expect(income.balanceInput()).toBeVisible();
     await expect(income.submitButton()).toHaveText('Add');
+    const options = await income.typeSelect().locator('option').allTextContents();
+    expect(options).toContain('Bank');
+    expect(options).toContain('E-Wallet');
+    expect(options).toContain('Cash on Hand');
   });
 
   test('selecting Cash on Hand hides the name field', async () => {
@@ -65,13 +69,5 @@ test.describe('Income page', () => {
     await income.dialog().getByRole('button', { name: 'Add' }).click();
     // Name and balance are both required for a bank source.
     await expect(income.fieldError().first()).toBeVisible();
-  });
-
-  test('type select options are capitalised', async () => {
-    await income.openAddModal();
-    const options = await income.typeSelect().locator('option').allTextContents();
-    expect(options).toContain('Bank');
-    expect(options).toContain('E-Wallet');
-    expect(options).toContain('Cash on Hand');
   });
 });

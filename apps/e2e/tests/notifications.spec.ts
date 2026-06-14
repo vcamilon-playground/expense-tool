@@ -14,16 +14,12 @@ test.describe('Notifications page', () => {
     await expect(notifications.addReminderButton()).toBeVisible();
   });
 
-  test('Add Reminder form opens with title, repeat, and date fields', async () => {
+  test('Add Reminder form opens with title, repeat, date fields and cadence options', async () => {
     await notifications.openForm();
     await expect(notifications.titleInput()).toBeVisible();
     await expect(notifications.repeatSelect()).toBeVisible();
     await expect(notifications.dateInput()).toBeVisible();
     await expect(notifications.submitReminderButton()).toBeVisible();
-  });
-
-  test('repeat options include one-time and recurring cadences', async () => {
-    await notifications.openForm();
     const options = await notifications.repeatSelect().locator('option').allTextContents();
     expect(options).toContain('One-time');
     expect(options).toContain('Weekly');

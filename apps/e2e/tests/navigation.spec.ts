@@ -24,18 +24,13 @@ test.describe('Navigation — desktop sidebar', () => {
     }
   });
 
-  test('active nav link is highlighted on expenses page', async ({ page }) => {
+  test('active nav link is highlighted on the current page', async ({ page }) => {
     const nav = new NavBar(page);
-    await page.goto('/expenses');
-    await expect(nav.nav()).toBeVisible();
-    await expect(nav.link('Expenses')).toHaveClass(/active/);
-  });
-
-  test('active nav link is highlighted on reports page', async ({ page }) => {
-    const nav = new NavBar(page);
-    await page.goto('/reports');
-    await expect(nav.nav()).toBeVisible();
-    await expect(nav.link('Reports')).toHaveClass(/active/);
+    for (const [path, label] of [['/expenses', 'Expenses'], ['/reports', 'Reports']] as const) {
+      await page.goto(path);
+      await expect(nav.nav()).toBeVisible();
+      await expect(nav.link(label)).toHaveClass(/active/);
+    }
   });
 
   test('profile card shows the user name and handle', async ({ page }) => {
@@ -72,29 +67,27 @@ test.describe('Navigation — logout / switch-user (desktop)', () => {
     await expect(nav.switchUserModal()).toContainText('Switch user?');
   });
 
-  test('logout modal cancel button closes it without logging out', async ({ page }) => {
+  test('logout and switch-user modals close via Cancel and backdrop without acting', async ({ page }) => {
     const nav = new NavBar(page);
+
+    // Logout modal — Cancel does not log out.
     await nav.sidebarLogoutButton().click();
     await expect(nav.logoutModal()).toBeVisible();
     await nav.logoutModal().getByRole('button', { name: /cancel/i }).click();
     await expect(nav.logoutModal()).not.toBeVisible();
     await expect(page).not.toHaveURL('/login');
-  });
 
-  test('switch user modal cancel button closes it', async ({ page }) => {
-    const nav = new NavBar(page);
-    await nav.sidebarSwitchUserButton().click();
-    await expect(nav.switchUserModal()).toBeVisible();
-    await nav.switchUserModal().getByRole('button', { name: /cancel/i }).click();
-    await expect(nav.switchUserModal()).not.toBeVisible();
-  });
-
-  test('clicking overlay backdrop closes logout modal', async ({ page }) => {
-    const nav = new NavBar(page);
+    // Logout modal — backdrop click closes it.
     await nav.sidebarLogoutButton().click();
     await expect(nav.logoutModal()).toBeVisible();
     await page.mouse.click(10, 10);
     await expect(nav.logoutModal()).not.toBeVisible();
+
+    // Switch-user modal — Cancel closes it.
+    await nav.sidebarSwitchUserButton().click();
+    await expect(nav.switchUserModal()).toBeVisible();
+    await nav.switchUserModal().getByRole('button', { name: /cancel/i }).click();
+    await expect(nav.switchUserModal()).not.toBeVisible();
   });
 });
 

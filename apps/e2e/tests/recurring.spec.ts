@@ -76,12 +76,9 @@ test.describe('Recurring Expenses — payment confirmation flow', () => {
     await recurring.goto();
   });
 
-  test('due badge is visible on an item whose charge date has arrived', async () => {
+  test('a due item shows the Due badge and a Confirm Payment button', async () => {
     await expect(recurring.dueBadge(E2E_RECURRING_NAME)).toBeVisible();
     await expect(recurring.dueBadge(E2E_RECURRING_NAME)).toHaveText('Due');
-  });
-
-  test('Confirm Payment button is visible for a due item', async () => {
     await expect(recurring.confirmPaymentButton(E2E_RECURRING_NAME)).toBeVisible();
   });
 
@@ -112,17 +109,11 @@ test.describe('Recurring Expenses — payment confirmation flow', () => {
     await expect(recurring.reminderOkButton()).toBeVisible();
   });
 
-  test('reminder modal does not close on backdrop click', async () => {
+  test('reminder modal is not dismissible by backdrop click or Escape key', async () => {
     await recurring.confirmPaymentButton(E2E_RECURRING_NAME).click();
     await recurring.confirmNoButton().click();
     await expect(recurring.reminderModal()).toBeVisible();
     await recurring.page.mouse.click(5, 5);
-    await expect(recurring.reminderModal()).toBeVisible();
-  });
-
-  test('reminder modal does not close on Escape key', async () => {
-    await recurring.confirmPaymentButton(E2E_RECURRING_NAME).click();
-    await recurring.confirmNoButton().click();
     await expect(recurring.reminderModal()).toBeVisible();
     await recurring.page.keyboard.press('Escape');
     await expect(recurring.reminderModal()).toBeVisible();
@@ -157,14 +148,12 @@ test.describe('Recurring Expenses — delete confirmation modal', () => {
     await expect(recurring.deleteXButton()).toBeVisible();
   });
 
-  test('X button closes the modal without deleting the record', async () => {
+  test('X and "No, keep it" each close the modal without deleting the record', async () => {
     await recurring.openDeleteModal(E2E_RECURRING_NAME);
     await recurring.deleteXButton().click();
     await expect(recurring.deleteDialog()).toBeHidden();
     await expect(recurring.row(E2E_RECURRING_NAME)).toBeVisible();
-  });
 
-  test('No, keep it button closes the modal without deleting the record', async () => {
     await recurring.openDeleteModal(E2E_RECURRING_NAME);
     await recurring.deleteNoButton().click();
     await expect(recurring.deleteDialog()).toBeHidden();
