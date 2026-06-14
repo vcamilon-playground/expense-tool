@@ -89,7 +89,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/settings.spec.ts` | Smoke | Session expiry, profile section, global save/cancel, navigation guard, change password, theme colours, categories, past-edit toggle, profile menu |
 | `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + global eye toggle + per-card eye reveal, Add Source modal fields, cash hides name field, inline validation |
 | `tests/notifications.spec.ts` | Smoke | Page load, Add Reminder form (title/repeat/date), repeat cadence options, empty-title validation, form open/close toggle |
-| `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, theme pill toggles data-theme, notification bell links to /notifications |
+| `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, personalized today date line (`Today is yyyy/mm/dd, DDD`), theme pill toggles data-theme, notification bell links to /notifications; date line absent on /login |
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
 | `tests/expenses.regression.spec.ts` | Regression | Create/edit/delete expense; past-month lock with allow-past-edit off and on |
 | `tests/expenses-grid.regression.spec.ts` | Regression | Grid cards render category/amount/merchant/description; receipt pill and ≈PHP conversion; search narrows cards; edit/delete from a card; Load More pagination (20-per-page, accent-styled button); past-month lock with allow-past-edit off and on |
@@ -232,8 +232,12 @@ cd apps/e2e && npx playwright show-report
 
 **Site header**
 - shows a time-based greeting with the user first name
+- shows the personalized today date line in `Today is yyyy/mm/dd, DDD` format
 - theme pill toggles the `data-theme` attribute (resets to light)
 - notification bell links to the notifications page
+
+**Site header — unauthenticated**
+- hides the header date line on the login page
 
 ---
 

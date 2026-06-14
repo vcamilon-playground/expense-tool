@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from './ThemeToggle';
 import { listRecurring, listReminders } from '@/lib/db';
 import { computeNotifications, incomeReminderKey } from '@/lib/notifications';
+import { formatToday } from '@/lib/today';
 
 function greetingInfo(): { text: string; emoji: string } {
   const h = new Date().getHours();
@@ -31,6 +32,7 @@ export default function SiteHeader() {
   if (!user) return null;
 
   const { text, emoji } = greetingInfo();
+  const todayLabel = formatToday(new Date());
   const initials = `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
 
   function handleAvatarClick() {
@@ -64,7 +66,10 @@ export default function SiteHeader() {
             <span>{initials}</span>
           )}
         </div>
-        <p className="site-welcome">{text} {user.first_name}! {emoji}</p>
+        <div className="site-header-greet">
+          <p className="site-welcome">{text} {user.first_name}! {emoji}</p>
+          <p className="site-date">{todayLabel}</p>
+        </div>
       </div>
 
       {/* Right: theme toggle + notifications */}

@@ -103,6 +103,10 @@ export class NavBar {
     return this.page.locator('.site-welcome');
   }
 
+  dateLine(): Locator {
+    return this.page.locator('.site-date');
+  }
+
   themePill(): Locator {
     return this.page.locator('.theme-toggle-pill');
   }

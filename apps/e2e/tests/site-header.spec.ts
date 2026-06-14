@@ -16,6 +16,13 @@ test.describe('Site header', () => {
     await expect(nav.greeting()).toContainText('E2E');
   });
 
+  test('shows the personalized today date line in yyyy/mm/dd, DDD format', async () => {
+    await expect(nav.dateLine()).toBeVisible();
+    await expect(nav.dateLine()).toHaveText(
+      /^Today is \d{4}\/\d{2}\/\d{2}, (Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/,
+    );
+  });
+
   test('theme pill toggles the data-theme attribute', async ({ page }) => {
     await expect(nav.themePill()).toBeVisible();
     await expect(nav.themePillButton('light')).toBeVisible();
@@ -33,5 +40,15 @@ test.describe('Site header', () => {
     await expect(nav.notifBell()).toBeVisible();
     await nav.notifBell().click();
     await expect(page).toHaveURL(/\/notifications/);
+  });
+});
+
+test.describe('Site header — unauthenticated', () => {
+  test('hides the header date line on the login page', async ({ page, context }) => {
+    await context.clearCookies();
+    await page.goto('/login');
+    const nav = new NavBar(page);
+    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
+    await expect(nav.dateLine()).toHaveCount(0);
   });
 });

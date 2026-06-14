@@ -324,6 +324,13 @@ nav.sidenav button:active:not(:disabled) { transform: scale(0.97); }
 }
 .header-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
+.site-header-greet {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .site-welcome {
   font-size: 20px;
   font-weight: 700;
@@ -331,6 +338,15 @@ nav.sidenav button:active:not(:disabled) { transform: scale(0.97); }
   margin: 0;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.site-date {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  margin: 0;
+  white-space: nowrap;
 }
 
 .site-header-actions {
@@ -1036,6 +1052,7 @@ button.btn-sm {
   .site-header-left { gap: 8px; }
   .header-avatar { display: flex; }
   .site-welcome { font-size: 15px; }
+  .site-date { font-size: 11px; }
   main.container { padding: 12px 12px calc(64px + env(safe-area-inset-bottom, 0px) + 12px); }
   h1 { font-size: 20px; }
   h2 { font-size: 17px; }
