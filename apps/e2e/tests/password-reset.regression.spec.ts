@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordResetPage';
 
+const E2E_USERNAME = process.env.E2E_USERNAME || 'e2e_tester';
+const E2E_PASSWORD = process.env.E2E_PASSWORD || 'E2eTestPass123';
+
 test.describe('Password reset — regression', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -40,5 +43,35 @@ test.describe('Password reset — regression', () => {
     await reset.submit('newpassword123', 'newpassword123');
     await expect(reset.errorBanner).toBeVisible();
     await expect(reset.errorBanner).toContainText(/invalid or expired/i);
+  });
+
+  test('login by an identifier containing "@" but no account is a generic 401', async ({
+    request,
+  }) => {
+    for (const identifier of ['foo@', '@bar', 'nobody@nowhere.invalid']) {
+      const res = await request.post('/api/auth/login', { data: { identifier, password: 'x' } });
+      expect(res.status()).toBe(401);
+    }
+  });
+
+  test('login still accepts the legacy { username, password } payload (back-compat)', async ({
+    request,
+  }) => {
+    const res = await request.post('/api/auth/login', {
+      data: { username: E2E_USERNAME, password: E2E_PASSWORD },
+    });
+    expect(res.ok()).toBeTruthy();
+  });
+});
+
+test.describe('Email update — regression (authenticated)', () => {
+  test('a whitespace-only email is coalesced to null, never stored as ""', async ({ request }) => {
+    // Uses the e2e_tester account (default email is null), so it leaves no
+    // residue. Guards the register/update-profile empty-after-normalize fix.
+    const res = await request.patch('/api/auth/update-profile', { data: { email: '   ' } });
+    expect(res.ok()).toBeTruthy();
+    const me = await request.get('/api/auth/me');
+    const { user } = await me.json();
+    expect(user.email ?? null).toBeNull();
   });
 });

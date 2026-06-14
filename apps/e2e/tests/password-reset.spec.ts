@@ -33,4 +33,22 @@ test.describe('Password reset — smoke', () => {
     await expect(reset.errorBanner).toBeVisible();
     await expect(reset.errorBanner).toContainText(/invalid or incomplete/i);
   });
+
+  test('forgot/reset pages render without the app chrome at desktop + mobile widths', async ({
+    page,
+  }) => {
+    // The .app-layout wrapper carries the NavBar (desktop sidebar + mobile
+    // bottom-nav) + header + footer; auth pages must not show it while logged
+    // out, at any viewport.
+    for (const size of [
+      { width: 1280, height: 800 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(size);
+      await page.goto('/forgot-password');
+      await expect(page.locator('.app-layout')).toHaveCount(0);
+      await page.goto('/reset-password?token=x');
+      await expect(page.locator('.app-layout')).toHaveCount(0);
+    }
+  });
 });

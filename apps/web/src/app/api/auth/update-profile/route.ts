@@ -29,7 +29,8 @@ export async function PATCH(req: NextRequest) {
     if (theme !== undefined) appearancePatch.theme = theme;
 
     if (email !== undefined) {
-      const cleanEmail = email ? normalizeEmail(email) : null;
+      // Coalesce empty/whitespace-only input to null so we never store "".
+      const cleanEmail = email ? normalizeEmail(email) || null : null;
       if (cleanEmail && !isValidEmail(cleanEmail)) {
         return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 });
       }

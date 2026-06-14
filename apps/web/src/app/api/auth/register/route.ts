@@ -36,7 +36,8 @@ export async function POST(req: Request) {
     }
 
     // Email is optional, but when present it must be valid and unique.
-    const cleanEmail = email ? normalizeEmail(email) : null;
+    // Coalesce empty/whitespace-only input to null so we never store "".
+    const cleanEmail = email ? normalizeEmail(email) || null : null;
     if (cleanEmail && !isValidEmail(cleanEmail)) {
       return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 });
     }
