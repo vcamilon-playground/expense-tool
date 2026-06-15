@@ -232,6 +232,20 @@ export async function deductFromIncomeSource(id: string, amount: number): Promis
   if (upErr) throw upErr;
 }
 
+export async function addToIncomeSource(id: string, amount: number): Promise<void> {
+  const { data, error } = await supabase
+    .from('income_sources')
+    .select('balance')
+    .eq('id', id)
+    .single();
+  if (error) throw error;
+  const { error: upErr } = await supabase
+    .from('income_sources')
+    .update({ balance: Number(data.balance) + amount })
+    .eq('id', id);
+  if (upErr) throw upErr;
+}
+
 export async function transferIncome(fromId: string, toId: string, amount: number): Promise<void> {
   const { data, error } = await supabase
     .from('income_sources')

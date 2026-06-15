@@ -80,6 +80,45 @@ export class IncomePage extends BasePage {
     await expect(this.dialog()).toBeHidden();
   }
 
+  // ── Add Money (top-up) modal ──
+  addMoneyDialog(): Locator {
+    return this.page.getByRole('dialog').filter({ hasText: 'Add Money to' });
+  }
+
+  // The "+ Add" button on a bank / e-wallet source row.
+  addMoneyButton(name: string): Locator {
+    return this.row(name).getByRole('button', { name: '+ Add' });
+  }
+
+  // The "+ Add Money" button in the Cash on Hand section.
+  cashAddMoneyButton(): Locator {
+    return this.page.getByRole('button', { name: '+ Add Money' });
+  }
+
+  async openAddMoney(name: string): Promise<void> {
+    await this.addMoneyButton(name).click();
+    await expect(this.addMoneyDialog()).toBeVisible();
+  }
+
+  addMoneyAmountInput(): Locator {
+    return this.addMoneyDialog().locator('input[type="number"]');
+  }
+
+  addMoneySubmit(): Locator {
+    return this.addMoneyDialog().getByRole('button', { name: /^(Add Money|Adding…)$/ });
+  }
+
+  addMoneyError(): Locator {
+    return this.addMoneyDialog().locator('.field-error');
+  }
+
+  async addMoney(name: string, amount: string): Promise<void> {
+    await this.openAddMoney(name);
+    await this.addMoneyAmountInput().fill(amount);
+    await this.addMoneySubmit().click();
+    await expect(this.addMoneyDialog()).toBeHidden();
+  }
+
   // ── Source rows (within the Bank Accounts / E-Wallets tables) ──
   row(name: string): Locator {
     return this.page.locator('.income-table tbody tr').filter({ hasText: name });

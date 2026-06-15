@@ -96,7 +96,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/budgets.regression.spec.ts` | Regression | Edit overall budget and verify updated limit |
 | `tests/recurring.regression.spec.ts` | Regression | Create/edit/delete recurring expense; confirm YES adds expense + advances date; confirm NO advances date without adding expense |
 | `tests/settings.regression.spec.ts` | Regression | Add category with custom icon; add category without icon uses default; deleting category does not delete linked expenses |
-| `tests/income.regression.spec.ts` | Regression | Create/edit/delete a bank source; transfer moves balance between sources; transfer rejects an over-balance amount |
+| `tests/income.regression.spec.ts` | Regression | Create/edit/delete a bank source; transfer moves balance between sources; transfer rejects an over-balance amount; add money tops up a source balance; add money rejects a non-positive amount |
 | `tests/notifications.regression.spec.ts` | Regression | Create/delete a reminder; mark a due one-time reminder Done (removed); mark a due recurring reminder Done (date advances) |
 | `tests/password-reset.regression.spec.ts` | Regression | Forgot-password rejects an invalid email inline; returns a generic success for any valid email (no account enumeration); reset-password rejects mismatched passwords inline and an invalid/expired token |
 
@@ -431,6 +431,10 @@ cd apps/e2e && npx playwright show-report
 **Income — transfer between sources**
 - transferring moves the balance from one source to another
 - transfer rejects an amount greater than the source balance
+
+**Income — add money (top-up)**
+- adding money increments the source balance, section total, and Grand Total
+- add money rejects a non-positive amount inline
 
 ---
 

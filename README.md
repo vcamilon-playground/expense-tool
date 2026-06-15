@@ -168,7 +168,8 @@ after each Vercel deploy.
   optionally deduct from an income source.
 - **Income** — track balances across bank accounts, e-wallets, and cash on
   hand. Expenses (and recurring payments) can optionally deduct from a chosen
-  source when recorded. **Transfer** moves money between any two sources.
+  source when recorded. **Add Money** tops up any source's balance, and
+  **Transfer** moves money between any two sources.
   Amounts are hidden by default for privacy — reveal everything with the header
   eye, or peek a single card/source with its own inline eye.
 - **Notifications** — a bell in the header lists recurring payments due within

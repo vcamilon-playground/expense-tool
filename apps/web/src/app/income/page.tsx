@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { IncomeSource, IncomeType } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
 import {
+  addToIncomeSource,
   createIncomeSource,
   deleteIncomeSource,
   listIncomeSources,
@@ -97,6 +98,12 @@ export default function IncomePage() {
   const [transferError, setTransferError] = useState<string | null>(null);
   const [transferring, setTransferring] = useState(false);
   const [cashExpanded, setCashExpanded] = useState(true);
+
+  // Add-money (top-up) modal state
+  const [addMoneyTarget, setAddMoneyTarget] = useState<IncomeSource | null>(null);
+  const [addMoneyAmount, setAddMoneyAmount] = useState('');
+  const [addMoneyError, setAddMoneyError] = useState<string | null>(null);
+  const [addingMoney, setAddingMoney] = useState(false);
 
   // Privacy: amounts hidden by default; global preference persisted per device,
   // plus a per-item reveal set so individual cards/sources can be peeked.
@@ -257,6 +264,35 @@ export default function IncomePage() {
       setTransferError(errorMessage(err, 'Transfer failed'));
     } finally {
       setTransferring(false);
+    }
+  }
+
+  function openAddMoney(source: IncomeSource) {
+    setAddMoneyTarget(source);
+    setAddMoneyAmount('');
+    setAddMoneyError(null);
+  }
+
+  async function handleAddMoney(e: React.FormEvent) {
+    e.preventDefault();
+    if (!addMoneyTarget || addingMoney) return;
+    setAddMoneyError(null);
+
+    const amount = parseFloat(addMoneyAmount);
+    if (!addMoneyAmount || !Number.isFinite(amount) || amount <= 0) {
+      setAddMoneyError('Enter a valid amount greater than zero.');
+      return;
+    }
+
+    setAddingMoney(true);
+    try {
+      await addToIncomeSource(addMoneyTarget.id, amount);
+      setAddMoneyTarget(null);
+      await reload();
+    } catch (err) {
+      setAddMoneyError(errorMessage(err, 'Failed to add money'));
+    } finally {
+      setAddingMoney(false);
     }
   }
 
@@ -439,6 +475,43 @@ export default function IncomePage() {
         </form>
       </FormModal>
 
+      {/* Add Money (top-up) modal */}
+      <FormModal
+        open={addMoneyTarget !== null}
+        title={addMoneyTarget ? `Add Money to ${sourceLabel(addMoneyTarget)}` : 'Add Money'}
+        onClose={() => setAddMoneyTarget(null)}
+      >
+        <form onSubmit={handleAddMoney} noValidate>
+          {addMoneyTarget && (
+            <p className="muted" style={{ marginTop: 0, marginBottom: 12 }}>
+              Current balance: {formatMoney(addMoneyTarget.balance)}
+            </p>
+          )}
+          <label style={{ display: 'block', marginBottom: 12 }}>
+            <div className="muted" style={{ marginBottom: 4 }}>Amount to add (₱)</div>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              value={addMoneyAmount}
+              onChange={(e) => { setAddMoneyAmount(e.target.value); setAddMoneyError(null); }}
+              aria-invalid={!!addMoneyError}
+              autoFocus
+            />
+          </label>
+          {addMoneyError && <p className="field-error">{addMoneyError}</p>}
+          <div className="row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
+            <button type="button" className="ghost" style={{ width: 'auto' }} onClick={() => setAddMoneyTarget(null)} disabled={addingMoney}>
+              Cancel
+            </button>
+            <button type="submit" className="primary" style={{ width: 'auto' }} disabled={addingMoney}>
+              {addingMoney ? 'Adding…' : 'Add Money'}
+            </button>
+          </div>
+        </form>
+      </FormModal>
+
       {/* Bank Accounts */}
       <IncomeSection
         title="Bank Accounts"
@@ -447,6 +520,7 @@ export default function IncomePage() {
         emptyText="No bank accounts added yet."
         onEdit={startEdit}
         onDelete={setPendingDelete}
+        onAddMoney={openAddMoney}
         totalKey="sum-bank"
         isVisible={isVisible}
         toggleKey={toggleKey}
@@ -460,6 +534,7 @@ export default function IncomePage() {
         emptyText="No e-wallets added yet."
         onEdit={startEdit}
         onDelete={setPendingDelete}
+        onAddMoney={openAddMoney}
         totalKey="sum-ewallet"
         isVisible={isVisible}
         toggleKey={toggleKey}
@@ -488,6 +563,7 @@ export default function IncomePage() {
                 <AmountWithEye amount={cashSource.balance} visible={isVisible(cashSource.id)} onToggle={() => toggleKey(cashSource.id)} />
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
+                <button className="primary btn-sm" style={{ width: 'auto' }} onClick={() => openAddMoney(cashSource)}>+ Add Money</button>
                 <button className="btn-sm" onClick={() => startEdit(cashSource)}>Edit Balance</button>
                 <button className="danger btn-sm" onClick={() => setPendingDelete(cashSource)}>Delete</button>
               </div>
@@ -500,7 +576,7 @@ export default function IncomePage() {
 }
 
 function IncomeSection({
-  title, icon, sources, emptyText, onEdit, onDelete, totalKey, isVisible, toggleKey,
+  title, icon, sources, emptyText, onEdit, onDelete, onAddMoney, totalKey, isVisible, toggleKey,
 }: {
   title: string;
   icon: string;
@@ -508,6 +584,7 @@ function IncomeSection({
   emptyText: string;
   onEdit: (s: IncomeSource) => void;
   onDelete: (s: IncomeSource) => void;
+  onAddMoney: (s: IncomeSource) => void;
   totalKey: string;
   isVisible: (key: string) => boolean;
   toggleKey: (key: string) => void;
@@ -549,6 +626,7 @@ function IncomeSection({
                     <td style={{ textAlign: 'right', fontWeight: 600 }}><AmountWithEye amount={s.balance} visible={isVisible(s.id)} onToggle={() => toggleKey(s.id)} /></td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                        <button className="primary btn-sm" style={{ width: 'auto' }} onClick={() => onAddMoney(s)}>+ Add</button>
                         <button className="btn-sm" onClick={() => onEdit(s)}>Edit</button>
                         <button className="danger btn-sm" onClick={() => onDelete(s)}>Delete</button>
                       </div>
