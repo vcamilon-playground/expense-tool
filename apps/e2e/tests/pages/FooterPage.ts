@@ -50,8 +50,16 @@ export class FooterPage extends BasePage {
     return this.dialog().locator('a[href^="tel:"]');
   }
 
+  headerCloseButton(): Locator {
+    return this.modalHeader().getByRole('button', { name: 'Close' });
+  }
+
   closeButton(): Locator {
-    return this.dialog().getByRole('button', { name: 'Close' });
+    return this.dialog().locator('.row').getByRole('button', { name: 'Close', exact: true });
+  }
+
+  aboutBlurb(): Locator {
+    return this.dialog().locator('.muted');
   }
 
   async openAbout(): Promise<void> {

@@ -30,12 +30,16 @@ export default function SiteFooter() {
         <p className="muted" style={{ marginTop: 0, lineHeight: 1.6 }}>
           A personal, multi-user expense tracker. Record expenses, set budgets, track recurring
           charges and income sources, and review your spending through reports and charts.
-          Installable as a PWA and built with Next.js and Supabase.
         </p>
         <p style={{ marginBottom: 0, color: 'var(--text)' }}>
           Created by Vegil Camilon &amp; Claude Code
         </p>
         {version && <p className="footer-version" style={{ marginTop: 4, marginBottom: 0 }}>v{version}</p>}
+        <div className="row" style={{ justifyContent: 'flex-end', marginTop: 20 }}>
+          <button type="button" className="primary" style={{ width: 'auto' }} onClick={() => setAboutOpen(false)}>
+            Close
+          </button>
+        </div>
       </FormModal>
 
       <FormModal open={contactOpen} title="Contact" onClose={() => setContactOpen(false)}>
@@ -50,6 +54,11 @@ export default function SiteFooter() {
           <span aria-hidden="true">📱</span>
           <a href={`tel:${CONTACT_PHONE}`}>{CONTACT_PHONE}</a>
         </p>
+        <div className="row" style={{ justifyContent: 'flex-end', marginTop: 20 }}>
+          <button type="button" className="primary" style={{ width: 'auto' }} onClick={() => setContactOpen(false)}>
+            Close
+          </button>
+        </div>
       </FormModal>
     </>
   );

@@ -51,6 +51,28 @@ test.describe('Site footer', () => {
     await expect(footer.emailLink()).toHaveAttribute('href', 'mailto:camilonvegil@gmail.com');
     await expect(footer.phoneLink()).toHaveAttribute('href', 'tel:+639178020429');
 
+    await footer.headerCloseButton().click();
+    await expect(footer.dialog()).toHaveCount(0);
+  });
+
+  test('About has a primary Close button that closes the dialog, and the blurb omits the removed sentence', async () => {
+    await footer.openAbout();
+    await expect(footer.dialogTitle('About Expense Tool')).toBeVisible();
+
+    const blurb = await footer.aboutBlurb().innerText();
+    expect(blurb).not.toContain('Installable as a PWA');
+    expect(blurb).not.toContain('Supabase');
+
+    await expect(footer.closeButton()).toBeVisible();
+    await footer.closeButton().click();
+    await expect(footer.dialog()).toHaveCount(0);
+  });
+
+  test('Contact has a primary Close button that closes the dialog', async () => {
+    await footer.openContact();
+    await expect(footer.dialogTitle('Contact')).toBeVisible();
+
+    await expect(footer.closeButton()).toBeVisible();
     await footer.closeButton().click();
     await expect(footer.dialog()).toHaveCount(0);
   });
