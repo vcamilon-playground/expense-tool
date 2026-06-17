@@ -83,7 +83,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/navigation.spec.ts` | Smoke | Desktop sidebar links + active state + profile card + footer; desktop logout/switch-user via sidebar buttons; mobile bottom tab bar navigation + active state + header-avatar profile popup |
 | `tests/dashboard.spec.ts` | Smoke | Page heading, four KPI stat cards, Budget Status, Category Chart, 6-month Trend, Upcoming Charges sections |
 | `tests/expenses.spec.ts` | Smoke | Page load, Add Expense modal, required fields, inline validation errors, search/filter, delete modal, month group collapse, column sorting, List/Grid/Calendar view toggle + Grid cards + month navigation |
-| `tests/recurring.spec.ts` | Smoke | Page load, Add Recurring modal, required fields, inline validation errors, payment confirmation flow, delete modal, column sorting |
+| `tests/recurring.spec.ts` | Smoke | Page load, Add Recurring modal, required fields, inline validation errors, themed table header, payment confirmation flow, delete modal, column sorting |
 | `tests/reports.spec.ts` | Smoke | Page load, period select, preset/date-range mode toggle, compare period, column sorting |
 | `tests/budgets.spec.ts` | Smoke | Page load, form labels, edit/cancel flow, inline validation errors, column sorting |
 | `tests/settings.spec.ts` | Smoke | Session expiry, profile section, global save/cancel, navigation guard, change password, theme colours, categories, past-edit toggle, profile menu |
@@ -273,6 +273,7 @@ cd apps/e2e && npx playwright show-report
 - modal closes on Cancel and Escape key
 - submitting without name keeps modal open and shows inline error
 - submitting with zero amount shows inline error below amount field
+- table header is a themed band (non-white background) with white title text
 
 **Recurring Expenses — payment confirmation flow**
 - a due item shows the Due badge and a Confirm Payment button

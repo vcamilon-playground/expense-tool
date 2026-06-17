@@ -144,6 +144,10 @@ export class RecurringPage extends BasePage {
     return this.page.locator('.recurring-table th.sortable').filter({ hasText: new RegExp(name, 'i') });
   }
 
+  headerCell(name: string): Locator {
+    return this.page.locator('.recurring-table thead th').filter({ hasText: new RegExp(name, 'i') });
+  }
+
   activeSortIcon(): Locator {
     return this.page.locator('.recurring-table th.sortable .sort-active');
   }

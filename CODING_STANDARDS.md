@@ -224,7 +224,7 @@ function reset() {
 | Rule |
 |---|
 | Use `.field-error` class for inline validation errors — the color, size, and weight are set globally. |
-| Modal title bars use the shared `.modal-header` class — a full-width band in the active accent (`var(--sidebar-bg)`) with white title and white close button. Don't hand-roll an inline modal header; reuse `.modal-header` so all modals stay consistent. |
+| Themed surfaces use the active accent (`var(--sidebar-bg)`) with white text: modal title bars use the shared `.modal-header` class (full-width band, white title + white close button), and data-table `<th>` header rows are styled globally as the same themed band (white text, white `.sort-active` arrow). Don't hand-roll an inline modal header or override the `th` band per page; reuse the shared rules so all surfaces stay consistent. |
 | Add `!important` to global utility class properties that are expected to win specificity battles (e.g., `.field-error { color: var(--bad) !important; }`). |
 | Dark-mode aware colors: always use CSS variables, never hardcode. Verify changes in both light and dark mode. |
 | New design tokens (colors, spacing, radii) go in `:root` in `globals.css`, not scattered in component files. |

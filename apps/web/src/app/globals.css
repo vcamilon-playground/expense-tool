@@ -513,19 +513,20 @@ h3 { font-size: 15px; margin: 16px 0 8px; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
 th {
-  color: var(--muted);
+  color: #fff;
   font-weight: 700;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: .05em;
-  background: var(--panel-2);
+  background: var(--sidebar-bg);
 }
 table tbody tr { transition: background 0.12s; }
 table tbody tr:hover td { background: var(--panel-2); }
 
 /* Sortable column headers */
 th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
-th.sortable:hover { color: var(--text); background: var(--border); }
+/* Layer the white wash over the themed band (keeps --sidebar-bg from base th). */
+th.sortable:hover { color: #fff; background-image: linear-gradient(rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.14)); }
 .sort-icon {
   display: inline-block;
   margin-left: 3px;
@@ -533,7 +534,7 @@ th.sortable:hover { color: var(--text); background: var(--border); }
   opacity: 0.3;
   vertical-align: middle;
 }
-.sort-active { opacity: 1; color: var(--accent); }
+.sort-active { opacity: 1; color: #fff; }
 
 /* ── Date groups (expense list) ── */
 .date-group {
