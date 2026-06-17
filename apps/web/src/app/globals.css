@@ -969,6 +969,26 @@ button.btn-sm {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
 }
+.footer-link {
+  width: auto;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+button.footer-link:hover {
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+}
+.footer-sep {
+  color: var(--muted);
+  opacity: 0.5;
+}
 
 /* ── Responsive: tablet (≤800px) ── */
 @media (max-width: 800px) {
@@ -1053,7 +1073,9 @@ button.btn-sm {
   .header-avatar { display: flex; }
   .site-welcome { font-size: 15px; }
   .site-date { font-size: 11px; }
-  main.container { padding: 12px 12px calc(64px + env(safe-area-inset-bottom, 0px) + 12px); }
+  main.container { padding: 12px; }
+  /* Footer is a sibling after main, so it carries the fixed bottom-nav clearance. */
+  .site-footer { padding-bottom: calc(16px + 64px + env(safe-area-inset-bottom, 0px)); }
   h1 { font-size: 20px; }
   h2 { font-size: 17px; }
 

@@ -184,7 +184,7 @@ after each Vercel deploy.
 
 ## Versioning
 
-The app version (`apps/web/package.json`) is injected at build time and shown in the site footer as **v1.0.0 · abc1234** (version + commit SHA). Every Vercel deployment is tagged to a specific commit.
+The app version (`apps/web/package.json`) is injected at build time and shown in the footer's **About** dialog as **v1.0.0** (the footer itself shows About · Contact · © year). Every Vercel deployment is tagged to a specific commit.
 
 | Command | Effect |
 |---|---|

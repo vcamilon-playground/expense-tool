@@ -190,7 +190,7 @@ Key variables: `var(--bad)` for errors, `var(--muted)` for secondary text, `var(
 
 ## Versioning
 
-The app version lives in `apps/web/package.json` (`version` field), injected at build time into `NEXT_PUBLIC_APP_VERSION` via `next.config.js` and shown in the site footer with the build SHA (`NEXT_PUBLIC_BUILD_SHA`; from `VERCEL_GIT_COMMIT_SHA` in production, `git rev-parse --short HEAD` locally).
+The app version lives in `apps/web/package.json` (`version` field), injected at build time into `NEXT_PUBLIC_APP_VERSION` via `next.config.js` and shown as `v{version}` in the footer's **About** dialog (`SiteFooter.tsx`; the footer itself shows About · Contact · © year). `NEXT_PUBLIC_BUILD_SHA` (`VERCEL_GIT_COMMIT_SHA` in production, `git rev-parse --short HEAD` locally) is still injected but no longer rendered.
 
 - **Every commit that changes app behaviour or UI must bump the `version` field directly** (patch/minor/major — the `change-shipper` agent has the decision table). Do **not** use `npm run release:*` for routine commits; those create a separate tag commit and are only for explicit tagged releases the user asks for.
 - **Rolling back:** Vercel dashboard → Deployments → "Promote to Production", or `vercel rollback`. Find a version's commit with `git log --oneline --decorate | grep "tag: v"`.

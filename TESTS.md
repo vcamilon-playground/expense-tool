@@ -91,6 +91,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/notifications.spec.ts` | Smoke | Page load, Add Reminder form (title/repeat/date), repeat cadence options, empty-title validation, form open/close toggle |
 | `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, personalized today date line (`Today is yyyy/mm/dd, DDD`), theme pill toggles data-theme, notification bell links to /notifications; date line absent on /login |
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
+| `tests/footer.spec.ts` | Smoke | Footer shows About/Contact/copyright on an authed page; About modal shows credit + version; Contact modal shows mailto/tel links; footer absent on the login page |
 | `tests/expenses.regression.spec.ts` | Regression | Create/edit/delete expense; past-month lock with allow-past-edit off and on |
 | `tests/expenses-grid.regression.spec.ts` | Regression | Grid cards render category/amount/merchant/description; receipt pill and ≈PHP conversion; search narrows cards; edit/delete from a card; Load More pagination (20-per-page, accent-styled button); past-month lock with allow-past-edit off and on |
 | `tests/budgets.regression.spec.ts` | Regression | Edit overall budget and verify updated limit |
@@ -248,6 +249,18 @@ cd apps/e2e && npx playwright show-report
 - apple touch icon is a public image
 - app icon SVG is public
 - service worker script is public
+
+---
+
+### `footer.spec.ts` — Site footer
+
+**Site footer**
+- shows About, Contact, and a copyright line on an authed page
+- About opens a dialog with the "Created by Vegil Camilon & Claude Code" credit and a `v{major}.{minor}.{patch}` version line, closes on Escape
+- Contact opens a dialog with `mailto:` and `tel:` links, closes via the ✕ button
+
+**Site footer — unauthenticated**
+- footer is absent on the login page when logged out
 
 ---
 
