@@ -13,14 +13,9 @@ export default function DeleteModal({ open, itemLabel, onConfirm, onCancel }: Pr
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-          <h3 style={{ margin: 0 }}>Remove {itemLabel}?</h3>
-          <button
-            className="ghost close-btn"
-            onClick={onCancel}
-            aria-label="Close"
-            style={{ marginLeft: 12, flexShrink: 0 }}
-          >
+        <div className="modal-header">
+          <h3>Remove {itemLabel}?</h3>
+          <button className="ghost close-btn" onClick={onCancel} aria-label="Close">
             ✕
           </button>
         </div>

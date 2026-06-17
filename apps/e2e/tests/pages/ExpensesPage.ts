@@ -78,6 +78,10 @@ export class ExpensesPage extends BasePage {
     return this.page.getByRole('dialog').filter({ hasText: 'Are you really sure' });
   }
 
+  deleteModalHeader(): Locator {
+    return this.deleteDialog().locator('.modal-header');
+  }
+
   deleteXButton(): Locator {
     return this.deleteDialog().getByRole('button', { name: 'Close' });
   }

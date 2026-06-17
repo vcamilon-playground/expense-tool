@@ -760,11 +760,14 @@ button.btn-sm {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border);
+  /* Bleed to the modal edges (counteracts the 28px modal padding) so the title
+     reads as a full-width band in the theme/nav color. */
+  margin: -28px -28px 20px;
+  padding: 16px 28px;
+  background: var(--sidebar-bg);
+  border-radius: 14px 14px 0 0;
 }
-.modal-header h3 { margin: 0; font-size: 18px; }
+.modal-header h3 { margin: 0; font-size: 18px; color: #fff; }
 .close-btn {
   font-size: 16px;
   line-height: 1;
@@ -772,6 +775,8 @@ button.btn-sm {
   height: 32px;
   color: var(--muted);
 }
+.modal-header .close-btn { color: rgba(255, 255, 255, 0.85); }
+.modal-header .close-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); color: #fff; }
 
 /* ── View toggle (List / Calendar) ── */
 .view-toggle {
@@ -1099,6 +1104,8 @@ button.footer-link:hover {
     border-radius: 18px 18px 0 0;
     padding: 24px 16px;
   }
+  /* Bottom-sheet padding differs (24px 16px), so re-bleed the themed header. */
+  .form-modal .modal-header { margin: -24px -16px 20px; padding: 14px 16px; border-radius: 18px 18px 0 0; }
 
   /* Expense table: card view */
   .expense-table thead { display: none; }

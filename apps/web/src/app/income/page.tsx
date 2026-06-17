@@ -322,8 +322,8 @@ export default function IncomePage() {
       {transferOpen && (
         <div className="modal-overlay" onClick={() => setTransferOpen(false)}>
           <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-              <h3 style={{ margin: 0 }}>Transfer Between Sources</h3>
+            <div className="modal-header">
+              <h3>Transfer Between Sources</h3>
               <button className="ghost close-btn" onClick={() => setTransferOpen(false)} aria-label="Close">✕</button>
             </div>
             <form onSubmit={handleTransfer} noValidate>

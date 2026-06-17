@@ -27,6 +27,24 @@ test.describe('Site footer', () => {
     await expect(footer.dialog()).toHaveCount(0);
   });
 
+  test('modal header is a themed band with a white title', async () => {
+    await footer.openAbout();
+    await expect(footer.modalHeader()).toBeVisible();
+
+    // Themed band: background is opaque (alpha > 0) and not white / near-white.
+    const bg = await footer.modalHeader().evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    const match = bg.match(/^rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\s*\)$/);
+    expect(match, `unexpected background-color: ${bg}`).not.toBeNull();
+    const [r, g, b] = [Number(match![1]), Number(match![2]), Number(match![3])];
+    const alpha = match![4] === undefined ? 1 : Number(match![4]);
+    expect(alpha).toBeGreaterThan(0);
+    expect(r > 240 && g > 240 && b > 240, `header background is white/near-white: ${bg}`).toBe(false);
+
+    // Title text is white against the themed band.
+    const titleColor = await footer.modalHeaderTitle().evaluate((el) => window.getComputedStyle(el).color);
+    expect(titleColor).toBe('rgb(255, 255, 255)');
+  });
+
   test('Contact opens a dialog with mailto/tel links, closes via ✕', async () => {
     await footer.openContact();
     await expect(footer.dialogTitle('Contact')).toBeVisible();

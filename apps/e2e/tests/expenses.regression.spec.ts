@@ -33,7 +33,11 @@ test.describe('Expenses — CRUD regression', () => {
     await expect(expenses.row(E2E_MERCHANT)).toContainText('E2E regression expense (edited)');
 
     // DELETE
-    await expenses.deleteRow(E2E_MERCHANT);
+    await expenses.openDeleteModal(E2E_MERCHANT);
+    // Structural guard: DeleteModal was converted to the shared .modal-header band.
+    await expect(expenses.deleteModalHeader()).toBeVisible();
+    await expenses.deleteYesButton().click();
+    await expect(expenses.deleteDialog()).toBeHidden();
 
     // Verify deleted
     await expect(expenses.row(E2E_MERCHANT)).toHaveCount(0);

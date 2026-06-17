@@ -347,8 +347,8 @@ export default function RecurringPage() {
       {confirmStep === 'confirm' && pendingItem && (
         <div className="modal-overlay" onClick={dismissConfirm}>
           <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-              <h3 style={{ margin: 0 }}>Confirm Payment</h3>
+            <div className="modal-header">
+              <h3>Confirm Payment</h3>
               <button className="ghost close-btn" onClick={dismissConfirm} aria-label="Close">✕</button>
             </div>
             <p style={{ marginBottom: 16 }}>
@@ -417,8 +417,8 @@ export default function RecurringPage() {
       {pendingEarlyItem && (
         <div className="modal-overlay" onClick={() => setPendingEarlyItem(null)}>
           <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-              <h3 style={{ margin: 0 }}>Record Early Payment</h3>
+            <div className="modal-header">
+              <h3>Record Early Payment</h3>
               <button className="ghost close-btn" onClick={() => setPendingEarlyItem(null)} aria-label="Close">✕</button>
             </div>
             <p style={{ marginBottom: 16 }}>

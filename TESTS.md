@@ -257,6 +257,7 @@ cd apps/e2e && npx playwright show-report
 **Site footer**
 - shows About, Contact, and a copyright line on an authed page
 - About opens a dialog with the "Created by Vegil Camilon & Claude Code" credit and a `v{major}.{minor}.{patch}` version line, closes on Escape
+- About modal header is a themed band (non-white background) with a white title
 - Contact opens a dialog with `mailto:` and `tel:` links, closes via the ✕ button
 
 **Site footer — unauthenticated**
@@ -368,7 +369,7 @@ cd apps/e2e && npx playwright show-report
 ### `expenses.regression.spec.ts` — Expenses CRUD
 
 **Expenses — CRUD regression**
-- create, edit, and delete a current-month expense
+- create, edit, and delete a current-month expense *(delete confirmation uses the shared `.modal-header` band)*
 
 **Expenses — past-month lock (allow-past-edit disabled)**
 - past-month expense shows lock icon and no Edit or Delete buttons

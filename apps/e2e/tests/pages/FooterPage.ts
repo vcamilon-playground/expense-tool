@@ -30,6 +30,14 @@ export class FooterPage extends BasePage {
     return this.dialog().getByRole('heading', { name: title });
   }
 
+  modalHeader(): Locator {
+    return this.dialog().locator('.modal-header');
+  }
+
+  modalHeaderTitle(): Locator {
+    return this.modalHeader().locator('h3');
+  }
+
   versionLine(): Locator {
     return this.dialog().locator('.footer-version');
   }
