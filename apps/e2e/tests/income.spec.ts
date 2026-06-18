@@ -70,4 +70,22 @@ test.describe('Income page', () => {
     // Name and balance are both required for a bank source.
     await expect(income.fieldError().first()).toBeVisible();
   });
+
+  test('section collapse-header is a themed band with white title text', async () => {
+    const header = income.sectionHeader('Bank Accounts');
+    await expect(header).toBeVisible();
+
+    // Themed band: background is opaque (alpha > 0) and not white / near-white.
+    const bg = await header.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    const match = bg.match(/^rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\s*\)$/);
+    expect(match, `unexpected background-color: ${bg}`).not.toBeNull();
+    const [r, g, b] = [Number(match![1]), Number(match![2]), Number(match![3])];
+    const alpha = match![4] === undefined ? 1 : Number(match![4]);
+    expect(alpha).toBeGreaterThan(0);
+    expect(r > 240 && g > 240 && b > 240, `header background is white/near-white: ${bg}`).toBe(false);
+
+    // Title text is white against the themed band.
+    const titleColor = await income.sectionHeaderTitle('Bank Accounts').evaluate((el) => window.getComputedStyle(el).color);
+    expect(titleColor).toBe('rgb(255, 255, 255)');
+  });
 });

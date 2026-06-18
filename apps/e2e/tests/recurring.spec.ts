@@ -16,6 +16,17 @@ test.describe('Recurring Expenses page', () => {
     await expect(recurring.addButton()).toHaveText('+ Add Recurring');
   });
 
+  test('card section title carries the accent left bar', async () => {
+    const title = recurring.cardTitle();
+    await expect(title).toBeVisible();
+    const style = await title.evaluate((el) => {
+      const cs = window.getComputedStyle(el);
+      return { width: cs.borderLeftWidth, style: cs.borderLeftStyle };
+    });
+    expect(style.width).toBe('3px');
+    expect(style.style).toBe('solid');
+  });
+
   test('modal form has required fields and capitalized cadence options', async () => {
     await recurring.addButton().click();
     const dialog = recurring.dialog();

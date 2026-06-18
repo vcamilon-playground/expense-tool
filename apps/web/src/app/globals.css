@@ -454,26 +454,40 @@ h3 { font-size: 15px; margin: 16px 0 8px; }
   border-color: var(--accent);
 }
 
-/* Collapsible card header — full-width clickable row */
+/* Card section titles — subtle themed accent bar (text stays high-contrast) */
+.card > h2 {
+  border-left: 3px solid var(--accent);
+  padding-left: 10px;
+}
+
+/* Collapsible card header — full-width themed band */
 .collapse-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0;
-  background: none;
+  padding: 12px 14px;
+  background: var(--sidebar-bg);
   border: none;
+  border-radius: 8px;
   cursor: pointer;
-  color: var(--text);
+  color: #fff;
   text-align: left;
 }
-.collapse-header:hover { background: none; }
+/* :not(:disabled) raises specificity above the global button:hover grey. */
+button.collapse-header:hover:not(:disabled) {
+  background-color: var(--sidebar-bg);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1));
+}
+.collapse-header h2 { color: #fff; }
+.collapse-header .muted { color: rgba(255, 255, 255, 0.82); }
 .collapse-chevron {
   font-size: 14px;
   color: var(--muted);
   transition: color 0.15s;
 }
-.collapse-header:hover .collapse-chevron { color: var(--text); }
+.collapse-header .collapse-chevron { color: rgba(255, 255, 255, 0.9); }
+.collapse-header:hover .collapse-chevron { color: #fff; }
 
 /* Inline per-amount privacy eye (income page) */
 .amount-eye {
@@ -550,13 +564,16 @@ th.sortable:hover { color: #fff; background-image: linear-gradient(rgba(255, 255
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: var(--panel-2);
+  background: var(--sidebar-bg);
+  color: #fff;
   cursor: pointer;
   user-select: none;
   gap: 8px;
   transition: background 0.15s;
 }
-.date-group-header:hover { background: var(--border); }
+.date-group-header:hover { background-image: linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)); }
+.date-group-header .muted { color: rgba(255, 255, 255, 0.82); }
+.date-group-header .collapse-chevron { color: rgba(255, 255, 255, 0.9); }
 .date-group-date { font-weight: 600; font-size: 14px; }
 .date-group-body { background: var(--panel); }
 .date-group-body .expense-table { margin: 0; }

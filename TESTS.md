@@ -216,6 +216,7 @@ cd apps/e2e && npx playwright show-report
 - Add Source modal opens with type, name, balance fields and capitalised type options
 - selecting Cash on Hand hides the name field
 - empty required fields show inline errors
+- a section collapse-header is a themed band (non-white background) with white title text
 
 ---
 
@@ -273,6 +274,7 @@ cd apps/e2e && npx playwright show-report
 - modal closes on Cancel and Escape key
 - submitting without name keeps modal open and shows inline error
 - submitting with zero amount shows inline error below amount field
+- card section title carries the accent left bar
 - table header is a themed band (non-white background) with white title text
 
 **Recurring Expenses — payment confirmation flow**

@@ -19,6 +19,11 @@ export class RecurringPage extends BasePage {
     return this.page.getByText(/Track subscriptions/i);
   }
 
+  // The "Current Recurring" section title — a `.card > h2` carrying the accent left bar.
+  cardTitle(): Locator {
+    return this.page.locator('.card > h2').filter({ hasText: 'Current Recurring' });
+  }
+
   addButton(): Locator {
     return this.page.getByRole('button', { name: '+ Add Recurring' });
   }

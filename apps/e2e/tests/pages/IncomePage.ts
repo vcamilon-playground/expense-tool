@@ -148,6 +148,11 @@ export class IncomePage extends BasePage {
     return this.page.locator('.collapse-header').filter({ hasText: title });
   }
 
+  // The white title text inside a themed collapse-header band.
+  sectionHeaderTitle(title: string): Locator {
+    return this.sectionHeader(title).locator('h2');
+  }
+
   // ── Transfer modal ──
   transferDialog(): Locator {
     return this.page.getByRole('dialog').filter({ hasText: 'Transfer Between Sources' });
