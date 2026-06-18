@@ -15,6 +15,7 @@ import {
   updateRecurring,
 } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import DeleteModal from '@/components/DeleteModal';
 import FormModal from '@/components/FormModal';
@@ -225,7 +226,7 @@ export default function RecurringPage() {
 
   const { sortCol, sortDir, handleSort } = useSortState<'name' | 'category' | 'cadence' | 'next_charge' | 'amount' | 'active'>('next_charge', 'asc');
 
-  if (!user || loading) return <p className="muted">Loading…</p>;
+  if (!user || loading) return <LoadingScreen />;
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const activeCategories = categories.filter(
     (c) => c.active !== false || c.id === draft.category_id,

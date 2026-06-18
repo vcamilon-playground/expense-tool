@@ -117,12 +117,13 @@ The web app is **`'use client'` throughout** — all data fetching happens in th
 ```ts
 // every page component starts with this pattern
 const { user } = useAuth();
-if (!user || loading) return <p className="muted">Loading…</p>;
+if (!user || loading) return <LoadingScreen />;
 ```
 
 | Rule |
 |---|
 | Every page reads `const { user } = useAuth()` and returns the loading state if null. |
+| Page-level loading states render the shared `<LoadingScreen />` (`components/LoadingScreen.tsx`) — a themed `var(--accent)` ring spinner with a "Loading" label and `role="status"`. Don't hand-roll a `<p>Loading…</p>` for a page load. |
 | A page that fetches data also reads `const { refreshKey } = useDataRefresh()` and adds `refreshKey` to its load-effect deps (`}, [user, refreshKey]);`) so it refetches when the app resumes after a long idle period. |
 | No server components that fetch data — all Supabase calls are client-side. |
 | No new React context providers without a strong reason; `AuthContext`, `NavigationGuardContext`, and `DataRefreshContext` cover the current needs. |

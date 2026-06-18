@@ -14,6 +14,7 @@ import {
 } from '@expense/shared';
 import { listBudgets, listCategories, listExpenses, listRecurring } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 import SummaryCards from '@/components/SummaryCards';
@@ -76,7 +77,7 @@ export default function DashboardPage() {
     }, upSortDir);
   }, [recurring, today, cutoffStr, upSortCol, upSortDir]);
 
-  if (!user || loading) return <p className="muted">Loading…</p>;
+  if (!user || loading) return <LoadingScreen />;
   if (loadError) return <p style={{ color: 'var(--bad)' }}>{loadError}</p>;
 
   const day: PeriodSummary = summarize(expenses, categories, 'day');

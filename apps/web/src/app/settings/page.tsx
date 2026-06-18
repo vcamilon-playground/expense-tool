@@ -7,6 +7,7 @@ import { useAuth, type SessionTimeout } from '@/contexts/AuthContext';
 import { useNavigationGuard } from '@/contexts/NavigationGuardContext';
 import { supabase } from '@/lib/supabase';
 import DeleteModal from '@/components/DeleteModal';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const DEFAULT_ICON = '🏷️';
 
@@ -312,7 +313,7 @@ export default function SettingsPage() {
   }
 
   // ── Loading guard ─────────────────────────────────────────────────────────
-  if (authLoading || !user || !draft) return <p className="muted">Loading…</p>;
+  if (authLoading || !user || !draft) return <LoadingScreen />;
 
   return (
     <div>

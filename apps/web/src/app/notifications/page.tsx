@@ -12,6 +12,7 @@ import {
   updateReminder,
 } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import { errorMessage } from '@/lib/errors';
 import {
@@ -158,7 +159,7 @@ export default function NotificationsPage() {
     await reload();
   }
 
-  if (!user || loading) return <p className="muted">Loading…</p>;
+  if (!user || loading) return <LoadingScreen />;
   if (loadError) return <p style={{ color: 'var(--bad)' }}>{loadError}</p>;
 
   const notifications = computeNotifications(recurring, reminders, today, dismissed);

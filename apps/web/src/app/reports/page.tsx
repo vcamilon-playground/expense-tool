@@ -12,6 +12,7 @@ import {
 } from '@expense/shared';
 import { listCategories, listExpenses } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 
@@ -127,7 +128,7 @@ export default function ReportsPage() {
   const { sortCol: catSortCol, sortDir: catSortDir, handleSort: catHandleSort } =
     useSortState<'category' | 'count' | 'total' | 'pct'>('total', 'desc');
 
-  if (!user || loading) return <p className="muted">Loading…</p>;
+  if (!user || loading) return <LoadingScreen />;
   if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
 
   const sortedByCategory = sortRows(summary.by_category, (c) => {

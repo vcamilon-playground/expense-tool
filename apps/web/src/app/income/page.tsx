@@ -12,6 +12,7 @@ import {
   updateIncomeSource,
 } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import { errorMessage } from '@/lib/errors';
 import DeleteModal from '@/components/DeleteModal';
@@ -296,7 +297,7 @@ export default function IncomePage() {
     }
   }
 
-  if (!user || loading) return <p className="muted">Loading…</p>;
+  if (!user || loading) return <LoadingScreen />;
 
   const bankSources = sources.filter((s) => s.type === 'bank');
   const ewalletSources = sources.filter((s) => s.type === 'ewallet');

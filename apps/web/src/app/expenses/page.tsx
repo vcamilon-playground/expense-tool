@@ -17,6 +17,7 @@ import ExpenseGrid from '@/components/ExpenseGrid';
 import ExpenseList from '@/components/ExpenseList';
 import FormModal from '@/components/FormModal';
 import MonthEndBanner from '@/components/MonthEndBanner';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDataRefresh } from '@/contexts/DataRefreshContext';
 
@@ -103,7 +104,7 @@ export default function ExpensesPage() {
     });
   }, [expenses, search, categoryFilter]);
 
-  if (!user || loading) return <p className="muted">Loading…</p>;
+  if (!user || loading) return <LoadingScreen />;
   if (loadError) return <p style={{ color: 'var(--bad)' }}>{loadError}</p>;
 
   const modalOpen = showAdd || editing !== null;

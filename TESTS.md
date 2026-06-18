@@ -92,6 +92,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, personalized today date line (`Today is yyyy/mm/dd, DDD`), theme pill toggles data-theme, notification bell links to /notifications; date line absent on /login |
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
 | `tests/footer.spec.ts` | Smoke | Footer shows About/Contact/copyright on an authed page; About modal shows credit + version; Contact modal shows mailto/tel links; footer absent on the login page |
+| `tests/loading.spec.ts` | Smoke | Page-level loading state shows the themed `LoadingScreen` spinner (`.loading-screen`, `role="status"`, `.spinner` with 12 bars, "Loading" label) while a delayed Supabase request is in flight |
 | `tests/expenses.regression.spec.ts` | Regression | Create/edit/delete expense; past-month lock with allow-past-edit off and on |
 | `tests/expenses-grid.regression.spec.ts` | Regression | Grid cards render category/amount/merchant/description; receipt pill and ≈PHP conversion; search narrows cards; edit/delete from a card; Load More pagination (20-per-page, accent-styled button); past-month lock with allow-past-edit off and on |
 | `tests/budgets.regression.spec.ts` | Regression | Edit overall budget and verify updated limit |
@@ -263,6 +264,13 @@ cd apps/e2e && npx playwright show-report
 
 **Site footer — unauthenticated**
 - footer is absent on the login page when logged out
+
+---
+
+### `loading.spec.ts` — Themed loading spinner
+
+**Themed loading spinner**
+- shows the themed spinner with 12 bars while data loads *(delays `/rest/v1/` requests to hold the transient state; asserts `.loading-screen`, `role="status"`, `.spinner`, 12 bars, and the "Loading" label)*
 
 ---
 

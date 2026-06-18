@@ -5,6 +5,7 @@ import type { Budget, Category } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
 import { deleteBudget, listBudgets, listCategories, updateBudget, upsertBudget } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 import DeleteModal from '@/components/DeleteModal';
@@ -100,7 +101,7 @@ export default function BudgetsPage() {
 
   const { sortCol, sortDir, handleSort } = useSortState<'category' | 'limit'>('category', 'asc');
 
-  if (!user || loading) return <p className="muted">Loading…</p>;
+  if (!user || loading) return <LoadingScreen />;
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const activeCategories = categories.filter((c) => c.active !== false);
   const sortedBudgets = sortRows(budgets, (b) => {
