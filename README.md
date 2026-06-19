@@ -149,7 +149,9 @@ after each Vercel deploy.
 
 - **Multi-user auth** — register with first name, last name, username, password, and an optional email (plus profile picture and birth date). Log in with either username **or** email. Logout and switch-user from the sidebar. Forgot a password? Request a reset link by email (a time-limited, single-use token) and set a new one — no admin needed when an email is on file.
 - **Dashboard** — totals for today / this week / this month / this year,
-  category breakdown (pie), budget status bars, daily spend trend (past 7 days)
+  category breakdown (pie), a Budget Status table (Category / Budget / Actual /
+  Difference / % of Budget, with a colored percentage pill and the Overall total
+  as a summary row), daily spend trend (past 7 days)
   and weekly spend trend (past 5 weeks) line charts, 6-month trend, monthly AI
   insight (on demand).
 - **Expenses** — full CRUD with three views: **List view** (grouped by month, collapsible, sortable), **Grid view** (responsive cards showing category, date, amount, merchant, and a receipt pill, sorted newest first, no month grouping), and **Calendar view** (monthly grid showing daily totals; click any day to see and edit that day's expenses). Filters (search, category) apply in all three views.

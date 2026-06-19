@@ -58,7 +58,20 @@ test.describe('Budgets — edit regression', () => {
     await dashboard.goto();
 
     await expect(dashboard.budgetStatusSection()).toBeVisible();
-    await expect(dashboard.budgetStatusRow('Overall')).toBeVisible();
+    await expect(dashboard.budgetStatusTable()).toBeVisible();
+
+    // Category budget is a tbody row.
     await expect(dashboard.budgetStatusRow(categoryName)).toBeVisible();
+
+    // The computed Overall row is rendered LAST, in tfoot, as a summary row.
+    const overall = dashboard.budgetOverallRow();
+    await expect(overall).toBeVisible();
+    await expect(overall.locator('td[data-label="Category"]')).toHaveText('Overall');
+
+    // Overall is below the category rows: it is the last row in the table.
+    const allRows = dashboard.budgetStatusAllRows();
+    const lastRow = allRows.last();
+    await expect(lastRow).toHaveClass(/budget-status-summary/);
+    await expect(lastRow.locator('td[data-label="Category"]')).toHaveText('Overall');
   });
 });

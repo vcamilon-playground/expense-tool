@@ -165,6 +165,7 @@ cd apps/e2e && npx playwright show-report
 
 **Dashboard**
 - page title is correct and all sections render *(header greeting, 4 KPI cards, Budget Status, Daily + Weekly spend charts, Category Chart, 6-Month Trend, Upcoming Charges)*
+- Budget Status card renders the new table or the empty state *(when budgets exist, asserts the `.budget-status-table`, a category row's `.pct-pill` carries `pct-ok|warn|over` and shows an `N%` label, and the Overall row is the last row rendered as a `.budget-status-summary` footer)*
 - month-end reminder banner is conditional on days remaining in month
 
 **Dashboard — Upcoming Charges column sorting**
@@ -419,7 +420,7 @@ cd apps/e2e && npx playwright show-report
 **Budgets — edit regression**
 - editing a per-category budget updates its displayed limit
 - read-only Overall footer row reflects the sum of category limits and has no actions
-- dashboard Budget Status lists the computed Overall row alongside the category
+- dashboard Budget Status table shows the category row and the computed Overall row last, as the `.budget-status-summary` footer row
 
 ---
 

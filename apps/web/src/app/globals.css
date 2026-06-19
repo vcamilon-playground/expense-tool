@@ -768,6 +768,49 @@ button.btn-sm {
 .pill.warn { background: rgba(200, 122, 21, 0.12); color: var(--warn); }
 .pill.over { background: rgba(192, 57, 43, 0.12); color: var(--bad); }
 
+/* ── Budget status table (dashboard) ── */
+.budget-status-table th.num, .budget-status-table td.num { text-align: right; }
+.budget-status-table tbody td { vertical-align: middle; }
+.budget-status-table tfoot td {
+  border-top: 2px solid var(--border);
+  border-bottom: none;
+  font-weight: 700;
+}
+.budget-status-table .budget-status-summary td { background: var(--panel-2); }
+
+.pct-pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  min-width: 96px;
+  max-width: 160px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.pct-pill-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+.pct-pill-label {
+  position: relative;
+  z-index: 1;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+}
+.pct-ok   { background: rgba(42, 157, 92, 0.16); }
+.pct-warn { background: rgba(200, 122, 21, 0.16); }
+.pct-over { background: rgba(192, 57, 43, 0.16); }
+.pct-ok   .pct-pill-fill { background: var(--ok); }
+.pct-warn .pct-pill-fill { background: var(--warn); }
+.pct-over .pct-pill-fill { background: var(--bad); }
+
 /* ── Banners ── */
 .banner {
   border-radius: 10px;
@@ -1202,6 +1245,39 @@ button.footer-link:hover {
     min-width: 80px;
   }
   .expense-table td[data-label=""] { justify-content: flex-end; gap: 8px; margin-top: 6px; }
+
+  /* Budget status table (dashboard): card view */
+  .budget-status-table thead { display: none; }
+  .budget-status-table tbody tr,
+  .budget-status-table tfoot tr {
+    display: block;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .budget-status-table tbody tr:last-child { border-bottom: none; }
+  .budget-status-table tfoot tr { border-top: 2px solid var(--border); border-bottom: none; }
+  .budget-status-table tbody td,
+  .budget-status-table tfoot td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
+    border-top: none;
+    padding: 3px 0;
+    font-size: 13px;
+  }
+  .budget-status-table tbody td::before,
+  .budget-status-table tfoot td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-right: 10px;
+    min-width: 80px;
+  }
+  .budget-status-table .pct-pill { width: 140px; }
 
   /* Budget table: two-line card view */
   .budget-table thead { display: none; }

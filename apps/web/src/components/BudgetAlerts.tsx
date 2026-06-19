@@ -3,39 +3,60 @@
 import type { BudgetStatus } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
 
+function statusClass(status: BudgetStatus['status']): string {
+  return status === 'warning' ? 'warn' : status; // ok | warn | over
+}
+
+function BudgetRow({ status, summary }: { status: BudgetStatus; summary?: boolean }) {
+  const pct = Math.round(status.pct_used * 100);
+  const fillPct = Math.min(100, pct);
+  const css = statusClass(status.status);
+  return (
+    <tr className={summary ? 'budget-status-summary' : undefined}>
+      <td data-label="Category">{status.category_name}</td>
+      <td data-label="Budget" className="num">{formatMoney(status.limit)}</td>
+      <td data-label="Actual" className="num">{formatMoney(status.spent)}</td>
+      <td data-label="Difference" className="num">{formatMoney(status.remaining)}</td>
+      <td data-label="% of Budget">
+        <div className={`pct-pill pct-${css}`} role="img" aria-label={`${pct}% of budget used`}>
+          <div className="pct-pill-fill" style={{ width: `${fillPct}%` }} />
+          <span className="pct-pill-label">{pct}%</span>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 export default function BudgetAlerts({ statuses }: { statuses: BudgetStatus[] }) {
   if (statuses.length === 0) {
     return <p className="muted">No budgets set. Add one on the Budgets page.</p>;
   }
+  const overall = statuses.find((s) => s.category_id === null) ?? null;
+  const categories = statuses.filter((s) => s.category_id !== null);
+
   return (
-    <div>
-      {statuses.map((s) => {
-        const pct = Math.min(100, Math.round(s.pct_used * 100));
-        const css = s.status === 'warning' ? 'warn' : s.status; // ok | warn | over
-        return (
-          <div key={`${s.category_id ?? 'overall'}`} style={{ marginBottom: 12 }}>
-            <div className="row" style={{ justifyContent: 'space-between' }}>
-              <strong>{s.category_name}</strong>
-              <span className={`pill ${css}`}>
-                {pct}% — {formatMoney(s.spent)} / {formatMoney(s.limit)}
-              </span>
-            </div>
-            <div className={`bar bar-${css}`} style={{ marginTop: 6 }}>
-              <div style={{ width: `${pct}%` }} />
-            </div>
-            {s.status === 'over' && (
-              <p style={{ color: 'var(--bad)', margin: '6px 0 0', fontSize: 13 }}>
-                Over budget by {formatMoney(-s.remaining)} this month.
-              </p>
-            )}
-            {s.status === 'warning' && (
-              <p style={{ color: 'var(--warn)', margin: '6px 0 0', fontSize: 13 }}>
-                Approaching limit — {formatMoney(s.remaining)} left.
-              </p>
-            )}
-          </div>
-        );
-      })}
+    <div className="table-wrap">
+      <table className="budget-status-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th className="num">Budget</th>
+            <th className="num">Actual</th>
+            <th className="num">Difference</th>
+            <th>% of Budget</th>
+          </tr>
+        </thead>
+        <tbody>
+          {categories.map((s) => (
+            <BudgetRow key={s.category_id ?? 'overall'} status={s} />
+          ))}
+        </tbody>
+        {overall && (
+          <tfoot>
+            <BudgetRow status={overall} summary />
+          </tfoot>
+        )}
+      </table>
     </div>
   );
 }

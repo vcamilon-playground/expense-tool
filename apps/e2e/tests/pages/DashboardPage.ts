@@ -33,8 +33,33 @@ export class DashboardPage extends BasePage {
     return this.page.locator('.card').filter({ hasText: 'Budget Status' });
   }
 
+  budgetStatusTable(): Locator {
+    return this.budgetStatusCard().locator('table.budget-status-table');
+  }
+
+  // Category rows live in <tbody>; the computed Overall row lives in <tfoot>
+  // as tr.budget-status-summary. Match on the Category cell's data-label.
   budgetStatusRow(name: string): Locator {
-    return this.budgetStatusCard().locator('strong').filter({ hasText: name });
+    return this.budgetStatusTable()
+      .locator('tbody tr')
+      .filter({ has: this.page.locator('td[data-label="Category"]', { hasText: name }) });
+  }
+
+  budgetOverallRow(): Locator {
+    return this.budgetStatusTable().locator('tfoot tr.budget-status-summary');
+  }
+
+  // Rows in document order across tbody + tfoot, to assert Overall comes last.
+  budgetStatusAllRows(): Locator {
+    return this.budgetStatusTable().locator('tbody tr, tfoot tr');
+  }
+
+  budgetRowPercentLabel(row: Locator): Locator {
+    return row.locator('td[data-label="% of Budget"] .pct-pill-label');
+  }
+
+  budgetRowPill(row: Locator): Locator {
+    return row.locator('td[data-label="% of Budget"] .pct-pill');
   }
 
   budgetEmptyState(): Locator {

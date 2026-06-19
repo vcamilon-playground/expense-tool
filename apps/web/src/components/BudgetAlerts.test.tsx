@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import BudgetAlerts from './BudgetAlerts';
 import type { BudgetStatus } from '@expense/shared';
 
@@ -22,39 +22,54 @@ describe('BudgetAlerts', () => {
     expect(screen.getByText(/no budgets set/i)).toBeInTheDocument();
   });
 
-  it('renders the category name', () => {
+  it('renders the category name and its budget/actual/difference', () => {
     render(<BudgetAlerts statuses={[makeStatus({ category_name: 'Transport' })]} />);
     expect(screen.getByText('Transport')).toBeInTheDocument();
+    expect(screen.getByText(/5,000/)).toBeInTheDocument();
+    expect(screen.getByText(/1,000/)).toBeInTheDocument();
+    expect(screen.getByText(/4,000/)).toBeInTheDocument();
   });
 
-  it('applies "ok" pill class for ok status', () => {
+  it('renders the rounded percentage label', () => {
+    render(<BudgetAlerts statuses={[makeStatus({ pct_used: 0.926 })]} />);
+    expect(screen.getByText('93%')).toBeInTheDocument();
+  });
+
+  it('applies the "ok" pill class for ok status', () => {
     render(<BudgetAlerts statuses={[makeStatus({ status: 'ok' })]} />);
-    expect(document.querySelector('.pill.ok')).toBeInTheDocument();
+    expect(document.querySelector('.pct-pill.pct-ok')).toBeInTheDocument();
   });
 
-  it('maps "warning" status to "warn" CSS class', () => {
-    render(<BudgetAlerts statuses={[makeStatus({ status: 'warning', pct_used: 0.8, remaining: 1000 })]} />);
-    expect(document.querySelector('.pill.warn')).toBeInTheDocument();
+  it('maps "warning" status to the "warn" pill class', () => {
+    render(<BudgetAlerts statuses={[makeStatus({ status: 'warning', pct_used: 0.8 })]} />);
+    expect(document.querySelector('.pct-pill.pct-warn')).toBeInTheDocument();
   });
 
-  it('applies "over" pill class for over status', () => {
+  it('applies the "over" pill class for over status', () => {
     render(<BudgetAlerts statuses={[makeStatus({ status: 'over', pct_used: 1.1, remaining: -500 })]} />);
-    expect(document.querySelector('.pill.over')).toBeInTheDocument();
+    expect(document.querySelector('.pct-pill.pct-over')).toBeInTheDocument();
   });
 
-  it('shows over-budget message when status is over', () => {
+  it('caps the fill width at 100% while still showing the true percentage', () => {
     render(<BudgetAlerts statuses={[makeStatus({ status: 'over', pct_used: 1.1, remaining: -500 })]} />);
-    expect(screen.getByText(/over budget by/i)).toBeInTheDocument();
+    expect(screen.getByText('110%')).toBeInTheDocument();
+    const fill = document.querySelector('.pct-pill-fill') as HTMLElement;
+    expect(fill.style.width).toBe('100%');
   });
 
-  it('shows approaching-limit message when status is warning', () => {
-    render(<BudgetAlerts statuses={[makeStatus({ status: 'warning', pct_used: 0.8, remaining: 1000 })]} />);
-    expect(screen.getByText(/approaching limit/i)).toBeInTheDocument();
-  });
-
-  it('shows no extra message when status is ok', () => {
-    render(<BudgetAlerts statuses={[makeStatus({ status: 'ok' })]} />);
-    expect(screen.queryByText(/over budget/i)).toBeNull();
-    expect(screen.queryByText(/approaching limit/i)).toBeNull();
+  it('renders the Overall entry as a summary row in the table footer, categories in the body', () => {
+    render(
+      <BudgetAlerts
+        statuses={[
+          makeStatus({ category_id: null, category_name: 'Overall', limit: 8000, spent: 3000, remaining: 5000 }),
+          makeStatus({ category_id: 'cat1', category_name: 'Food' }),
+        ]}
+      />,
+    );
+    const summary = document.querySelector('tfoot .budget-status-summary') as HTMLElement;
+    expect(summary).toBeInTheDocument();
+    expect(within(summary).getByText('Overall')).toBeInTheDocument();
+    expect(document.querySelector('tbody')?.textContent).toContain('Food');
+    expect(document.querySelector('tfoot')?.textContent).not.toContain('Food');
   });
 });

@@ -26,6 +26,35 @@ test.describe('Dashboard', () => {
     await expect(dashboard.upcomingChargesSection()).toHaveText('Upcoming Charges');
   });
 
+  test('Budget Status card renders the new table or the empty state', async () => {
+    await expect(dashboard.budgetStatusSection()).toBeVisible();
+
+    const table = dashboard.budgetStatusTable();
+    if (await table.count() > 0) {
+      // New markup: a table with Category/Budget/Actual/Difference/% of Budget columns.
+      await expect(table).toBeVisible();
+      const headers = table.locator('thead th');
+      await expect(headers).toHaveText(['Category', 'Budget', 'Actual', 'Difference', '% of Budget']);
+
+      // At least one per-category row with a percentage pill (no legacy .pill/.bar).
+      const firstCategoryRow = table.locator('tbody tr').first();
+      await expect(firstCategoryRow).toBeVisible();
+      await expect(dashboard.budgetRowPill(firstCategoryRow)).toHaveClass(/pct-(ok|warn|over)/);
+      await expect(dashboard.budgetRowPercentLabel(firstCategoryRow)).toHaveText(/^\d+%$/);
+      await expect(table.locator('.pill')).toHaveCount(0);
+      await expect(table.locator('.bar')).toHaveCount(0);
+
+      // The computed Overall row is shown LAST as a tfoot summary row.
+      const overall = dashboard.budgetOverallRow();
+      await expect(overall).toBeVisible();
+      await expect(overall.locator('td[data-label="Category"]')).toHaveText('Overall');
+      const lastRow = dashboard.budgetStatusAllRows().last();
+      await expect(lastRow).toHaveClass(/budget-status-summary/);
+    } else {
+      await expect(dashboard.budgetEmptyState()).toBeVisible();
+    }
+  });
+
   test('month-end reminder banner is conditional on days remaining in month', async () => {
     const now = new Date();
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
