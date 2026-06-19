@@ -24,6 +24,8 @@ import TrendChart from '@/components/TrendChart';
 import CategoryChart from '@/components/CategoryChart';
 import LineTrendChart from '@/components/LineTrendChart';
 import MonthEndBanner from '@/components/MonthEndBanner';
+import MonthProjectionChart from '@/components/MonthProjectionChart';
+import SpendOutlookChart from '@/components/SpendOutlookChart';
 import { dailyTrend, weeklyTrend } from '@/lib/trends';
 
 export default function DashboardPage() {
@@ -125,6 +127,18 @@ export default function DashboardPage() {
         <div className="card chart-card">
           <h2 style={{ marginTop: 0 }}>6-Month Trend</h2>
           <TrendChart expenses={expenses} budgets={budgets} />
+        </div>
+      </div>
+
+      {/* Forecasting — month-end projection + next-quarter outlook */}
+      <div className="grid cols-2 chart-grid">
+        <div className="card chart-card">
+          <h2 style={{ marginTop: 0 }}>Month-End Projection</h2>
+          <MonthProjectionChart expenses={expenses} recurring={recurring} budgets={budgets} />
+        </div>
+        <div className="card chart-card">
+          <h2 style={{ marginTop: 0 }}>3-Month Outlook</h2>
+          <SpendOutlookChart expenses={expenses} recurring={recurring} budgets={budgets} />
         </div>
       </div>
 
