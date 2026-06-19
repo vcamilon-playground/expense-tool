@@ -77,7 +77,8 @@ export type IncomeSource = {
   id: string;
   user_id: string;
   type: IncomeType;
-  name: string | null;
+  name: string | null; // display alias (e.g. "Payroll"); falls back to brand
+  brand: string | null; // canonical company (e.g. "BPI", "GCash") that drives the logo
   balance: number;
   created_at?: string;
 };

@@ -18,6 +18,9 @@ import { errorMessage } from '@/lib/errors';
 import DeleteModal from '@/components/DeleteModal';
 import FormModal from '@/components/FormModal';
 import BrandLogo from '@/components/BrandLogo';
+import { brandLabelFromText, brandsForType, type BrandType } from '@/lib/brand-logos';
+
+const OTHER_BRAND = '__other__';
 
 const typeLabel: Record<IncomeType, string> = {
   bank: 'Bank',
@@ -88,9 +91,11 @@ export default function IncomePage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formType, setFormType] = useState<IncomeType>('bank');
+  const [formBrand, setFormBrand] = useState(''); // '' = none, a brand label, or OTHER_BRAND
+  const [formCustomBrand, setFormCustomBrand] = useState('');
   const [formName, setFormName] = useState('');
   const [formBalance, setFormBalance] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<{ name?: string; balance?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ brand?: string; name?: string; balance?: string }>({});
 
   // Transfer modal state
   const [transferOpen, setTransferOpen] = useState(false);
@@ -154,6 +159,18 @@ export default function IncomePage() {
   function startEdit(s: IncomeSource) {
     setEditingId(s.id);
     setFormType(s.type);
+    // Prefer the stored brand; for legacy rows (no brand) infer it from the name.
+    const knownLabel = brandLabelFromText(s.brand ?? s.name);
+    if (s.type === 'cash') {
+      setFormBrand('');
+      setFormCustomBrand('');
+    } else if (knownLabel) {
+      setFormBrand(knownLabel);
+      setFormCustomBrand('');
+    } else {
+      setFormBrand(OTHER_BRAND);
+      setFormCustomBrand(s.brand ?? '');
+    }
     setFormName(s.name ?? '');
     setFormBalance(String(s.balance));
     setFieldErrors({});
@@ -169,6 +186,8 @@ export default function IncomePage() {
   function resetForm() {
     setEditingId(null);
     setFormType('bank');
+    setFormBrand('');
+    setFormCustomBrand('');
     setFormName('');
     setFormBalance('');
     setFieldErrors({});
@@ -178,11 +197,21 @@ export default function IncomePage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSubmitError(null);
-    const newErrors: { name?: string; balance?: string } = {};
+    const newErrors: { brand?: string; name?: string; balance?: string } = {};
 
-    if (formType !== 'cash' && !formName.trim()) {
-      newErrors.name = `${typeLabel[formType]} name is required`;
+    // For bank/e-wallet, the company comes from the dropdown or a custom entry.
+    const effectiveBrand =
+      formType === 'cash'
+        ? null
+        : formBrand === OTHER_BRAND
+        ? formCustomBrand.trim()
+        : formBrand;
+
+    if (formType !== 'cash' && !effectiveBrand) {
+      newErrors.brand =
+        formBrand === OTHER_BRAND ? `Enter the ${typeLabel[formType].toLowerCase()} name` : 'Select a company';
     }
+
     const parsedBalance = parseFloat(formBalance);
     if (!formBalance) {
       newErrors.balance = 'Balance is required';
@@ -196,10 +225,14 @@ export default function IncomePage() {
     }
     setFieldErrors({});
 
+    // Alias is optional; default the display name to the company.
+    const displayName = formType === 'cash' ? null : (formName.trim() || effectiveBrand);
+
     try {
       if (editingId) {
         await updateIncomeSource(editingId, {
-          name: formType !== 'cash' ? formName.trim() : null,
+          name: displayName,
+          brand: effectiveBrand,
           balance: parsedBalance,
         });
       } else {
@@ -209,7 +242,7 @@ export default function IncomePage() {
           return;
         }
         await createIncomeSource(
-          { type: formType, name: formType !== 'cash' ? formName.trim() : null, balance: parsedBalance },
+          { type: formType, name: displayName, brand: effectiveBrand, balance: parsedBalance },
           user.id,
         );
       }
@@ -429,7 +462,12 @@ export default function IncomePage() {
             <div className="muted" style={{ marginBottom: 4 }}>Type</div>
             <select
               value={formType}
-              onChange={(e) => { setFormType(e.target.value as IncomeType); setFieldErrors({}); }}
+              onChange={(e) => {
+                setFormType(e.target.value as IncomeType);
+                setFormBrand('');
+                setFormCustomBrand('');
+                setFieldErrors({});
+              }}
               disabled={!!editingId}
             >
               <option value="bank">Bank</option>
@@ -439,16 +477,45 @@ export default function IncomePage() {
           </label>
 
           {formType !== 'cash' && (
-            <label style={{ display: 'block', marginBottom: 12 }}>
-              <div className="muted" style={{ marginBottom: 4 }}>{formType === 'bank' ? 'Bank Name' : 'E-Wallet Name'}</div>
-              <input
-                value={formName}
-                placeholder={formType === 'bank' ? 'e.g. BDO Savings' : 'e.g. GCash'}
-                onChange={(e) => { setFormName(e.target.value); setFieldErrors((p) => ({ ...p, name: undefined })); }}
-                aria-invalid={!!fieldErrors.name}
-              />
-              {fieldErrors.name && <p className="field-error">{fieldErrors.name}</p>}
-            </label>
+            <>
+              <label style={{ display: 'block', marginBottom: 12 }}>
+                <div className="muted" style={{ marginBottom: 4 }}>{formType === 'bank' ? 'Bank' : 'E-Wallet'}</div>
+                <select
+                  value={formBrand}
+                  onChange={(e) => { setFormBrand(e.target.value); setFieldErrors((p) => ({ ...p, brand: undefined })); }}
+                  aria-invalid={!!fieldErrors.brand}
+                >
+                  <option value="">{formType === 'bank' ? 'Select a bank…' : 'Select an e-wallet…'}</option>
+                  {brandsForType(formType as BrandType).map((b) => (
+                    <option key={b.label} value={b.label}>{b.label}</option>
+                  ))}
+                  <option value={OTHER_BRAND}>Other (not listed)</option>
+                </select>
+                {fieldErrors.brand && formBrand !== OTHER_BRAND && <p className="field-error">{fieldErrors.brand}</p>}
+              </label>
+
+              {formBrand === OTHER_BRAND && (
+                <label style={{ display: 'block', marginBottom: 12 }}>
+                  <div className="muted" style={{ marginBottom: 4 }}>{formType === 'bank' ? 'Bank name' : 'E-Wallet name'}</div>
+                  <input
+                    value={formCustomBrand}
+                    placeholder={formType === 'bank' ? 'e.g. Rural Bank of Cebu' : 'e.g. Starpay'}
+                    onChange={(e) => { setFormCustomBrand(e.target.value); setFieldErrors((p) => ({ ...p, brand: undefined })); }}
+                    aria-invalid={!!fieldErrors.brand}
+                  />
+                  {fieldErrors.brand && <p className="field-error">{fieldErrors.brand}</p>}
+                </label>
+              )}
+
+              <label style={{ display: 'block', marginBottom: 12 }}>
+                <div className="muted" style={{ marginBottom: 4 }}>Display name <span style={{ fontWeight: 400 }}>(optional)</span></div>
+                <input
+                  value={formName}
+                  placeholder="e.g. Payroll, Savings — defaults to the company"
+                  onChange={(e) => { setFormName(e.target.value); setFieldErrors((p) => ({ ...p, name: undefined })); }}
+                />
+              </label>
+            </>
           )}
 
           <label style={{ display: 'block', marginBottom: 12 }}>
@@ -626,7 +693,7 @@ function IncomeSection({
                   <tr key={s.id}>
                     <td style={{ fontWeight: 500 }}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                        <BrandLogo name={s.name} />
+                        <BrandLogo name={s.brand ?? s.name} />
                         {s.name}
                       </span>
                     </td>

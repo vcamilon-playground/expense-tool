@@ -131,10 +131,13 @@ create table if not exists income_sources (
   user_id uuid not null references users(id) on delete cascade,
   type text not null check (type in ('bank', 'ewallet', 'cash')),
   name text,
+  brand text,
   balance numeric(12,2) not null default 0 check (balance >= 0),
   created_at timestamptz not null default now()
 );
 create index if not exists income_sources_user_id_idx on income_sources (user_id);
+-- Migration for existing databases: add the brand (company) column if missing.
+alter table income_sources add column if not exists brand text;
 
 -- ---------- reminders ----------
 create table if not exists reminders (

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { brandDomain, brandHue, brandInitials, faviconUrl } from './brand-logos';
+import { brandDomain, brandHue, brandInitials, brandLabelFromText, brandsForType, faviconUrl } from './brand-logos';
 
 describe('brandDomain', () => {
   it('matches common banks and e-wallets case-insensitively', () => {
@@ -45,6 +45,33 @@ describe('brandInitials', () => {
 describe('faviconUrl', () => {
   it('builds a sized favicon URL for the domain', () => {
     expect(faviconUrl('bpi.com.ph', 64)).toBe('https://www.google.com/s2/favicons?domain=bpi.com.ph&sz=64');
+  });
+});
+
+describe('brandsForType', () => {
+  it('returns only brands of the requested type, alphabetised', () => {
+    const banks = brandsForType('bank');
+    expect(banks.every((b) => b.type === 'bank')).toBe(true);
+    expect(banks.map((b) => b.label)).toContain('BPI');
+    const labels = banks.map((b) => b.label);
+    expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b)));
+
+    const wallets = brandsForType('ewallet');
+    expect(wallets.every((b) => b.type === 'ewallet')).toBe(true);
+    expect(wallets.map((b) => b.label)).toContain('GCash');
+  });
+});
+
+describe('brandLabelFromText', () => {
+  it('resolves a canonical label from an exact name or substring', () => {
+    expect(brandLabelFromText('GCash')).toBe('GCash');
+    expect(brandLabelFromText('BPI Savings')).toBe('BPI');
+    expect(brandLabelFromText('Maya Bank')).toBe('Maya Bank');
+  });
+  it('returns null for unknown or empty text', () => {
+    expect(brandLabelFromText('Rural Bank of Cebu')).toBeNull();
+    expect(brandLabelFromText('')).toBeNull();
+    expect(brandLabelFromText(null)).toBeNull();
   });
 });
 

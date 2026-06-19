@@ -201,7 +201,7 @@ export async function createIncomeSource(
 
 export async function updateIncomeSource(
   id: string,
-  patch: Partial<Pick<IncomeSource, 'name' | 'balance'>>,
+  patch: Partial<Pick<IncomeSource, 'name' | 'brand' | 'balance'>>,
 ): Promise<IncomeSource> {
   const { data, error } = await supabase
     .from('income_sources')
