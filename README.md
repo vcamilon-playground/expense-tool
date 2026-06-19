@@ -149,7 +149,8 @@ after each Vercel deploy.
 
 - **Multi-user auth** — register with first name, last name, username, password, and an optional email (plus profile picture and birth date). Log in with either username **or** email. Logout and switch-user from the sidebar. Forgot a password? Request a reset link by email (a time-limited, single-use token) and set a new one — no admin needed when an email is on file.
 - **Dashboard** — totals for today / this week / this month / this year,
-  category breakdown (pie), a Budget Status table (Category / Budget / Actual /
+  a category breakdown donut (per-slice percentages, total in the center, and a
+  legend), a Budget Status table (Category / Budget / Actual /
   Difference / % of Budget, with a colored percentage pill and the Overall total
   as a summary row), daily spend trend (past 7 days)
   and weekly spend trend (past 5 weeks) line charts, 6-month trend, monthly AI
