@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import type { Expense } from '@expense/shared';
+import type { Category, Expense } from '@expense/shared';
 import { generateInsights, currentProvider } from '@/lib/ai';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
 
-type Body = { expenses: Expense[] };
+type Body = { expenses: Expense[]; categories?: Category[] };
 
 export async function POST(req: Request) {
   let body: Body;
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const result = await generateInsights(body.expenses);
+    const result = await generateInsights(body.expenses, body.categories ?? []);
     return NextResponse.json({ provider: currentProvider(), ...result });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'insight generation failed';

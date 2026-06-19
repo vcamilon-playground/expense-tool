@@ -1,4 +1,4 @@
-import type { Expense, MonthlyInsight, ReceiptExtraction } from '@expense/shared';
+import type { Category, Expense, MonthlyInsight, ReceiptExtraction } from '@expense/shared';
 import { extractReceiptAnthropic, generateInsightsAnthropic } from './providers/anthropic';
 import { extractReceiptGemini, generateInsightsGemini } from './providers/gemini';
 import { extractReceiptGroq, generateInsightsGroq } from './providers/groq';
@@ -28,13 +28,16 @@ export async function extractReceipt(
   }
 }
 
-export async function generateInsights(expenses: Expense[]): Promise<MonthlyInsight> {
+export async function generateInsights(
+  expenses: Expense[],
+  categories: Category[] = [],
+): Promise<MonthlyInsight> {
   switch (currentProvider()) {
     case 'anthropic':
-      return generateInsightsAnthropic(expenses);
+      return generateInsightsAnthropic(expenses, categories);
     case 'gemini':
-      return generateInsightsGemini(expenses);
+      return generateInsightsGemini(expenses, categories);
     case 'groq':
-      return generateInsightsGroq(expenses);
+      return generateInsightsGroq(expenses, categories);
   }
 }

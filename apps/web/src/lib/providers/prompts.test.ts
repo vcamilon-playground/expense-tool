@@ -8,13 +8,14 @@ function exp(
   occurred_at: string,
   amount: number,
   conversion_rate: number | null = null,
+  category_id: string | null = null,
 ): Expense {
   return {
     id: occurred_at + amount + (conversion_rate ?? ''),
     amount,
     currency: conversion_rate ? 'USD' : 'PHP',
     conversion_rate,
-    category_id: null,
+    category_id,
     merchant: null,
     description: null,
     occurred_at,
@@ -53,5 +54,21 @@ describe('buildInsightInput', () => {
     const { thisMonth, total } = buildInsightInput([exp('1999-12-31', 500)]);
     expect(thisMonth).toHaveLength(0);
     expect(total).toBe(0);
+  });
+
+  it('resolves the category id to its name so the model never sees a raw UUID', () => {
+    const catId = 'ea4b8927-f412-49f2-8b0d-740e7c2a6f85';
+    const { compact } = buildInsightInput(
+      [exp(`${MONTH}-07`, 16219, null, catId)],
+      [{ id: catId, name: 'Transport' }],
+    );
+    expect(compact[0]?.category).toBe('Transport');
+    // The raw id must not leak into the model input.
+    expect(JSON.stringify(compact)).not.toContain(catId);
+  });
+
+  it('falls back to null category when the id has no matching name', () => {
+    const { compact } = buildInsightInput([exp(`${MONTH}-07`, 100, null, 'unknown-id')], []);
+    expect(compact[0]?.category).toBeNull();
   });
 });

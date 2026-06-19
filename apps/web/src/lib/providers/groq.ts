@@ -54,8 +54,11 @@ export async function extractReceiptGroq(
   return parsed;
 }
 
-export async function generateInsightsGroq(expenses: Expense[]): Promise<MonthlyInsight> {
-  const { month, thisMonth, compact, total } = buildInsightInput(expenses);
+export async function generateInsightsGroq(
+  expenses: Expense[],
+  categories: { id: string; name: string }[] = [],
+): Promise<MonthlyInsight> {
+  const { month, thisMonth, compact, total } = buildInsightInput(expenses, categories);
   if (thisMonth.length === 0) {
     return emptyInsight(month);
   }

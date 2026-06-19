@@ -160,7 +160,7 @@ export default function DashboardPage() {
       </div>
 
       {/* AI Insight */}
-      <InsightCard expenses={expenses} />
+      <InsightCard expenses={expenses} categories={categories} />
     </div>
   );
 }

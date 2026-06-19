@@ -1,10 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Expense, MonthlyInsight } from '@expense/shared';
+import type { Category, Expense, MonthlyInsight } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
 
-export default function InsightCard({ expenses }: { expenses: Expense[] }) {
+export default function InsightCard({
+  expenses,
+  categories,
+}: {
+  expenses: Expense[];
+  categories: Category[];
+}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [insight, setInsight] = useState<MonthlyInsight | null>(null);
@@ -24,7 +30,7 @@ export default function InsightCard({ expenses }: { expenses: Expense[] }) {
       const res = await fetch('/api/insights', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ expenses }),
+        body: JSON.stringify({ expenses, categories }),
       });
       if (!res.ok) throw new Error(await res.text());
       const data = (await res.json()) as MonthlyInsight;

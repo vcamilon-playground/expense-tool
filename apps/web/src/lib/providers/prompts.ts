@@ -50,7 +50,7 @@ export type InsightExpense = {
   date: string;
   amount: number;
   currency: 'PHP';
-  category_id: string | null;
+  category: string | null;
   merchant: string | null;
   description: string | null;
 };
@@ -61,19 +61,23 @@ export type InsightExpense = {
  * total. Centralised here so all providers agree with the dashboard, which
  * sums the same PHP-converted amounts.
  */
-export function buildInsightInput(expenses: Expense[]): {
+export function buildInsightInput(
+  expenses: Expense[],
+  categories: { id: string; name: string }[] = [],
+): {
   month: string;
   thisMonth: Expense[];
   compact: InsightExpense[];
   total: number;
 } {
   const month = currentMonth();
+  const nameById = new Map(categories.map((c) => [c.id, c.name]));
   const thisMonth = expenses.filter((e) => e.occurred_at.startsWith(month));
   const compact: InsightExpense[] = thisMonth.map((e) => ({
     date: e.occurred_at,
     amount: round2(phpAmount(e)),
     currency: 'PHP',
-    category_id: e.category_id,
+    category: e.category_id ? nameById.get(e.category_id) ?? null : null,
     merchant: e.merchant,
     description: e.description,
   }));
