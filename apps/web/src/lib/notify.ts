@@ -1,4 +1,4 @@
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.expensetooltracker.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://your-app.vercel.app';
 
 function monthLabel(): string {
   return new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
