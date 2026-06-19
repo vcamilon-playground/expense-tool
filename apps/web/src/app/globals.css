@@ -582,6 +582,10 @@ th {
 table tbody tr { transition: background 0.12s; }
 table tbody tr:hover td { background: var(--panel-2); }
 
+/* Budget "Overall" total row */
+.budget-table tfoot td { border-bottom: none; border-top: 2px solid var(--border); }
+.budget-overall-row td { padding-top: 12px; }
+
 /* Sortable column headers */
 th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 /* Layer the white wash over the themed band (keeps --sidebar-bg from base th). */
@@ -1234,6 +1238,15 @@ button.footer-link:hover {
     gap: 6px;
     padding-top: 8px;
   }
+  .budget-table tfoot tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 12px 0 0;
+  }
+  .budget-table tfoot td:nth-child(1) { flex: 1 1 auto; font-size: 14px; }
+  .budget-table tfoot td:nth-child(2) { flex: 0 0 auto; font-size: 14px; text-align: right; }
+  .budget-table tfoot td:nth-child(3) { display: none; }
 
   /* Income table: same two-line card view */
   .income-table thead { display: none; }

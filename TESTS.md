@@ -95,7 +95,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/loading.spec.ts` | Smoke | Page-level loading state shows the themed `LoadingScreen` spinner (`.loading-screen`, `role="status"`, `.spinner` with 12 bars, "Loading" label) while a delayed Supabase request is in flight |
 | `tests/expenses.regression.spec.ts` | Regression | Create/edit/delete expense; past-month lock with allow-past-edit off and on |
 | `tests/expenses-grid.regression.spec.ts` | Regression | Grid cards render category/amount/merchant/description; receipt pill and ≈PHP conversion; search narrows cards; edit/delete from a card; Load More pagination (20-per-page, accent-styled button); past-month lock with allow-past-edit off and on |
-| `tests/budgets.regression.spec.ts` | Regression | Edit overall budget and verify updated limit |
+| `tests/budgets.regression.spec.ts` | Regression | Seed a per-category budget, edit its limit; verify the computed read-only Overall footer row (sum of category limits, no actions) and the dashboard Overall + category rows |
 | `tests/recurring.regression.spec.ts` | Regression | Create/edit/delete recurring expense; confirm YES adds expense + advances date; confirm NO advances date without adding expense |
 | `tests/settings.regression.spec.ts` | Regression | Add category with custom icon; add category without icon uses default; deleting category does not delete linked expenses |
 | `tests/income.regression.spec.ts` | Regression | Create/edit/delete a bank source; transfer moves balance between sources; transfer rejects an over-balance amount; add money tops up a source balance; add money rejects a non-positive amount |
@@ -417,7 +417,9 @@ cd apps/e2e && npx playwright show-report
 ### `budgets.regression.spec.ts` — Budgets CRUD
 
 **Budgets — edit regression**
-- edit overall budget updates the displayed limit
+- editing a per-category budget updates its displayed limit
+- read-only Overall footer row reflects the sum of category limits and has no actions
+- dashboard Budget Status lists the computed Overall row alongside the category
 
 ---
 

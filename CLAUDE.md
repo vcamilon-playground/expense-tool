@@ -95,7 +95,7 @@ Tables in Supabase Postgres:
 | `users` | `id`, `username`, `email` (optional, unique), `first_name`, `last_name`, `password_hash`, `avatar_url`, `birth_date`, `reset_token_hash`, `reset_token_expires_at` |
 | `categories` | `id`, `user_id`, `name`, `icon`, `active` |
 | `expenses` | `id`, `user_id`, `amount`, `currency`, `conversion_rate`, `category_id`, `merchant`, `description`, `occurred_at`, `receipt_url`, `source` |
-| `budgets` | `id`, `user_id`, `category_id` (null = overall), `monthly_limit` |
+| `budgets` | `id`, `user_id`, `category_id` (required per-category; legacy nulls ignored), `monthly_limit` |
 | `recurring_expenses` | `id`, `user_id`, `name`, `amount`, `category_id`, `cadence` (weekly/monthly/yearly), `next_charge_date`, `active` |
 | `income_sources` | `id`, `user_id`, `type` (bank/ewallet/cash), `name` (null for cash), `balance` |
 | `reminders` | `id`, `user_id`, `title`, `remind_date`, `cadence` (once/weekly/monthly/yearly), `active` |
@@ -106,7 +106,7 @@ Tables in Supabase Postgres:
 - `income_sources.type` is `'bank'`, `'ewallet'`, or `'cash'`. Only one `cash` entry is allowed per user (enforced in app code). When an expense is **created** (not edited), the user may optionally select an income source to deduct from; `deductFromIncomeSource` is called immediately after `createExpense`. No restoration occurs on edit or delete. `addToIncomeSource(id, amount)` tops up a single source's balance (the "Add Money" action on the Income page). `transferIncome(fromId, toId, amount)` moves money between two sources (deduct + add).
 - `reminders` power the user-created notifications on the `/notifications` page. `cadence` is `'once'` (deleted when marked Done) or `'weekly'`/`'monthly'`/`'yearly'` (`remind_date` advances via `advanceDate` when marked Done). `computeNotifications(recurring, reminders, today, incomeReminderDismissed)` in `lib/notifications.ts` is pure and emits a notification for any active reminder whose `remind_date <= today`.
 - Edit button on expenses is shown for current-month rows by default. If the user enables "Allow past expense editing" in Settings (`localStorage` key `allow-past-edit`), edit is shown on all rows.
-- `budgets.category_id` is nullable — a null category_id means "overall" budget.
+- The Budgets page requires a category (no manual "Overall" budget). The "Overall" total is **computed** as the sum of every per-category budget limit — shown as a read-only footer row on the Budgets page and returned first by `budgetStatus` for the dashboard Budget Status card; legacy null-category budget rows are ignored. `budgetStatus` flags a budget as `over` only when `spent > limit` (strictly), `warning` at `pct_used >= 0.80`, else `ok`.
 
 **Environment variables required (set in Vercel and `apps/web/.env.local`):**
 

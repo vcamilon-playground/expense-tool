@@ -136,6 +136,13 @@ export function summarizeRange(
   return buildPeriodSummary(expenses, categories, 'custom', from, to);
 }
 
+function deriveStatus(spent: number, limit: number): BudgetStatus {
+  const remaining = limit - spent;
+  const pct_used = limit > 0 ? spent / limit : 0;
+  const status: BudgetStatus['status'] = spent > limit ? 'over' : pct_used >= 0.80 ? 'warning' : 'ok';
+  return { category_id: null, category_name: '', limit, spent, remaining, pct_used, status };
+}
+
 export function budgetStatus(
   expenses: Expense[],
   categories: Category[],
@@ -146,21 +153,23 @@ export function budgetStatus(
   const catMap = new Map(categories.map((c) => [c.id, c.name]));
   const spentByCat = new Map(month.by_category.map((c) => [c.category_id ?? '__none__', c.total]));
 
-  return budgets.map((b) => {
-    const spent = b.category_id ? spentByCat.get(b.category_id) ?? 0 : month.total;
-    const remaining = b.monthly_limit - spent;
-    const pct_used = b.monthly_limit > 0 ? spent / b.monthly_limit : 0;
-    const status: BudgetStatus['status'] = pct_used > 0.90 ? 'over' : pct_used > 0.75 ? 'warning' : 'ok';
-    return {
-      category_id: b.category_id,
-      category_name: b.category_id ? catMap.get(b.category_id) ?? 'Unknown' : 'Overall',
-      limit: b.monthly_limit,
-      spent,
-      remaining,
-      pct_used,
-      status,
-    };
-  });
+  const categoryBudgets = budgets.filter((b) => b.category_id !== null);
+
+  const perCategory: BudgetStatus[] = categoryBudgets.map((b) => ({
+    ...deriveStatus(spentByCat.get(b.category_id as string) ?? 0, b.monthly_limit),
+    category_id: b.category_id,
+    category_name: catMap.get(b.category_id as string) ?? 'Unknown',
+  }));
+
+  const overallLimit = categoryBudgets.reduce((sum, b) => sum + b.monthly_limit, 0);
+  if (overallLimit <= 0) return perCategory;
+
+  const overall: BudgetStatus = {
+    ...deriveStatus(month.total, overallLimit),
+    category_id: null,
+    category_name: 'Overall',
+  };
+  return [overall, ...perCategory];
 }
 
 export function formatMoney(n: number, currency = 'PHP'): string {

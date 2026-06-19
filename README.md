@@ -159,8 +159,9 @@ after each Vercel deploy.
   `AI_PROVIDER` (default Gemini, free).
 - **Reports** — switch between day / week / month / year, with category
   totals and percentages.
-- **Budgets** — overall or per-category monthly limits. Dashboard warns at
-  ≥ 80% and flags over-budget.
+- **Budgets** — per-category monthly limits, with an Overall total computed as
+  the sum of every category limit. Dashboard warns at ≥ 80% and flags
+  over-budget once spending exceeds the limit.
 - **Recurring** — track subscriptions (weekly / monthly / yearly) with
   the next charge date. Due items show a "Confirm Payment" flow (record or
   skip). Future-dated items have a "Pay Now" button to record the payment

@@ -21,6 +21,7 @@ export default function BudgetsPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [limitError, setLimitError] = useState<string | null>(null);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Budget | null>(null);
   const [editing, setEditing] = useState<Budget | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -50,6 +51,7 @@ export default function BudgetsPage() {
     setCategoryId(b.category_id ?? '');
     setLimit(String(b.monthly_limit));
     setLimitError(null);
+    setCategoryError(null);
     setFormOpen(true);
   }
 
@@ -58,6 +60,7 @@ export default function BudgetsPage() {
     setCategoryId('');
     setLimit('');
     setLimitError(null);
+    setCategoryError(null);
     setFormOpen(true);
   }
 
@@ -66,11 +69,16 @@ export default function BudgetsPage() {
     setCategoryId('');
     setLimit('');
     setLimitError(null);
+    setCategoryError(null);
     setFormOpen(false);
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (!editing && !categoryId) {
+      setCategoryError('Select a category');
+      return;
+    }
     const parsed = parseFloat(limit);
     if (!limit) {
       setLimitError('Monthly limit is required');
@@ -81,12 +89,13 @@ export default function BudgetsPage() {
       return;
     }
     setLimitError(null);
+    setCategoryError(null);
     if (editing) {
       await updateBudget(editing.id, parsed);
       setEditing(null);
     } else {
       if (!user) return;
-      await upsertBudget({ category_id: categoryId || null, monthly_limit: parsed }, user.id);
+      await upsertBudget({ category_id: categoryId, monthly_limit: parsed }, user.id);
     }
     setLimit('');
     setCategoryId('');
@@ -104,7 +113,9 @@ export default function BudgetsPage() {
   if (!user || loading) return <LoadingScreen />;
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const activeCategories = categories.filter((c) => c.active !== false);
-  const sortedBudgets = sortRows(budgets, (b) => {
+  const categoryBudgets = budgets.filter((b) => b.category_id !== null);
+  const overallLimit = categoryBudgets.reduce((sum, b) => sum + b.monthly_limit, 0);
+  const sortedBudgets = sortRows(categoryBudgets, (b) => {
     if (sortCol === 'limit') return b.monthly_limit;
     const cat = b.category_id ? catMap.get(b.category_id) : null;
     return cat ? cat.name : '';
@@ -128,7 +139,7 @@ export default function BudgetsPage() {
           + Add Budget
         </button>
       </div>
-      <p className="muted">Set a monthly limit overall or per category. Dashboard will warn at 80% and flag overspend.</p>
+      <p className="muted">Set a monthly limit per category. Your overall budget is the total of every category limit. Dashboard will warn at 80% and flag overspend.</p>
 
       {loadError && <p style={{ color: 'var(--bad)', marginBottom: 12 }}>{loadError}</p>}
 
@@ -145,14 +156,21 @@ export default function BudgetsPage() {
           )}
           <label style={{ display: 'block', marginBottom: 12 }}>
             <div className="muted" style={{ marginBottom: 4 }}>Category</div>
-            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} disabled={editing !== null}>
-              <option value="">Overall (any category)</option>
+            <select
+              value={categoryId}
+              onChange={(e) => { setCategoryId(e.target.value); setCategoryError(null); }}
+              disabled={editing !== null}
+              aria-invalid={!!categoryError}
+              required
+            >
+              <option value="">Select a category</option>
               {activeCategories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.icon} {c.name}
                 </option>
               ))}
             </select>
+            {categoryError && <p className="field-error">{categoryError}</p>}
           </label>
           <label style={{ display: 'block', marginBottom: 12 }}>
             <div className="muted" style={{ marginBottom: 4 }}>Monthly Limit</div>
@@ -180,7 +198,7 @@ export default function BudgetsPage() {
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>Current Budgets</h2>
-        {budgets.length === 0 ? (
+        {categoryBudgets.length === 0 ? (
           <p className="muted">No budgets set.</p>
         ) : (
           <div className="table-wrap">
@@ -197,7 +215,7 @@ export default function BudgetsPage() {
                   const cat = b.category_id ? catMap.get(b.category_id) : null;
                   return (
                     <tr key={b.id}>
-                      <td>{cat ? `${cat.icon ?? ''} ${cat.name}` : 'Overall'}</td>
+                      <td>{cat ? `${cat.icon ?? ''} ${cat.name}` : 'Unknown'}</td>
                       <td style={{ textAlign: 'right' }}>{formatMoney(b.monthly_limit)}</td>
                       <td style={{ textAlign: 'right' }}>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
@@ -209,6 +227,13 @@ export default function BudgetsPage() {
                   );
                 })}
               </tbody>
+              <tfoot>
+                <tr className="budget-overall-row">
+                  <td><strong>Overall</strong></td>
+                  <td style={{ textAlign: 'right' }}><strong>{formatMoney(overallLimit)}</strong></td>
+                  <td></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         )}

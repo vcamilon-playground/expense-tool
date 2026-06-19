@@ -11,7 +11,9 @@ test.describe('Budgets page', () => {
 
   test('page renders with heading, add button, and budget sections', async () => {
     await expect(budgets.heading()).toHaveText('Budgets');
-    await expect(budgets.page.getByText('Set a monthly limit overall or per category')).toBeVisible();
+    await expect(
+      budgets.page.getByText('Set a monthly limit per category. Your overall budget is the total of every category limit. Dashboard will warn at 80% and flag overspend.'),
+    ).toBeVisible();
     await expect(budgets.addBudgetButton()).toBeVisible();
     await expect(budgets.currentBudgetsHeading()).toHaveText('Current Budgets');
   });
@@ -22,6 +24,20 @@ test.describe('Budgets page', () => {
     await expect(budgets.dialog().getByText('Monthly Limit', { exact: true })).toBeVisible();
     await expect(budgets.monthlyLimitInput()).toBeVisible();
     await expect(budgets.saveBudgetButton()).toHaveText('Save Budget');
+  });
+
+  test('category select prompts to "Select a category" and offers no manual Overall option', async () => {
+    await budgets.openAddModal();
+    await expect(budgets.categorySelect().locator('option').first()).toHaveText('Select a category');
+    await expect(budgets.categorySelect().locator('option', { hasText: 'Overall (any category)' })).toHaveCount(0);
+  });
+
+  test('computed Overall footer row is read-only with no Edit/Delete buttons', async () => {
+    const table = budgets.page.locator('table.budget-table');
+    if (await table.count() === 0) test.skip();
+    await expect(budgets.overallFooterRow()).toBeVisible();
+    await expect(budgets.overallFooterRow()).toContainText('Overall');
+    await expect(budgets.overallFooterRow().getByRole('button')).toHaveCount(0);
   });
 
   test('each budget row has Edit and Delete buttons', async () => {
@@ -53,6 +69,8 @@ test.describe('Budgets page', () => {
 
   test('invalid Monthly Limit values show inline error', async () => {
     await budgets.openAddModal();
+    // Category is required and validated before the limit, so pick a real one first.
+    if (!(await budgets.selectFirstCategory())) test.skip();
     await budgets.monthlyLimitInput().fill('');
     await budgets.saveBudgetButton().click();
     await expect(budgets.dialog().locator('label').filter({ hasText: 'Monthly Limit' }).locator('.field-error')).toBeVisible();
@@ -60,6 +78,14 @@ test.describe('Budgets page', () => {
     await budgets.monthlyLimitInput().fill('-1');
     await budgets.saveBudgetButton().click();
     await expect(budgets.dialog().locator('label').filter({ hasText: 'Monthly Limit' }).locator('.field-error')).toBeVisible();
+  });
+
+  test('submitting Add Budget without choosing a category shows an inline error', async () => {
+    await budgets.openAddModal();
+    await budgets.monthlyLimitInput().fill('500');
+    await budgets.saveBudgetButton().click();
+    await expect(budgets.categoryFieldError()).toBeVisible();
+    await expect(budgets.categoryFieldError()).toHaveText('Select a category');
   });
 });
 

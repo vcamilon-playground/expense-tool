@@ -2,45 +2,63 @@ import { test, expect } from '@playwright/test';
 import {
   E2E_BUDGET_LIMIT,
   E2E_BUDGET_LIMIT_EDITED,
-  OverallBudgetSnapshot,
+  categoryBudget,
   cleanup,
-  overallBudget,
   seed,
 } from './helpers/supabase';
 import { BudgetsPage } from './pages/BudgetsPage';
+import { DashboardPage } from './pages/DashboardPage';
 
 test.describe('Budgets — edit regression', () => {
-  let snapshot: OverallBudgetSnapshot = null;
+  let categoryName = '';
 
   test.beforeAll(async () => {
-    snapshot = await overallBudget.get();
-    if (snapshot) {
-      await overallBudget.restore(snapshot.id, E2E_BUDGET_LIMIT);
-    } else {
-      await seed.budget();
-    }
+    await cleanup.budget();
+    await cleanup.category();
+    const created = await seed.categoryBudget();
+    categoryName = created.categoryName;
   });
 
   test.afterAll(async () => {
-    if (snapshot) {
-      await overallBudget.restore(snapshot.id, snapshot.monthly_limit);
-    } else {
-      await cleanup.budget();
-    }
+    await cleanup.budget();
+    await cleanup.category();
   });
 
-  test('edit overall budget updates the displayed limit', async ({ page }) => {
+  test('editing a per-category budget updates its displayed limit', async ({ page }) => {
     const budgets = new BudgetsPage(page);
     await budgets.goto();
 
-    await expect(budgets.row('Overall')).toBeVisible();
-    await expect(budgets.row('Overall')).toContainText(E2E_BUDGET_LIMIT.toLocaleString());
+    await expect(budgets.row(categoryName)).toBeVisible();
+    await expect(budgets.row(categoryName)).toContainText(E2E_BUDGET_LIMIT.toLocaleString());
 
-    await budgets.editRow('Overall');
+    await budgets.editRow(categoryName);
+    await expect(budgets.categorySelect()).toBeDisabled();
     await budgets.monthlyLimitInput().fill(String(E2E_BUDGET_LIMIT_EDITED));
     await budgets.updateBudgetButton().click();
 
     await expect(budgets.updateBudgetButton()).toBeHidden();
-    await expect(budgets.row('Overall')).toContainText(E2E_BUDGET_LIMIT_EDITED.toLocaleString());
+    await expect(budgets.row(categoryName)).toContainText(E2E_BUDGET_LIMIT_EDITED.toLocaleString());
+  });
+
+  test('read-only Overall footer row reflects the sum of category limits and has no actions', async ({ page }) => {
+    const budgets = new BudgetsPage(page);
+    await budgets.goto();
+
+    const expectedSum = await categoryBudget.sumLimits();
+    expect(expectedSum).toBeGreaterThan(0);
+
+    await expect(budgets.overallFooterRow()).toBeVisible();
+    await expect(budgets.overallFooterRow()).toContainText('Overall');
+    await expect(budgets.overallFooterRow()).toContainText(expectedSum.toLocaleString());
+    await expect(budgets.overallFooterRow().getByRole('button')).toHaveCount(0);
+  });
+
+  test('dashboard Budget Status lists the computed Overall row alongside the category', async ({ page }) => {
+    const dashboard = new DashboardPage(page);
+    await dashboard.goto();
+
+    await expect(dashboard.budgetStatusSection()).toBeVisible();
+    await expect(dashboard.budgetStatusRow('Overall')).toBeVisible();
+    await expect(dashboard.budgetStatusRow(categoryName)).toBeVisible();
   });
 });

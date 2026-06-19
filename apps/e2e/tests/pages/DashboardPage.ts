@@ -29,6 +29,18 @@ export class DashboardPage extends BasePage {
     return this.page.getByRole('heading', { level: 2, name: 'Budget Status' });
   }
 
+  budgetStatusCard(): Locator {
+    return this.page.locator('.card').filter({ hasText: 'Budget Status' });
+  }
+
+  budgetStatusRow(name: string): Locator {
+    return this.budgetStatusCard().locator('strong').filter({ hasText: name });
+  }
+
+  budgetEmptyState(): Locator {
+    return this.budgetStatusCard().getByText('No budgets set. Add one on the Budgets page.');
+  }
+
   categoryChartSection(): Locator {
     return this.page.getByRole('heading', { level: 2, name: 'This Month by Category' });
   }

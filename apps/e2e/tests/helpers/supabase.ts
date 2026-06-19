@@ -149,7 +149,7 @@ export const cleanup = {
   },
   budget: () => {
     const uid = loadE2EUserId();
-    const base = `category_id=is.null&monthly_limit=in.(${E2E_BUDGET_LIMIT},${E2E_BUDGET_LIMIT_EDITED})`;
+    const base = `monthly_limit=in.(${E2E_BUDGET_LIMIT},${E2E_BUDGET_LIMIT_EDITED})`;
     const filter = uid ? `${base}&user_id=eq.${uid}` : base;
     return del('budgets', filter);
   },
@@ -303,9 +303,22 @@ export const seed = {
       category_id: null,
     });
   },
-  budget: () => {
+  // Creates a dedicated E2E category and a per-category budget against it.
+  // Returns the category id, category name, and budget id so the regression
+  // spec can locate the row in the table.
+  categoryBudget: async (): Promise<{ categoryId: string; categoryName: string; budgetId: string }> => {
     const uid = loadE2EUserId();
-    return post('budgets', { user_id: uid, monthly_limit: E2E_BUDGET_LIMIT, category_id: null });
+    const cat = await postReturn<{ id: string }>('categories', {
+      user_id: uid,
+      name: E2E_CATEGORY_NAME,
+      icon: '🧪',
+    });
+    const budget = await postReturn<{ id: string }>('budgets', {
+      user_id: uid,
+      monthly_limit: E2E_BUDGET_LIMIT,
+      category_id: cat.id,
+    });
+    return { categoryId: cat.id, categoryName: E2E_CATEGORY_NAME, budgetId: budget.id };
   },
   incomeSource: (name: string, balance: number) => {
     const uid = loadE2EUserId();
@@ -349,18 +362,15 @@ export const seed = {
   },
 };
 
-export type OverallBudgetSnapshot = { id: string; monthly_limit: number } | null;
-
-export const overallBudget = {
-  get: () => {
+export const categoryBudget = {
+  // Sum of every per-category budget limit for the E2E user. The Budgets page
+  // footer and the dashboard "Overall" row both display this total.
+  sumLimits: async (): Promise<number> => {
     const uid = loadE2EUserId();
     const filter = uid
-      ? `category_id=is.null&user_id=eq.${uid}&select=id,monthly_limit`
-      : 'category_id=is.null&select=id,monthly_limit';
-    return get<{ id: string; monthly_limit: number }>('budgets', filter).then(
-      (rows) => (rows.length > 0 ? rows[0] : null),
-    );
+      ? `category_id=not.is.null&user_id=eq.${uid}&select=monthly_limit`
+      : 'category_id=not.is.null&select=monthly_limit';
+    const rows = await get<{ monthly_limit: number }>('budgets', filter);
+    return rows.reduce((sum, r) => sum + Number(r.monthly_limit), 0);
   },
-  restore: (id: string, monthly_limit: number) =>
-    patch('budgets', `id=eq.${id}`, { monthly_limit }),
 };

@@ -49,12 +49,42 @@ export class BudgetsPage extends BasePage {
     return this.dialog().locator('select');
   }
 
+  async selectCategory(name: string): Promise<void> {
+    const value = await this.dialog()
+      .locator('select option', { hasText: name })
+      .first()
+      .getAttribute('value');
+    if (value === null) throw new Error(`No category option matching "${name}"`);
+    await this.categorySelect().selectOption(value);
+  }
+
+  // Selects the first real category (index 0 is the "Select a category" placeholder).
+  // Returns false when the user has no categories available.
+  async selectFirstCategory(): Promise<boolean> {
+    const options = this.categorySelect().locator('option');
+    if ((await options.count()) < 2) return false;
+    const value = await options.nth(1).getAttribute('value');
+    if (!value) return false;
+    await this.categorySelect().selectOption(value);
+    return true;
+  }
+
+  categoryFieldError(): Locator {
+    return this.dialog().locator('label').filter({ hasText: 'Category' }).locator('.field-error');
+  }
+
   currentBudgetsHeading(): Locator {
     return this.page.getByRole('heading', { level: 2, name: 'Current Budgets' });
   }
 
+  // Per-category budget rows live in <tbody> and carry Edit/Delete actions.
   row(label: string): Locator {
     return this.page.locator('table tbody tr').filter({ hasText: label });
+  }
+
+  // The computed, read-only "Overall" total lives in the table footer.
+  overallFooterRow(): Locator {
+    return this.page.locator('table tfoot tr.budget-overall-row');
   }
 
   editButton(label: string): Locator {
