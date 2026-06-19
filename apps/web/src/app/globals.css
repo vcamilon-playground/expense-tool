@@ -811,6 +811,25 @@ button.btn-sm {
 .pct-warn .pct-pill-fill { background: var(--warn); }
 .pct-over .pct-pill-fill { background: var(--bad); }
 
+/* ── Brand logo (income sources) ── */
+.brand-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  object-fit: contain;
+  background: var(--panel-2);
+}
+.brand-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: .02em;
+}
+
 /* ── Banners ── */
 .banner {
   border-radius: 10px;

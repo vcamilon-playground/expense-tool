@@ -17,6 +17,7 @@ import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import { errorMessage } from '@/lib/errors';
 import DeleteModal from '@/components/DeleteModal';
 import FormModal from '@/components/FormModal';
+import BrandLogo from '@/components/BrandLogo';
 
 const typeLabel: Record<IncomeType, string> = {
   bank: 'Bank',
@@ -623,7 +624,12 @@ function IncomeSection({
               <tbody>
                 {sources.map((s) => (
                   <tr key={s.id}>
-                    <td style={{ fontWeight: 500 }}>{s.name}</td>
+                    <td style={{ fontWeight: 500 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                        <BrandLogo name={s.name} />
+                        {s.name}
+                      </span>
+                    </td>
                     <td style={{ textAlign: 'right', fontWeight: 600 }}><AmountWithEye amount={s.balance} visible={isVisible(s.id)} onToggle={() => toggleKey(s.id)} /></td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>

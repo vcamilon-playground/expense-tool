@@ -171,7 +171,9 @@ after each Vercel deploy.
   ahead of schedule and advance the next charge date. Both flows can
   optionally deduct from an income source.
 - **Income** — track balances across bank accounts, e-wallets, and cash on
-  hand. Expenses (and recurring payments) can optionally deduct from a chosen
+  hand. Each bank/e-wallet shows its brand logo (fetched from a free favicon
+  service, with a colored initial badge fallback for offline or unknown names).
+  Expenses (and recurring payments) can optionally deduct from a chosen
   source when recorded. **Add Money** tops up any source's balance, and
   **Transfer** moves money between any two sources.
   Amounts are hidden by default for privacy — reveal everything with the header
