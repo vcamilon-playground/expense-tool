@@ -5,6 +5,7 @@ export type Brand = {
   domain: string; // used to fetch the favicon
   type: BrandType;
   match: string[]; // lowercase substrings that resolve free text to this brand
+  color?: string; // badge background when the favicon is unavailable (else a hashed hue)
 };
 
 // Known PH (and a few global) banks and e-wallets. Order matters for substring
@@ -12,7 +13,7 @@ export type Brand = {
 // e-wallets so "Maya Bank" resolves to the bank, not the Maya wallet.
 export const BRANDS: ReadonlyArray<Brand> = [
   // Banks
-  { label: 'BDO', domain: 'bdo.com.ph', type: 'bank', match: ['bdo'] },
+  { label: 'BDO', domain: 'bdo.com.ph', type: 'bank', match: ['bdo'], color: '#00256c' },
   { label: 'BPI', domain: 'bpi.com.ph', type: 'bank', match: ['bpi'] },
   { label: 'Metrobank', domain: 'metrobank.com.ph', type: 'bank', match: ['metrobank'] },
   { label: 'UnionBank', domain: 'unionbankph.com', type: 'bank', match: ['unionbank', 'union bank'] },
@@ -24,10 +25,10 @@ export const BRANDS: ReadonlyArray<Brand> = [
   { label: 'Maybank', domain: 'maybank.com.ph', type: 'bank', match: ['maybank'] },
   { label: 'RCBC', domain: 'rcbc.com', type: 'bank', match: ['rcbc'] },
   { label: 'PNB', domain: 'pnb.com.ph', type: 'bank', match: ['pnb'] },
-  { label: 'DBP', domain: 'dbp.ph', type: 'bank', match: ['dbp'] },
+  { label: 'DBP', domain: 'www.dbp.ph', type: 'bank', match: ['dbp'] },
   { label: 'GoTyme', domain: 'gotyme.com.ph', type: 'bank', match: ['gotyme'] },
   { label: 'Tonik', domain: 'tonikbank.com', type: 'bank', match: ['tonik'] },
-  { label: 'SeaBank', domain: 'seabank.ph', type: 'bank', match: ['seabank'] },
+  { label: 'SeaBank', domain: 'seabank.ph', type: 'bank', match: ['seabank'], color: '#ee4d2d' },
   { label: 'CIMB', domain: 'cimbbank.com.ph', type: 'bank', match: ['cimb'] },
   { label: 'HSBC', domain: 'hsbc.com.ph', type: 'bank', match: ['hsbc'] },
   { label: 'Citibank', domain: 'citibank.com.ph', type: 'bank', match: ['citibank'] },
@@ -88,4 +89,10 @@ export function brandHue(name: string | null | undefined): number {
   let hash = 0;
   for (let i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) % 360;
   return hash;
+}
+
+/** Fallback badge background: the brand's color when known, else a hashed hue. */
+export function brandColor(name: string | null | undefined): string {
+  const brand = brandFor(name);
+  return brand?.color ?? `hsl(${brandHue(name)} 52% 42%)`;
 }

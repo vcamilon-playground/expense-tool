@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { brandDomain, brandHue, brandInitials, brandLabelFromText, brandsForType, faviconUrl } from './brand-logos';
+import { brandColor, brandDomain, brandHue, brandInitials, brandLabelFromText, brandsForType, faviconUrl } from './brand-logos';
 
 describe('brandDomain', () => {
   it('matches common banks and e-wallets case-insensitively', () => {
@@ -72,6 +72,16 @@ describe('brandLabelFromText', () => {
     expect(brandLabelFromText('Rural Bank of Cebu')).toBeNull();
     expect(brandLabelFromText('')).toBeNull();
     expect(brandLabelFromText(null)).toBeNull();
+  });
+});
+
+describe('brandColor', () => {
+  it('uses the brand color when defined', () => {
+    expect(brandColor('BDO Savings')).toBe('#00256c');
+    expect(brandColor('SeaBank')).toBe('#ee4d2d');
+  });
+  it('falls back to a hashed hue for brands/names without a color', () => {
+    expect(brandColor('Rural Bank of Cebu')).toMatch(/^hsl\(\d+ 52% 42%\)$/);
   });
 });
 
