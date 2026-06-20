@@ -90,6 +90,7 @@ type PopupStyle = { top?: number; bottom?: number; left?: number; right?: number
 
 export default function NavBar() {
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmModal>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [popupStyle, setPopupStyle] = useState<PopupStyle>({});
@@ -100,6 +101,19 @@ export default function NavBar() {
   const { user, logout } = useAuth();
   const { guard } = useNavigationGuard();
   const router = useRouter();
+
+  // Desktop sidebar collapse (icons-only); persisted per device.
+  useEffect(() => {
+    setCollapsed(localStorage.getItem('sidebar-collapsed') === 'true');
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((c) => {
+      const next = !c;
+      localStorage.setItem('sidebar-collapsed', String(next));
+      return next;
+    });
+  }
 
   function handleNavClick(href: string, e: React.MouseEvent) {
     if (guard && !isActive(href)) {
@@ -168,7 +182,7 @@ export default function NavBar() {
 
   return (
     <>
-      <nav aria-label="Sidebar navigation" className="sidenav">
+      <nav aria-label="Sidebar navigation" className={`sidenav${collapsed ? ' collapsed' : ''}`}>
 
         {/* User profile card at top of sidebar */}
         {user && (
@@ -235,6 +249,19 @@ export default function NavBar() {
               <line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
             <span className="nav-label">Log Out</span>
+          </button>
+          <button
+            className="sidebar-action-btn sidebar-collapse-toggle"
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-expanded={!collapsed}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <svg className="collapse-chevron-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="11 17 6 12 11 7"/>
+              <polyline points="18 17 13 12 18 7"/>
+            </svg>
+            <span className="nav-label">Collapse</span>
           </button>
         </div>
       </nav>

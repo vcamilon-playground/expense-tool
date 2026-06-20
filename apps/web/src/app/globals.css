@@ -288,6 +288,30 @@ nav.sidenav button:active:not(:disabled) { transform: scale(0.97); }
 .sidebar-action-btn.sidebar-logout { color: rgba(255,140,140,0.85); }
 .sidebar-action-btn.sidebar-logout:hover { background: rgba(192,57,43,0.18); color: rgb(255,140,140); }
 
+.collapse-chevron-icon { transition: transform 0.2s ease; }
+
+/* ── Collapsed sidebar: icons only ── */
+nav.sidenav.collapsed { width: 72px; }
+nav.sidenav.collapsed .sidebar-profile { padding: 16px 8px 14px; }
+nav.sidenav.collapsed .sidebar-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+  margin-bottom: 0;
+  border-width: 1px;
+}
+nav.sidenav.collapsed .sidebar-user-name,
+nav.sidenav.collapsed .sidebar-user-handle,
+nav.sidenav.collapsed .nav-label { display: none; }
+nav.sidenav.collapsed .nav-links a,
+nav.sidenav.collapsed .sidebar-action-btn {
+  justify-content: center;
+  gap: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+nav.sidenav.collapsed .collapse-chevron-icon { transform: rotate(180deg); }
+
 /* ── Site header bar (desktop only — hidden on mobile) ── */
 .site-header {
   display: flex;

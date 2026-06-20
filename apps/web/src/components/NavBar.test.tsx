@@ -70,4 +70,19 @@ describe('NavBar', () => {
     await userEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
   });
+
+  it('collapses the sidebar to icons-only and persists the choice', async () => {
+    localStorage.removeItem('sidebar-collapsed');
+    render(<NavBar />);
+    const sidenav = screen.getByRole('navigation', { name: 'Sidebar navigation' });
+    expect(sidenav).not.toHaveClass('collapsed');
+
+    const collapse = screen.getByRole('button', { name: /collapse sidebar/i });
+    await userEvent.click(collapse);
+
+    expect(sidenav).toHaveClass('collapsed');
+    expect(localStorage.getItem('sidebar-collapsed')).toBe('true');
+    // The same button now expands.
+    expect(screen.getByRole('button', { name: /expand sidebar/i })).toBeInTheDocument();
+  });
 });
