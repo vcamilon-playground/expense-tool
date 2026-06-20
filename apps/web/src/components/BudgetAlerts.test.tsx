@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import BudgetAlerts from './BudgetAlerts';
 import type { BudgetStatus } from '@expense/shared';
 
@@ -71,5 +71,34 @@ describe('BudgetAlerts', () => {
     expect(within(summary).getByText('Overall')).toBeInTheDocument();
     expect(document.querySelector('tbody')?.textContent).toContain('Food');
     expect(document.querySelector('tfoot')?.textContent).not.toContain('Food');
+  });
+
+  it('sorts category rows by a clicked column without moving the Overall footer', () => {
+    const { container } = render(
+      <BudgetAlerts
+        statuses={[
+          makeStatus({ category_id: null, category_name: 'Overall', limit: 14000, spent: 0, remaining: 14000 }),
+          makeStatus({ category_id: 'a', category_name: 'Food', limit: 5000 }),
+          makeStatus({ category_id: 'b', category_name: 'Travel', limit: 9000 }),
+        ]}
+      />,
+    );
+    const bodyNames = () =>
+      Array.from(container.querySelectorAll('tbody tr td[data-label="Category"]')).map((td) => td.textContent);
+    const headers = container.querySelectorAll('thead th');
+    const budgetHeader = headers[1] as HTMLElement; // Category | Budget | Actual | Difference | % of Budget
+
+    // Default: category ascending.
+    expect(bodyNames()).toEqual(['Food', 'Travel']);
+
+    // Budget ascending then descending.
+    fireEvent.click(budgetHeader);
+    expect(bodyNames()).toEqual(['Food', 'Travel']);
+    fireEvent.click(budgetHeader);
+    expect(bodyNames()).toEqual(['Travel', 'Food']);
+
+    // Overall stays pinned in the footer regardless of sort.
+    expect(container.querySelector('tfoot .budget-status-summary')?.textContent).toContain('Overall');
+    expect(container.querySelector('tbody')?.textContent).not.toContain('Overall');
   });
 });

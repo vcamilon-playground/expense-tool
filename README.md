@@ -152,7 +152,8 @@ after each Vercel deploy.
   a category breakdown donut (per-slice percentages, total in the center, and a
   legend), a Budget Status table (Category / Budget / Actual /
   Difference / % of Budget, with a colored percentage pill and the Overall total
-  as a summary row), daily spend trend (past 7 days)
+  as a summary row; columns are sortable and the Overall row stays pinned),
+  daily spend trend (past 7 days)
   and weekly spend trend (past 5 weeks) line charts, 6-month trend, monthly AI
   insight (on demand).
 - **Expenses** — full CRUD with three views: **List view** (grouped by month, collapsible, sortable), **Grid view** (responsive cards showing category, date, amount, merchant, and a receipt pill, sorted newest first, no month grouping), and **Calendar view** (monthly grid showing daily totals; click any day to see and edit that day's expenses). Filters (search, category) apply in all three views.
