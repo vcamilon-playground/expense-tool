@@ -168,7 +168,7 @@ export default function RecurringPage() {
         },
         user.id,
       );
-      if (incomeId) await deductFromIncomeSource(incomeId, item.amount);
+      if (incomeId) await deductFromIncomeSource(incomeId, item.amount, item.name);
       await updateRecurring(item.id, {
         next_charge_date: advanceDate(item.next_charge_date, item.cadence),
       });
@@ -204,7 +204,7 @@ export default function RecurringPage() {
         },
         user.id,
       );
-      if (incomeId) await deductFromIncomeSource(incomeId, item.amount);
+      if (incomeId) await deductFromIncomeSource(incomeId, item.amount, item.name);
       await updateRecurring(item.id, {
         next_charge_date: advanceDate(item.next_charge_date, item.cadence),
       });

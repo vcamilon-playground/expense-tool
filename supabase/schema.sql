@@ -139,6 +139,29 @@ create index if not exists income_sources_user_id_idx on income_sources (user_id
 -- Migration for existing databases: add the brand (company) column if missing.
 alter table income_sources add column if not exists brand text;
 
+-- ---------- income transactions (history) ----------
+-- Audit log of money movements on income sources: deductions, add-money,
+-- transfers, and balance edits. Rows are NEVER deleted when a source is
+-- removed (source_id is set null, snapshot labels persist) and are archived
+-- (hidden from the default view, not deleted) once older than 3 months.
+create table if not exists income_transactions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  source_id uuid references income_sources(id) on delete set null,
+  source_label text not null,
+  counterparty_id uuid references income_sources(id) on delete set null,
+  counterparty_label text,
+  kind text not null check (kind in ('deduct', 'add', 'transfer', 'edit')),
+  amount numeric(12,2) not null,
+  balance_before numeric(12,2),
+  balance_after numeric(12,2),
+  note text,
+  archived boolean not null default false,
+  created_at timestamptz not null default now()
+);
+create index if not exists income_transactions_user_id_idx on income_transactions (user_id);
+create index if not exists income_transactions_created_at_idx on income_transactions (created_at desc);
+
 -- ---------- reminders ----------
 create table if not exists reminders (
   id uuid primary key default gen_random_uuid(),
@@ -159,6 +182,7 @@ alter table expenses disable row level security;
 alter table budgets disable row level security;
 alter table recurring_expenses disable row level security;
 alter table income_sources disable row level security;
+alter table income_transactions disable row level security;
 alter table reminders disable row level security;
 
 -- ---------- Privileges for anon role ----------

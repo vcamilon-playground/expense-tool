@@ -1,6 +1,10 @@
 import { expect, Locator, Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 
+// Mirrors OTHER_BRAND in apps/web/src/app/income/page.tsx — the option value for
+// "Other (not listed)", which reveals a free-text company-name input.
+const OTHER_BRAND = '__other__';
+
 export class IncomePage extends BasePage {
   constructor(page: Page) {
     super(page);
@@ -52,11 +56,18 @@ export class IncomePage extends BasePage {
   }
 
   typeSelect(): Locator {
-    return this.dialog().locator('select');
+    return this.dialog().locator('label').filter({ hasText: 'Type' }).locator('select');
   }
 
+  // The bank / e-wallet company picker shown for non-cash types — the only
+  // select whose placeholder option reads "Select a/an …".
+  brandSelect(): Locator {
+    return this.dialog().locator('select', { has: this.page.locator('option', { hasText: /^Select a/ }) });
+  }
+
+  // The optional "Display name" input (not the company picker).
   nameInput(): Locator {
-    return this.dialog().locator('label').filter({ hasText: 'Name' }).locator('input');
+    return this.dialog().locator('label').filter({ hasText: 'Display name' }).locator('input');
   }
 
   balanceInput(): Locator {
@@ -74,7 +85,9 @@ export class IncomePage extends BasePage {
   async addBankSource(name: string, balance: string): Promise<void> {
     await this.openAddModal();
     await this.typeSelect().selectOption('bank');
-    await this.nameInput().fill(name);
+    // A company is required; "Other (not listed)" reveals a free-text name field.
+    await this.brandSelect().selectOption(OTHER_BRAND);
+    await this.dialog().locator('label').filter({ hasText: 'Bank name' }).locator('input').fill(name);
     await this.balanceInput().fill(balance);
     await this.dialog().getByRole('button', { name: 'Add' }).click();
     await expect(this.dialog()).toBeHidden();
@@ -120,8 +133,12 @@ export class IncomePage extends BasePage {
   }
 
   // ── Source rows (within the Bank Accounts / E-Wallets tables) ──
+  // The Transaction History table also carries .income-table for styling, so
+  // exclude it (.history-table) to avoid matching history rows.
   row(name: string): Locator {
-    return this.page.locator('.income-table tbody tr').filter({ hasText: name });
+    return this.page
+      .locator('.income-table:not(.history-table) tbody tr')
+      .filter({ hasText: name });
   }
 
   editButton(name: string): Locator {
@@ -181,5 +198,69 @@ export class IncomePage extends BasePage {
 
   transferError(): Locator {
     return this.transferDialog().locator('.field-error');
+  }
+
+  // ── Transaction History section ──
+  // The whole history card (scopes the shared .income-table class so it never
+  // matches the Bank Accounts / E-Wallets source tables).
+  historyCard(): Locator {
+    return this.page.locator('.card').filter({ hasText: '🧾 Transaction History' });
+  }
+
+  historyHeaderButton(): Locator {
+    return this.historyCard().locator('.collapse-header');
+  }
+
+  historyHeaderTitle(): Locator {
+    return this.historyHeaderButton().locator('h2');
+  }
+
+  async toggleHistory(): Promise<void> {
+    await this.historyHeaderButton().click();
+  }
+
+  showArchivedCheckbox(): Locator {
+    return this.historyCard().locator('label').filter({ hasText: 'Show archived' }).locator('input[type="checkbox"]');
+  }
+
+  async setShowArchived(checked: boolean): Promise<void> {
+    await this.showArchivedCheckbox().setChecked(checked);
+  }
+
+  historyEmptyState(): Locator {
+    return this.historyCard().locator('p.muted').filter({ hasText: /No (recent )?transactions/ });
+  }
+
+  historyTable(): Locator {
+    return this.historyCard().locator('table.history-table');
+  }
+
+  historyRows(): Locator {
+    return this.historyTable().locator('tbody tr');
+  }
+
+  // A single history row located by its Details / Source / Type text.
+  historyRow(text: string): Locator {
+    return this.historyRows().filter({ hasText: text });
+  }
+
+  // The signed Amount cell (4th column) of a history row.
+  historyRowAmount(text: string): Locator {
+    return this.historyRow(text).locator('td').nth(3);
+  }
+
+  // The Type label cell (2nd column) of a history row.
+  historyRowType(text: string): Locator {
+    return this.historyRow(text).locator('td').nth(1);
+  }
+
+  // The Source cell (3rd column) of a history row.
+  historyRowSource(text: string): Locator {
+    return this.historyRow(text).locator('td').nth(2);
+  }
+
+  // The Details cell (5th column) of a history row.
+  historyRowDetails(text: string): Locator {
+    return this.historyRow(text).locator('td').nth(4);
   }
 }

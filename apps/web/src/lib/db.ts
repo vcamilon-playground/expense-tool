@@ -7,12 +7,15 @@ import type {
   ExpenseInput,
   IncomeSource,
   IncomeSourceInput,
+  IncomeTransaction,
+  IncomeTransactionKind,
   RecurringExpense,
   RecurringInput,
   Reminder,
   ReminderInput,
 } from '@expense/shared';
 import { supabase } from './supabase';
+import { archiveCutoff, incomeSourceLabel } from './income-history';
 
 // ---------- Categories ----------
 
@@ -203,6 +206,13 @@ export async function updateIncomeSource(
   id: string,
   patch: Partial<Pick<IncomeSource, 'name' | 'brand' | 'balance'>>,
 ): Promise<IncomeSource> {
+  const { data: before, error: beforeErr } = await supabase
+    .from('income_sources')
+    .select('user_id, type, name, brand, balance')
+    .eq('id', id)
+    .single();
+  if (beforeErr) throw beforeErr;
+
   const { data, error } = await supabase
     .from('income_sources')
     .update(patch)
@@ -210,6 +220,19 @@ export async function updateIncomeSource(
     .select()
     .single();
   if (error) throw error;
+
+  // Only a balance change is a money movement worth logging.
+  if (patch.balance !== undefined && Number(patch.balance) !== Number(before.balance)) {
+    await logIncomeTransaction({
+      user_id: before.user_id,
+      source_id: id,
+      source_label: incomeSourceLabel(data),
+      kind: 'edit',
+      amount: Math.abs(Number(patch.balance) - Number(before.balance)),
+      balance_before: Number(before.balance),
+      balance_after: Number(patch.balance),
+    });
+  }
   return data;
 }
 
@@ -218,47 +241,78 @@ export async function deleteIncomeSource(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function deductFromIncomeSource(id: string, amount: number): Promise<void> {
+export async function deductFromIncomeSource(
+  id: string,
+  amount: number,
+  note?: string,
+): Promise<void> {
   const { data, error } = await supabase
     .from('income_sources')
-    .select('balance')
+    .select('user_id, type, name, brand, balance')
     .eq('id', id)
     .single();
   if (error) throw error;
+  const balanceBefore = Number(data.balance);
   const { error: upErr } = await supabase
     .from('income_sources')
-    .update({ balance: Number(data.balance) - amount })
+    .update({ balance: balanceBefore - amount })
     .eq('id', id);
   if (upErr) throw upErr;
+  await logIncomeTransaction({
+    user_id: data.user_id,
+    source_id: id,
+    source_label: incomeSourceLabel(data),
+    kind: 'deduct',
+    amount,
+    balance_before: balanceBefore,
+    balance_after: balanceBefore - amount,
+    note: note ?? null,
+  });
 }
 
-export async function addToIncomeSource(id: string, amount: number): Promise<void> {
+export async function addToIncomeSource(
+  id: string,
+  amount: number,
+  note?: string,
+): Promise<void> {
   const { data, error } = await supabase
     .from('income_sources')
-    .select('balance')
+    .select('user_id, type, name, brand, balance')
     .eq('id', id)
     .single();
   if (error) throw error;
+  const balanceBefore = Number(data.balance);
   const { error: upErr } = await supabase
     .from('income_sources')
-    .update({ balance: Number(data.balance) + amount })
+    .update({ balance: balanceBefore + amount })
     .eq('id', id);
   if (upErr) throw upErr;
+  await logIncomeTransaction({
+    user_id: data.user_id,
+    source_id: id,
+    source_label: incomeSourceLabel(data),
+    kind: 'add',
+    amount,
+    balance_before: balanceBefore,
+    balance_after: balanceBefore + amount,
+    note: note ?? null,
+  });
 }
 
 export async function transferIncome(fromId: string, toId: string, amount: number): Promise<void> {
   const { data, error } = await supabase
     .from('income_sources')
-    .select('id, balance')
+    .select('id, user_id, type, name, brand, balance')
     .in('id', [fromId, toId]);
   if (error) throw error;
   const from = data?.find((s) => s.id === fromId);
   const to = data?.find((s) => s.id === toId);
   if (!from || !to) throw new Error('Income source not found');
 
+  const fromBefore = Number(from.balance);
   const { error: fromErr } = await supabase
     .from('income_sources')
-    .update({ balance: Number(from.balance) - amount })
+    .update({ balance: fromBefore - amount })
     .eq('id', fromId);
   if (fromErr) throw fromErr;
 
@@ -267,6 +321,79 @@ export async function transferIncome(fromId: string, toId: string, amount: numbe
     .update({ balance: Number(to.balance) + amount })
     .eq('id', toId);
   if (toErr) throw toErr;
+
+  await logIncomeTransaction({
+    user_id: from.user_id,
+    source_id: fromId,
+    source_label: incomeSourceLabel(from),
+    counterparty_id: toId,
+    counterparty_label: incomeSourceLabel(to),
+    kind: 'transfer',
+    amount,
+    balance_before: fromBefore,
+    balance_after: fromBefore - amount,
+  });
+}
+
+// ---------- Income Transactions (history) ----------
+
+type IncomeTransactionLog = {
+  user_id: string;
+  source_id: string | null;
+  source_label: string;
+  kind: IncomeTransactionKind;
+  amount: number;
+  balance_before?: number | null;
+  balance_after?: number | null;
+  counterparty_id?: string | null;
+  counterparty_label?: string | null;
+  note?: string | null;
+};
+
+// Best-effort: the balance update is authoritative, so a history-write failure
+// must never surface a false error after the money has already moved (and must
+// not break income operations before the income_transactions migration is run).
+async function logIncomeTransaction(entry: IncomeTransactionLog): Promise<void> {
+  const { error } = await supabase.from('income_transactions').insert({
+    user_id: entry.user_id,
+    source_id: entry.source_id,
+    source_label: entry.source_label,
+    counterparty_id: entry.counterparty_id ?? null,
+    counterparty_label: entry.counterparty_label ?? null,
+    kind: entry.kind,
+    amount: entry.amount,
+    balance_before: entry.balance_before ?? null,
+    balance_after: entry.balance_after ?? null,
+    note: entry.note ?? null,
+  });
+  if (error) console.error('Failed to log income transaction', error);
+}
+
+// Mark transactions older than the 3-month cutoff as archived. Applied lazily
+// when the Income page loads, so no scheduled job is needed.
+export async function archiveOldIncomeTransactions(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('income_transactions')
+    .update({ archived: true })
+    .eq('user_id', userId)
+    .eq('archived', false)
+    .lt('created_at', archiveCutoff(new Date()).toISOString());
+  if (error) throw error;
+}
+
+export async function listIncomeTransactions(
+  userId: string,
+  includeArchived = false,
+): Promise<IncomeTransaction[]> {
+  let query = supabase
+    .from('income_transactions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (!includeArchived) query = query.eq('archived', false);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
 }
 
 // ---------- Reminders ----------

@@ -174,6 +174,16 @@ export const cleanup = {
       : 'title=like.E2E*';
     return del('reminders', filter);
   },
+  // Income history rows are intentionally non-deletable in the app (they
+  // survive source deletion). For test hygiene we still remove rows tagged with
+  // an E2E source_label so the DB does not accumulate test transactions.
+  incomeTransactions: () => {
+    const uid = loadE2EUserId();
+    const filter = uid
+      ? `source_label=like.E2E*&user_id=eq.${uid}`
+      : 'source_label=like.E2E*';
+    return del('income_transactions', filter);
+  },
 };
 
 export const seed = {
@@ -322,11 +332,34 @@ export const seed = {
   },
   incomeSource: (name: string, balance: number) => {
     const uid = loadE2EUserId();
+    // A recognised brand so the edit modal's required company picker
+    // pre-populates and the source can be updated without re-selecting a brand.
     return postReturn<{ id: string; balance: number }>('income_sources', {
       user_id: uid,
       type: 'bank',
+      brand: 'BDO',
       name,
       balance,
+    });
+  },
+  // Seeds an income history row dated > 3 months ago so it is treated as
+  // archived (hidden by default, revealed by "Show archived"). The note is used
+  // by the spec to locate the row. source_label is E2E-tagged for cleanup.
+  archivedIncomeTransaction: (note: string, sourceLabel = `${E2E_INCOME_NAME} (archived seed)`) => {
+    const uid = loadE2EUserId();
+    const old = new Date();
+    old.setMonth(old.getMonth() - 5);
+    return postReturn<{ id: string }>('income_transactions', {
+      user_id: uid,
+      source_id: null,
+      source_label: sourceLabel,
+      kind: 'add',
+      amount: 12.34,
+      balance_before: 0,
+      balance_after: 12.34,
+      note,
+      archived: true,
+      created_at: old.toISOString(),
     });
   },
   reminder: (title: string, cadence: 'once' | 'weekly' | 'monthly' | 'yearly', remind_date: string) => {

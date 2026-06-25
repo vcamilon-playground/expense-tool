@@ -55,6 +55,16 @@ export class ExpensesPage extends BasePage {
     await this.dialog().locator('label').filter({ hasText: 'Description' }).locator('textarea').fill(description);
   }
 
+  // The "Deduct from (optional)" income-source select shown only when creating
+  // an expense and the user has at least one income source.
+  deductFromSelect(): Locator {
+    return this.dialog().locator('label').filter({ hasText: 'Deduct from' }).locator('select');
+  }
+
+  async selectDeductFrom(sourceName: string): Promise<void> {
+    await this.deductFromSelect().selectOption({ label: sourceName });
+  }
+
   async submitAdd(): Promise<void> {
     await this.dialog().getByRole('button', { name: 'Add Expense' }).click();
     await expect(this.dialog()).toBeHidden();

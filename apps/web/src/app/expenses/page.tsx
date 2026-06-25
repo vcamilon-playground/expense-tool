@@ -74,7 +74,7 @@ export default function ExpensesPage() {
       const phpAmount = input.conversion_rate
         ? input.amount * input.conversion_rate
         : input.amount;
-      await deductFromIncomeSource(incomeSourceId, phpAmount);
+      await deductFromIncomeSource(incomeSourceId, phpAmount, input.merchant ?? input.description ?? undefined);
     }
     closeModal();
     await reload();

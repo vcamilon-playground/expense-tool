@@ -87,7 +87,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/reports.spec.ts` | Smoke | Page load, period select, preset/date-range mode toggle, compare period, column sorting |
 | `tests/budgets.spec.ts` | Smoke | Page load, form labels, edit/cancel flow, inline validation errors, column sorting |
 | `tests/settings.spec.ts` | Smoke | Session expiry, profile section, global save/cancel, navigation guard, change password, theme colours, categories, past-edit toggle, profile menu |
-| `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + global eye toggle + per-card eye reveal, Add Source modal fields, cash hides name field, inline validation |
+| `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + global eye toggle + per-card eye reveal, Add Source modal fields, cash hides name field, inline validation; Transaction History section renders (collapsible 5-column table / empty state, "Show archived" toggle) and collapse/expand hides the body |
 | `tests/notifications.spec.ts` | Smoke | Page load, Add Reminder form (title/repeat/date), repeat cadence options, empty-title validation, form open/close toggle |
 | `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, personalized today date line (`Today is yyyy/mm/dd, DDD`), theme pill toggles data-theme, notification bell links to /notifications; date line absent on /login |
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
@@ -98,7 +98,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/budgets.regression.spec.ts` | Regression | Seed a per-category budget, edit its limit; verify the computed read-only Overall footer row (sum of category limits, no actions) and the dashboard Overall + category rows |
 | `tests/recurring.regression.spec.ts` | Regression | Create/edit/delete recurring expense; confirm YES adds expense + advances date; confirm NO advances date without adding expense |
 | `tests/settings.regression.spec.ts` | Regression | Add category with custom icon; add category without icon uses default; deleting category does not delete linked expenses |
-| `tests/income.regression.spec.ts` | Regression | Create/edit/delete a bank source; transfer moves balance between sources; transfer rejects an over-balance amount; add money tops up a source balance; add money rejects a non-positive amount |
+| `tests/income.regression.spec.ts` | Regression | Create/edit/delete a bank source; transfer moves balance between sources; transfer rejects an over-balance amount; add money tops up a source balance; add money rejects a non-positive amount; Transaction History logs deduct/add/transfer/balance-edit rows (sign, colour, note, before→after), source deletion retains rows (snapshot label persists), "Show archived" reveals archived rows, privacy eye masks history amounts, and name-only / same-value edits log nothing |
 | `tests/notifications.regression.spec.ts` | Regression | Create/delete a reminder; mark a due one-time reminder Done (removed); mark a due recurring reminder Done (date advances) |
 | `tests/password-reset.regression.spec.ts` | Regression | Forgot-password rejects an invalid email inline; returns a generic success for any valid email (no account enumeration); reset-password rejects mismatched passwords inline and an invalid/expired token |
 
@@ -219,6 +219,10 @@ cd apps/e2e && npx playwright show-report
 - selecting Cash on Hand hides the name field
 - empty required fields show inline errors
 - a section collapse-header is a themed band (non-white background) with white title text
+
+**Transaction History**
+- the history section renders (collapsible header, "Show archived" toggle, 5-column table or empty state)
+- collapsing the history header hides the body and toggles `aria-expanded`
 
 ---
 
@@ -463,6 +467,13 @@ cd apps/e2e && npx playwright show-report
 **Income — add money (top-up)**
 - adding money increments the source balance, section total, and Grand Total
 - add money rejects a non-positive amount inline
+
+**Income — Transaction History**
+- Add Money logs a newest-first `+` row; expense deduction logs a `−` (red) row carrying the merchant note
+- transfer logs a single "From → To" row with a `−` amount; balance edit logs a "before → after" row
+- deleting a source retains its history rows (snapshot label persists)
+- "Show archived" reveals/hides archived rows (tagged `(archived)`); the privacy eye masks history amounts (incl. `•••••• → ••••••`)
+- a name-only edit and a same-value balance edit log no new row
 
 ---
 

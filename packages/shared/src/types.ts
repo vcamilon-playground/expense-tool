@@ -85,6 +85,27 @@ export type IncomeSource = {
 
 export type IncomeSourceInput = Omit<IncomeSource, 'id' | 'user_id' | 'created_at'>;
 
+// Money movements recorded against income sources. Rows are retained even after
+// the source they reference is deleted (source_id becomes null, but the
+// snapshot labels persist), and are archived after 3 months.
+export type IncomeTransactionKind = 'deduct' | 'add' | 'transfer' | 'edit';
+
+export type IncomeTransaction = {
+  id: string;
+  user_id: string;
+  source_id: string | null; // null once the referenced source is deleted
+  source_label: string; // snapshot of the source name, retained after deletion
+  counterparty_id: string | null; // transfer destination (null otherwise)
+  counterparty_label: string | null; // snapshot of the destination name
+  kind: IncomeTransactionKind;
+  amount: number; // positive magnitude of the movement
+  balance_before: number | null; // source balance before the movement
+  balance_after: number | null; // source balance after the movement
+  note: string | null; // free context, e.g. the expense merchant for a deduction
+  archived: boolean;
+  created_at: string;
+};
+
 export type ReminderCadence = 'once' | 'weekly' | 'monthly' | 'yearly';
 
 export type Reminder = {

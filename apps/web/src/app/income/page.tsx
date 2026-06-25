@@ -1,16 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { IncomeSource, IncomeType } from '@expense/shared';
+import type { IncomeSource, IncomeTransaction, IncomeType } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
 import {
   addToIncomeSource,
+  archiveOldIncomeTransactions,
   createIncomeSource,
   deleteIncomeSource,
   listIncomeSources,
+  listIncomeTransactions,
   transferIncome,
   updateIncomeSource,
 } from '@/lib/db';
+import { TRANSACTION_TYPE_LABELS, transactionSign } from '@/lib/income-history';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingScreen from '@/components/LoadingScreen';
 import { useDataRefresh } from '@/contexts/DataRefreshContext';
@@ -83,6 +86,9 @@ export default function IncomePage() {
   const { user } = useAuth();
   const { refreshKey } = useDataRefresh();
   const [sources, setSources] = useState<IncomeSource[]>([]);
+  const [transactions, setTransactions] = useState<IncomeTransaction[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
+  const [historyExpanded, setHistoryExpanded] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -141,11 +147,23 @@ export default function IncomePage() {
   async function reload() {
     if (!user) return;
     setSources(await listIncomeSources(user.id));
+    // History is additive — never let it block the core income view (e.g. if the
+    // income_transactions migration has not been applied yet).
+    try {
+      setTransactions(await listIncomeTransactions(user.id, showArchived));
+    } catch (e) {
+      console.error('Failed to load income transactions', e);
+    }
   }
 
   useEffect(() => {
     if (!user) return;
     (async () => {
+      try {
+        await archiveOldIncomeTransactions(user.id);
+      } catch (e) {
+        console.error('Failed to archive old income transactions', e);
+      }
       try {
         await reload();
       } catch (e) {
@@ -155,6 +173,14 @@ export default function IncomePage() {
       }
     })();
   }, [user, refreshKey]);
+
+  // Re-fetch history when the archived filter toggles (after the initial load).
+  useEffect(() => {
+    if (!user || loading) return;
+    listIncomeTransactions(user.id, showArchived)
+      .then(setTransactions)
+      .catch((e) => console.error('Failed to load income transactions', e));
+  }, [showArchived]);
 
   function startEdit(s: IncomeSource) {
     setEditingId(s.id);
@@ -640,7 +666,100 @@ export default function IncomePage() {
           )
         )}
       </div>
+
+      {/* Transaction History */}
+      <div className="card">
+        <button
+          type="button"
+          className="collapse-header"
+          onClick={() => setHistoryExpanded((v) => !v)}
+          aria-expanded={historyExpanded}
+        >
+          <h2 style={{ margin: 0 }}>🧾 Transaction History</h2>
+          <span className="collapse-chevron" aria-hidden="true">{historyExpanded ? '▾' : '▸'}</span>
+        </button>
+        {historyExpanded && (
+          <>
+            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+              <p className="muted" style={{ margin: 0 }}>
+                Deductions, top-ups, transfers, and balance edits. Kept even after a source is deleted; entries older than 3 months are archived.
+              </p>
+              <label className="row" style={{ gap: 6, alignItems: 'center', width: 'auto', margin: 0, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={showArchived}
+                  onChange={(e) => setShowArchived(e.target.checked)}
+                  style={{ width: 'auto', margin: 0 }}
+                />
+                <span className="muted" style={{ fontSize: 14 }}>Show archived</span>
+              </label>
+            </div>
+            {transactions.length === 0 ? (
+              <p className="muted" style={{ marginBottom: 0, marginTop: 12 }}>
+                {showArchived ? 'No transactions yet.' : 'No recent transactions. Toggle "Show archived" to see older entries.'}
+              </p>
+            ) : (
+              <div className="table-wrap" style={{ marginTop: 12 }}>
+                <table className="income-table history-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Source</th>
+                      <th style={{ textAlign: 'right' }}>Amount</th>
+                      <th>Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.map((t) => (
+                      <TransactionRow key={t.id} t={t} visible={isVisible('history')} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
+  );
+}
+
+function TransactionRow({ t, visible }: { t: IncomeTransaction; visible: boolean }) {
+  const sign = transactionSign(t.kind, t.balance_before, t.balance_after);
+  const created = new Date(t.created_at);
+  const dateStr = created.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  const timeStr = created.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  const amountText = visible ? formatMoney(t.amount) : AMOUNT_MASK;
+  const prefix = sign > 0 ? '+' : sign < 0 ? '−' : '';
+
+  const details =
+    t.kind === 'edit' && t.balance_before !== null && t.balance_after !== null
+      ? (visible
+          ? `${formatMoney(t.balance_before)} → ${formatMoney(t.balance_after)}`
+          : `${AMOUNT_MASK} → ${AMOUNT_MASK}`)
+      : t.note ?? '';
+
+  return (
+    <tr>
+      <td style={{ whiteSpace: 'nowrap' }}>
+        {dateStr}
+        <div className="muted" style={{ fontSize: 12 }}>{timeStr}</div>
+      </td>
+      <td>{TRANSACTION_TYPE_LABELS[t.kind]}</td>
+      <td style={{ fontWeight: 500 }}>
+        {t.kind === 'transfer' && t.counterparty_label
+          ? `${t.source_label} → ${t.counterparty_label}`
+          : t.source_label}
+      </td>
+      <td style={{ textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap', color: sign < 0 ? 'var(--bad)' : 'var(--text)' }}>
+        {prefix}{amountText}
+      </td>
+      <td className="muted">
+        {details}
+        {t.archived && <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>(archived)</span>}
+      </td>
+    </tr>
   );
 }
 
