@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { IncomePage } from './pages/IncomePage';
+import { IncomeHistoryPage } from './pages/IncomeHistoryPage';
 
 test.describe('Income page', () => {
   let income!: IncomePage;
@@ -71,35 +72,28 @@ test.describe('Income page', () => {
     await expect(income.fieldError().first()).toBeVisible();
   });
 
-  test('Transaction History section renders with collapse header, archived toggle, and table or empty state', async () => {
-    // Themed collapse header with the white emoji title.
-    await expect(income.historyHeaderTitle()).toHaveText('🧾 Transaction History');
-    // Expanded by default.
-    await expect(income.historyHeaderButton()).toHaveAttribute('aria-expanded', 'true');
+  test('the Transaction History button navigates to the standalone history page', async ({ page }) => {
+    await expect(income.historyLink()).toBeVisible();
+    await income.openHistory();
 
-    // The "Show archived" toggle is present and unchecked by default.
-    await expect(income.showArchivedCheckbox()).toBeVisible();
-    await expect(income.showArchivedCheckbox()).not.toBeChecked();
+    const history = new IncomeHistoryPage(page);
+    await expect(history.heading()).toHaveText('Transaction History');
+    await expect(page).toHaveURL(/\/income\/history$/);
 
-    // Either a table (with the five expected columns) or an empty-state line.
-    const rowCount = await income.historyRows().count();
+    // Back link and the "Show archived" toggle (unchecked by default) are present.
+    await expect(history.backLink()).toBeVisible();
+    await expect(history.showArchivedCheckbox()).toBeVisible();
+    await expect(history.showArchivedCheckbox()).not.toBeChecked();
+
+    // Either month-grouped tables (with the five expected columns) or an empty state.
+    const rowCount = await history.rows().count();
     if (rowCount > 0) {
-      const headers = await income.historyTable().locator('thead th').allTextContents();
+      const headers = await history.columnHeaders().allTextContents();
       expect(headers.map((h) => h.trim())).toEqual(['Date', 'Type', 'Source', 'Amount', 'Details']);
+      await expect(history.monthHeadings().first()).toBeVisible();
     } else {
-      await expect(income.historyEmptyState()).toBeVisible();
+      await expect(history.emptyState()).toBeVisible();
     }
-  });
-
-  test('collapsing the Transaction History section hides its body', async () => {
-    await expect(income.historyHeaderButton()).toHaveAttribute('aria-expanded', 'true');
-    await income.toggleHistory();
-    await expect(income.historyHeaderButton()).toHaveAttribute('aria-expanded', 'false');
-    // Body controls are gone while collapsed.
-    await expect(income.showArchivedCheckbox()).toBeHidden();
-    await income.toggleHistory();
-    await expect(income.historyHeaderButton()).toHaveAttribute('aria-expanded', 'true');
-    await expect(income.showArchivedCheckbox()).toBeVisible();
   });
 
   test('section collapse-header is a themed band with white title text', async () => {

@@ -179,10 +179,12 @@ after each Vercel deploy.
   **Transfer** moves money between any two sources.
   Amounts are hidden by default for privacy — reveal everything with the header
   eye, or peek a single card/source with its own inline eye.
-  A collapsible **Transaction History** logs every money movement
-  (expense/recurring deductions, Add Money, transfers, and balance edits) with
-  the running before/after balance; deleting a source keeps its past history,
-  and entries older than 3 months auto-archive behind a "Show archived" toggle.
+  A dedicated **Transaction History** page (the button right of Transfer) logs
+  every money movement (expense/recurring deductions, Add Money, transfers, and
+  balance edits) with the running before/after balance, **grouped by month**.
+  Deleting a source keeps its past history; entries older than 3 months
+  auto-archive behind a "Show archived" toggle, and entries older than 6 months
+  are deleted.
 - **Notifications** — a bell in the header lists recurring payments due within
   a week, a monthly income-update prompt (15th onward), and your own
   reminders. **Reminders** can be one-time (removed when marked Done) or

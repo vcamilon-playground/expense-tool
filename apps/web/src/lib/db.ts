@@ -15,7 +15,7 @@ import type {
   ReminderInput,
 } from '@expense/shared';
 import { supabase } from './supabase';
-import { archiveCutoff, incomeSourceLabel } from './income-history';
+import { archiveCutoff, deleteCutoff, incomeSourceLabel } from './income-history';
 
 // ---------- Categories ----------
 
@@ -370,7 +370,7 @@ async function logIncomeTransaction(entry: IncomeTransactionLog): Promise<void> 
 }
 
 // Mark transactions older than the 3-month cutoff as archived. Applied lazily
-// when the Income page loads, so no scheduled job is needed.
+// when the history page loads, so no scheduled job is needed.
 export async function archiveOldIncomeTransactions(userId: string): Promise<void> {
   const { error } = await supabase
     .from('income_transactions')
@@ -378,6 +378,17 @@ export async function archiveOldIncomeTransactions(userId: string): Promise<void
     .eq('user_id', userId)
     .eq('archived', false)
     .lt('created_at', archiveCutoff(new Date()).toISOString());
+  if (error) throw error;
+}
+
+// Permanently delete transactions older than the 6-month cutoff. Applied lazily
+// alongside archival, so no scheduled job is needed.
+export async function deleteOldIncomeTransactions(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('income_transactions')
+    .delete()
+    .eq('user_id', userId)
+    .lt('created_at', deleteCutoff(new Date()).toISOString());
   if (error) throw error;
 }
 

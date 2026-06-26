@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { IncomePage } from './pages/IncomePage';
+import { IncomeHistoryPage } from './pages/IncomeHistoryPage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import {
   cleanup,
@@ -180,14 +181,6 @@ test.describe('Income — transfer between sources', () => {
 });
 
 test.describe('Income — transaction history', () => {
-  let income!: IncomePage;
-
-  async function revealAmounts(): Promise<void> {
-    if ((await income.privacyToggle().getAttribute('aria-label')) === 'Show amounts') {
-      await income.privacyToggle().click();
-    }
-  }
-
   test.beforeAll(async () => {
     await cleanup.incomeTransactions();
     await cleanup.expenses();
@@ -212,14 +205,16 @@ test.describe('Income — transaction history', () => {
   test('an Add Money top-up appears as the newest row with a + amount', async ({ page }) => {
     await seed.incomeSource(E2E_INCOME_NAME, 500);
 
-    income = new IncomePage(page);
+    const income = new IncomePage(page);
     await income.goto();
-    await revealAmounts();
-
     await income.addMoney(E2E_INCOME_NAME, '75');
 
+    const history = new IncomeHistoryPage(page);
+    await history.goto();
+    await history.revealAmounts();
+
     // Newest-first: the top-up is the first history row.
-    const firstRow = income.historyRows().first();
+    const firstRow = history.rows().first();
     await expect(firstRow).toContainText('Add Money');
     await expect(firstRow).toContainText(E2E_INCOME_NAME);
     await expect(firstRow.locator('td').nth(3)).toHaveText(/\+.*75\.00/);
@@ -235,19 +230,19 @@ test.describe('Income — transaction history', () => {
     await expenses.selectDeductFrom(E2E_INCOME_NAME);
     await expenses.submitAdd();
 
-    income = new IncomePage(page);
-    await income.goto();
-    await revealAmounts();
+    const history = new IncomeHistoryPage(page);
+    await history.goto();
+    await history.revealAmounts();
 
-    const row = income.historyRow(E2E_MERCHANT);
+    const row = history.row(E2E_MERCHANT);
     await expect(row).toHaveCount(1);
-    await expect(income.historyRowType(E2E_MERCHANT)).toHaveText('Deduction');
-    await expect(income.historyRowSource(E2E_MERCHANT)).toHaveText(E2E_INCOME_NAME);
-    await expect(income.historyRowAmount(E2E_MERCHANT)).toHaveText(/−.*40\.00/);
-    await expect(income.historyRowDetails(E2E_MERCHANT)).toContainText(E2E_MERCHANT);
+    await expect(history.rowType(E2E_MERCHANT)).toHaveText('Deduction');
+    await expect(history.rowSource(E2E_MERCHANT)).toHaveText(E2E_INCOME_NAME);
+    await expect(history.rowAmount(E2E_MERCHANT)).toHaveText(/−.*40\.00/);
+    await expect(history.rowDetails(E2E_MERCHANT)).toContainText(E2E_MERCHANT);
 
     // The − amount is rendered in the "bad" (red) colour.
-    const color = await income.historyRowAmount(E2E_MERCHANT).evaluate((el) => window.getComputedStyle(el).color);
+    const color = await history.rowAmount(E2E_MERCHANT).evaluate((el) => window.getComputedStyle(el).color);
     expect(color).not.toBe('rgb(255, 255, 255)');
   });
 
@@ -255,9 +250,8 @@ test.describe('Income — transaction history', () => {
     const from = await seed.incomeSource(E2E_INCOME_NAME, 1000);
     await seed.incomeSource(E2E_INCOME_NAME_2, 0);
 
-    income = new IncomePage(page);
+    const income = new IncomePage(page);
     await income.goto();
-    await revealAmounts();
 
     await income.openTransfer();
     await income.transferFromSelect().selectOption(from.id);
@@ -266,19 +260,22 @@ test.describe('Income — transaction history', () => {
     await income.transferSubmit().click();
     await expect(income.transferDialog()).toBeHidden();
 
+    const history = new IncomeHistoryPage(page);
+    await history.goto();
+    await history.revealAmounts();
+
     // Exactly ONE row for the whole transfer, Source column = "From → To".
     const arrow = `${E2E_INCOME_NAME} → ${E2E_INCOME_NAME_2}`;
-    await expect(income.historyRow(arrow)).toHaveCount(1);
-    await expect(income.historyRowType(arrow)).toHaveText('Transfer');
-    await expect(income.historyRowAmount(arrow)).toHaveText(/−.*120\.00/);
+    await expect(history.row(arrow)).toHaveCount(1);
+    await expect(history.rowType(arrow)).toHaveText('Transfer');
+    await expect(history.rowAmount(arrow)).toHaveText(/−.*120\.00/);
   });
 
   test('editing a source balance logs a Balance Edit row with "before → after" details', async ({ page }) => {
     await seed.incomeSource(E2E_INCOME_NAME, 300);
 
-    income = new IncomePage(page);
+    const income = new IncomePage(page);
     await income.goto();
-    await revealAmounts();
 
     await income.editButton(E2E_INCOME_NAME).click();
     await expect(income.dialog()).toBeVisible();
@@ -286,7 +283,11 @@ test.describe('Income — transaction history', () => {
     await income.dialog().getByRole('button', { name: 'Update' }).click();
     await expect(income.dialog()).toBeHidden();
 
-    const editRow = income.historyRows().first();
+    const history = new IncomeHistoryPage(page);
+    await history.goto();
+    await history.revealAmounts();
+
+    const editRow = history.rows().first();
     await expect(editRow).toContainText('Balance Edit');
     await expect(editRow).toContainText(E2E_INCOME_NAME);
     // before → after, increasing balance ⇒ + sign.
@@ -297,84 +298,92 @@ test.describe('Income — transaction history', () => {
   test('history rows are retained after the source is deleted', async ({ page }) => {
     await seed.incomeSource(E2E_INCOME_NAME, 200);
 
-    income = new IncomePage(page);
+    const income = new IncomePage(page);
     await income.goto();
-    await revealAmounts();
 
     // Generate a history row, then delete the source.
     await income.addMoney(E2E_INCOME_NAME, '15');
-    await expect(income.historyRow(E2E_INCOME_NAME).first()).toBeVisible();
-
     await income.deleteRow(E2E_INCOME_NAME);
     await expect(income.row(E2E_INCOME_NAME)).toHaveCount(0);
 
     // The snapshot source_label keeps the history row visible after deletion.
-    await income.goto();
-    await revealAmounts();
-    await expect(income.historyRow(E2E_INCOME_NAME).first()).toBeVisible();
-    await expect(income.historyRow(E2E_INCOME_NAME).first()).toContainText('Add Money');
+    const history = new IncomeHistoryPage(page);
+    await history.goto();
+    await expect(history.row(E2E_INCOME_NAME).first()).toBeVisible();
+    await expect(history.row(E2E_INCOME_NAME).first()).toContainText('Add Money');
   });
 
   test('"Show archived" reveals rows older than 3 months', async ({ page }) => {
     const note = `E2E archived ${Date.now()}`;
     await seed.archivedIncomeTransaction(note);
 
-    income = new IncomePage(page);
-    await income.goto();
-    await revealAmounts();
+    const history = new IncomeHistoryPage(page);
+    await history.goto();
 
     // Hidden by default.
-    await expect(income.historyRow(note)).toHaveCount(0);
+    await expect(history.row(note)).toHaveCount(0);
 
     // Revealed with the toggle, tagged "(archived)".
-    await income.setShowArchived(true);
-    await expect(income.historyRow(note)).toHaveCount(1);
-    await expect(income.historyRow(note)).toContainText('(archived)');
+    await history.setShowArchived(true);
+    await expect(history.row(note)).toHaveCount(1);
+    await expect(history.row(note)).toContainText('(archived)');
 
     // Hidden again when unchecked.
-    await income.setShowArchived(false);
-    await expect(income.historyRow(note)).toHaveCount(0);
+    await history.setShowArchived(false);
+    await expect(history.row(note)).toHaveCount(0);
+  });
+
+  test('transactions are grouped under a month heading', async ({ page }) => {
+    await seed.incomeSource(E2E_INCOME_NAME, 100);
+
+    const income = new IncomePage(page);
+    await income.goto();
+    await income.addMoney(E2E_INCOME_NAME, '20');
+
+    const history = new IncomeHistoryPage(page);
+    await history.goto();
+
+    // The current-month group heading (e.g. "June 2026") wraps at least one row.
+    const monthLabel = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
+    await expect(history.monthHeadings().filter({ hasText: monthLabel })).toBeVisible();
+    await expect(history.rows().first()).toBeVisible();
   });
 
   test('the amount privacy toggle masks and reveals history amounts', async ({ page }) => {
     await seed.incomeSource(E2E_INCOME_NAME, 100);
 
-    income = new IncomePage(page);
+    const income = new IncomePage(page);
     await income.goto();
-    await revealAmounts();
-
     await income.addMoney(E2E_INCOME_NAME, '88');
-    const row = income.historyRows().first();
+
+    const history = new IncomeHistoryPage(page);
+    await history.goto();
+    await history.revealAmounts();
+
+    const row = history.rows().first();
     await expect(row.locator('td').nth(3)).toContainText('88.00');
 
     // Hide amounts → history amount becomes the mask.
-    await income.privacyToggle().click();
+    await history.privacyToggle().click();
     await expect(row.locator('td').nth(3)).toHaveText('+••••••');
 
-    // An edit row masks both sides of "before → after".
-    await income.privacyToggle().click(); // reveal again to edit
+    // Create an edit row, then confirm both sides of "before → after" mask
+    // (the hidden preference persists across the navigation).
+    await income.goto();
     await income.editButton(E2E_INCOME_NAME).click();
     await expect(income.dialog()).toBeVisible();
     await income.balanceInput().fill('999');
     await income.dialog().getByRole('button', { name: 'Update' }).click();
     await expect(income.dialog()).toBeHidden();
 
-    await income.privacyToggle().click(); // hide
-    const editRow = income.historyRows().first();
+    await history.goto();
+    const editRow = history.rows().first();
     await expect(editRow).toContainText('Balance Edit');
     await expect(editRow.locator('td').nth(4)).toHaveText('•••••• → ••••••');
   });
 });
 
 test.describe('Income — transaction history (no spurious rows)', () => {
-  let income!: IncomePage;
-
-  async function revealAmounts(): Promise<void> {
-    if ((await income.privacyToggle().getAttribute('aria-label')) === 'Show amounts') {
-      await income.privacyToggle().click();
-    }
-  }
-
   test.beforeAll(async () => {
     await cleanup.incomeTransactions();
     await cleanup.incomeSources();
@@ -394,13 +403,14 @@ test.describe('Income — transaction history (no spurious rows)', () => {
   test('a name-only edit does not create a history row', async ({ page }) => {
     await seed.incomeSource(E2E_INCOME_NAME, 250);
 
-    income = new IncomePage(page);
-    await income.goto();
-    await revealAmounts();
+    const income = new IncomePage(page);
+    const history = new IncomeHistoryPage(page);
 
-    const before = await income.historyRows().count();
+    await history.goto();
+    const before = await history.rows().count();
 
     // Change only the name (balance left untouched).
+    await income.goto();
     await income.editButton(E2E_INCOME_NAME).click();
     await expect(income.dialog()).toBeVisible();
     await income.nameInput().fill(E2E_INCOME_NAME_2);
@@ -409,25 +419,28 @@ test.describe('Income — transaction history (no spurious rows)', () => {
     await expect(income.row(E2E_INCOME_NAME_2)).toBeVisible();
 
     // No new history row was logged.
-    await expect(income.historyRows()).toHaveCount(before);
+    await history.goto();
+    await expect(history.rows()).toHaveCount(before);
   });
 
   test('a same-value balance edit does not create a history row', async ({ page }) => {
     await seed.incomeSource(E2E_INCOME_NAME, 250);
 
-    income = new IncomePage(page);
-    await income.goto();
-    await revealAmounts();
+    const income = new IncomePage(page);
+    const history = new IncomeHistoryPage(page);
 
-    const before = await income.historyRows().count();
+    await history.goto();
+    const before = await history.rows().count();
 
     // Re-enter the identical balance.
+    await income.goto();
     await income.editButton(E2E_INCOME_NAME).click();
     await expect(income.dialog()).toBeVisible();
     await income.balanceInput().fill('250');
     await income.dialog().getByRole('button', { name: 'Update' }).click();
     await expect(income.dialog()).toBeHidden();
 
-    await expect(income.historyRows()).toHaveCount(before);
+    await history.goto();
+    await expect(history.rows()).toHaveCount(before);
   });
 });

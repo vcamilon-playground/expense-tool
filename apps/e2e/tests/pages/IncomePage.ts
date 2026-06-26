@@ -200,67 +200,14 @@ export class IncomePage extends BasePage {
     return this.transferDialog().locator('.field-error');
   }
 
-  // ── Transaction History section ──
-  // The whole history card (scopes the shared .income-table class so it never
-  // matches the Bank Accounts / E-Wallets source tables).
-  historyCard(): Locator {
-    return this.page.locator('.card').filter({ hasText: '🧾 Transaction History' });
+  // ── Transaction History ──
+  // Transaction history lives on its own page (/income/history); the Income page
+  // only links to it via a button to the right of Transfer.
+  historyLink(): Locator {
+    return this.page.getByRole('link', { name: /Transaction History/ });
   }
 
-  historyHeaderButton(): Locator {
-    return this.historyCard().locator('.collapse-header');
-  }
-
-  historyHeaderTitle(): Locator {
-    return this.historyHeaderButton().locator('h2');
-  }
-
-  async toggleHistory(): Promise<void> {
-    await this.historyHeaderButton().click();
-  }
-
-  showArchivedCheckbox(): Locator {
-    return this.historyCard().locator('label').filter({ hasText: 'Show archived' }).locator('input[type="checkbox"]');
-  }
-
-  async setShowArchived(checked: boolean): Promise<void> {
-    await this.showArchivedCheckbox().setChecked(checked);
-  }
-
-  historyEmptyState(): Locator {
-    return this.historyCard().locator('p.muted').filter({ hasText: /No (recent )?transactions/ });
-  }
-
-  historyTable(): Locator {
-    return this.historyCard().locator('table.history-table');
-  }
-
-  historyRows(): Locator {
-    return this.historyTable().locator('tbody tr');
-  }
-
-  // A single history row located by its Details / Source / Type text.
-  historyRow(text: string): Locator {
-    return this.historyRows().filter({ hasText: text });
-  }
-
-  // The signed Amount cell (4th column) of a history row.
-  historyRowAmount(text: string): Locator {
-    return this.historyRow(text).locator('td').nth(3);
-  }
-
-  // The Type label cell (2nd column) of a history row.
-  historyRowType(text: string): Locator {
-    return this.historyRow(text).locator('td').nth(1);
-  }
-
-  // The Source cell (3rd column) of a history row.
-  historyRowSource(text: string): Locator {
-    return this.historyRow(text).locator('td').nth(2);
-  }
-
-  // The Details cell (5th column) of a history row.
-  historyRowDetails(text: string): Locator {
-    return this.historyRow(text).locator('td').nth(4);
+  async openHistory(): Promise<void> {
+    await this.historyLink().click();
   }
 }
