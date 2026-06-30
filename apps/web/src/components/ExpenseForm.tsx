@@ -26,7 +26,7 @@ export default function ExpenseForm({ categories, incomeSources, initial, onSubm
   const [occurredAt, setOccurredAt] = useState(initial?.occurred_at ?? today());
   const [incomeSourceId, setIncomeSourceId] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<{ amount?: string; date?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ amount?: string; date?: string; category?: string }>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const isOverseas = currency.toUpperCase() !== 'PHP';
@@ -50,7 +50,7 @@ export default function ExpenseForm({ categories, incomeSources, initial, onSubm
     e.preventDefault();
     setSubmitError(null);
 
-    const newErrors: { amount?: string; date?: string } = {};
+    const newErrors: { amount?: string; date?: string; category?: string } = {};
     const parsed = parseFloat(amount);
     if (!amount) {
       newErrors.amount = 'Amount is required';
@@ -59,6 +59,9 @@ export default function ExpenseForm({ categories, incomeSources, initial, onSubm
     }
     if (!occurredAt) {
       newErrors.date = 'Date is required';
+    }
+    if (!categoryId) {
+      newErrors.category = 'Category is required';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -142,14 +145,20 @@ export default function ExpenseForm({ categories, incomeSources, initial, onSubm
         </label>
         <label>
           <div className="muted">Category</div>
-          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-            <option value="">— Uncategorized —</option>
+          <select
+            value={categoryId}
+            onChange={(e) => { setCategoryId(e.target.value); clearFieldError('category'); }}
+            aria-invalid={!!fieldErrors.category}
+            required
+          >
+            <option value="">— Select category —</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.icon ? `${c.icon} ` : ''}{c.name}
               </option>
             ))}
           </select>
+          {fieldErrors.category && <p className="field-error">{fieldErrors.category}</p>}
         </label>
         <label>
           <div className="muted">Merchant</div>

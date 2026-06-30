@@ -61,6 +61,47 @@ test.describe('Expenses page', () => {
     await expect(amountError).toBeVisible();
   });
 
+  test('Category select shows the "— Select category —" placeholder and defaults to it', async () => {
+    await expenses.openAddModal();
+    const select = expenses.categorySelect();
+    await expect(select).toHaveValue('');
+    await expect(select.locator('option').first()).toHaveText('— Select category —');
+  });
+
+  test('submitting with no category shows "Category is required" inline error and aria-invalid; selecting one clears it', async () => {
+    await expenses.openAddModal();
+    const dialog = expenses.dialog();
+
+    // Provide valid amount/date so only the category gate can block submission.
+    await dialog.locator('input[type="number"]').fill('100');
+
+    await dialog.getByRole('button', { name: 'Add Expense' }).click();
+    await expect(dialog).toBeVisible();
+    await expect(expenses.categoryError()).toHaveText('Category is required');
+    await expect(expenses.categorySelect()).toHaveAttribute('aria-invalid', 'true');
+
+    // Picking a category clears the error and the invalid state.
+    await expenses.selectFirstCategory();
+    await expect(expenses.categoryError()).toHaveCount(0);
+    await expect(expenses.categorySelect()).toHaveAttribute('aria-invalid', 'false');
+  });
+
+  test('empty amount, missing date, and missing category can all show "is required" together', async () => {
+    await expenses.openAddModal();
+    const dialog = expenses.dialog();
+
+    await dialog.locator('input[type="number"]').fill('');
+    await dialog.locator('input[type="date"]').fill('');
+    await dialog.getByRole('button', { name: 'Add Expense' }).click();
+
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator('label').filter({ hasText: 'Amount' }).locator('.field-error'))
+      .toHaveText('Amount is required');
+    await expect(dialog.locator('label').filter({ hasText: 'Date' }).locator('.field-error'))
+      .toHaveText('Date is required');
+    await expect(expenses.categoryError()).toHaveText('Category is required');
+  });
+
   test('searching with no matches shows the no-results message; clearing restores the list', async () => {
     await expenses.searchInput().fill('zzznomatch999');
     await expect(expenses.page.getByText('No expenses match your search.')).toBeVisible();

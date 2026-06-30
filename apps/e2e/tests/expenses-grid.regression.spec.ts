@@ -101,6 +101,9 @@ test.describe('Expenses Grid — edit and delete from a card', () => {
 
     await expenses.editGridCard(RECEIPT_MERCHANT);
     await expenses.fillDescription('E2E grid edited description');
+    // The receipt seed has a null category; Category is now required, so the
+    // edit must pick one before Update will save.
+    await expenses.selectFirstCategory();
     await expenses.submitEdit();
 
     await expect(expenses.gridCardDescription(RECEIPT_MERCHANT)).toContainText('E2E grid edited description');

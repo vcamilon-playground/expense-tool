@@ -44,6 +44,62 @@ test.describe('Expenses — CRUD regression', () => {
   });
 });
 
+test.describe('Expenses — category required (validation against the DB)', () => {
+  test.beforeAll(async () => {
+    await cleanup.expenses();
+  });
+
+  test.afterAll(async () => {
+    await cleanup.expenses();
+  });
+
+  test('Add Expense with no category is blocked and creates no row', async ({ page }) => {
+    const expenses = new ExpensesPage(page);
+    await expenses.goto();
+
+    await expenses.openAddModal();
+    const dialog = expenses.dialog();
+    await dialog.locator('input[type="number"]').fill('123');
+    await dialog.locator('label').filter({ hasText: 'Merchant' }).locator('input').fill(E2E_MERCHANT);
+    // Intentionally leave Category on the placeholder.
+    await dialog.getByRole('button', { name: 'Add Expense' }).click();
+
+    // Modal stays open with the inline error; the DB write is blocked.
+    await expect(dialog).toBeVisible();
+    await expect(expenses.categoryError()).toHaveText('Category is required');
+    await expenses.cancel();
+    await expect(expenses.dialog()).toBeHidden();
+
+    // Reload to prove nothing was persisted to the DB.
+    await expenses.goto();
+    await expect(expenses.row(E2E_MERCHANT)).toHaveCount(0);
+  });
+
+  test('editing a categorized expense and clearing the category blocks the Update', async ({ page }) => {
+    const expenses = new ExpensesPage(page);
+    await expenses.goto();
+
+    // Create a categorized row (fillForm picks the first real category).
+    await expenses.openAddModal();
+    await expenses.fillForm({ amount: '50', merchant: E2E_MERCHANT, description: 'E2E category-required edit' });
+    await expenses.submitAdd();
+    await expect(expenses.row(E2E_MERCHANT)).toBeVisible();
+
+    // Edit it and clear the category back to the placeholder.
+    await expenses.editRow(E2E_MERCHANT);
+    await expect(expenses.categorySelect()).not.toHaveValue('');
+    await expenses.clearCategory();
+    await expenses.dialog().getByRole('button', { name: 'Update' }).click();
+
+    // Update is blocked: modal stays open with the inline error.
+    await expect(expenses.dialog()).toBeVisible();
+    await expect(expenses.categoryError()).toHaveText('Category is required');
+    await expect(expenses.categorySelect()).toHaveAttribute('aria-invalid', 'true');
+
+    await expenses.cancel();
+  });
+});
+
 // Helper: compute the month label for the previous month the way the UI renders it
 function lastMonthLabel(): string {
   const d = new Date();

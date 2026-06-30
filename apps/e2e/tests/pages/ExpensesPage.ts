@@ -48,11 +48,39 @@ export class ExpensesPage extends BasePage {
     await expect(this.dialog()).toBeVisible();
   }
 
+  // The Category <select> inside the Add/Edit form. Category is required, so the
+  // placeholder option (value "") must not be the submitted value.
+  categorySelect(): Locator {
+    return this.dialog().locator('label').filter({ hasText: /^Category/ }).locator('select');
+  }
+
+  categoryError(): Locator {
+    return this.dialog().locator('label').filter({ hasText: /^Category/ }).locator('.field-error');
+  }
+
+  // Selects the first real category (index 1; index 0 is the "— Select category —"
+  // placeholder). Returns the chosen option's visible label.
+  async selectFirstCategory(): Promise<string> {
+    const select = this.categorySelect();
+    const value = await select.locator('option').nth(1).getAttribute('value');
+    await select.selectOption(value ?? '');
+    return (await select.locator('option').nth(1).textContent())?.trim() ?? '';
+  }
+
+  async selectCategory(label: string): Promise<void> {
+    await this.categorySelect().selectOption({ label });
+  }
+
+  async clearCategory(): Promise<void> {
+    await this.categorySelect().selectOption('');
+  }
+
   async fillForm(data: { amount: string; merchant: string; description: string }): Promise<void> {
     const d = this.dialog();
     await d.locator('input[type="number"]').fill(data.amount);
     await d.locator('label').filter({ hasText: 'Merchant' }).locator('input').fill(data.merchant);
     await d.locator('label').filter({ hasText: 'Description' }).locator('textarea').fill(data.description);
+    await this.selectFirstCategory();
   }
 
   async fillDescription(description: string): Promise<void> {
