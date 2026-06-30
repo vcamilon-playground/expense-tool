@@ -46,6 +46,12 @@ export default function BudgetsPage() {
     })();
   }, [user, refreshKey]);
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') {
+      openAddForm();
+    }
+  }, []);
+
   function handleEdit(b: Budget) {
     setEditing(b);
     setCategoryId(b.category_id ?? '');

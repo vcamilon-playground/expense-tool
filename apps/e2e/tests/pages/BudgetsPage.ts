@@ -24,6 +24,10 @@ export class BudgetsPage extends BasePage {
     return this.page.getByRole('dialog');
   }
 
+  addModalHeading(): Locator {
+    return this.dialog().getByRole('heading', { name: 'Add Budget' });
+  }
+
   async openAddModal(): Promise<void> {
     await this.addBudgetButton().click();
     await expect(this.dialog()).toBeVisible();

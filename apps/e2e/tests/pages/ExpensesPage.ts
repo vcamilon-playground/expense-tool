@@ -31,6 +31,10 @@ export class ExpensesPage extends BasePage {
     return this.page.getByRole('dialog');
   }
 
+  addModalHeading(): Locator {
+    return this.dialog().getByRole('heading', { name: 'Add Expense' });
+  }
+
   modalOverlay(): Locator {
     return this.page.locator('.modal-overlay');
   }

@@ -62,6 +62,12 @@ export default function ExpensesPage() {
     })();
   }, [user, refreshKey]);
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') {
+      setShowAdd(true);
+    }
+  }, []);
+
   function closeModal() {
     setShowAdd(false);
     setEditing(null);

@@ -24,6 +24,7 @@ import TrendChart from '@/components/TrendChart';
 import CategoryChart from '@/components/CategoryChart';
 import LineTrendChart from '@/components/LineTrendChart';
 import MonthEndBanner from '@/components/MonthEndBanner';
+import QuickActions from '@/components/QuickActions';
 import MonthProjectionChart from '@/components/MonthProjectionChart';
 import SpendOutlookChart from '@/components/SpendOutlookChart';
 import { dailyTrend, weeklyTrend } from '@/lib/trends';
@@ -99,6 +100,9 @@ export default function DashboardPage() {
 
       {/* KPIs */}
       <SummaryCards day={day} week={week} month={month} year={year} />
+
+      {/* Quick actions */}
+      <QuickActions />
 
       {/* Budget Status */}
       <div className="card">

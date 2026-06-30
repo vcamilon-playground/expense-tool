@@ -32,6 +32,10 @@ export class RecurringPage extends BasePage {
     return this.page.getByRole('dialog');
   }
 
+  addModalHeading(): Locator {
+    return this.dialog().getByRole('heading', { name: 'Add Recurring Expense' });
+  }
+
   cadenceSelect(): Locator {
     return this.dialog().locator('select').first();
   }

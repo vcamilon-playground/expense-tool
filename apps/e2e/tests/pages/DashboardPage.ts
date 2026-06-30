@@ -29,6 +29,23 @@ export class DashboardPage extends BasePage {
     return this.page.getByRole('heading', { level: 2, name: 'Budget Status' });
   }
 
+  // ── Quick actions row (below the KPI SummaryCards, above Budget Status) ──
+  quickActions(): Locator {
+    return this.page.locator('.quick-actions');
+  }
+
+  quickActionLinks(): Locator {
+    return this.quickActions().locator('a.quick-action');
+  }
+
+  quickAction(label: string): Locator {
+    return this.quickActions().locator('a.quick-action').filter({ hasText: label });
+  }
+
+  quickActionLabels(): Locator {
+    return this.quickActions().locator('.quick-action-label');
+  }
+
   budgetStatusCard(): Locator {
     return this.page.locator('.card').filter({ hasText: 'Budget Status' });
   }

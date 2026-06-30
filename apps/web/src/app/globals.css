@@ -484,6 +484,56 @@ h3 { font-size: 15px; margin: 16px 0 8px; }
   padding-left: 10px;
 }
 
+/* Quick actions — icon shortcuts on the dashboard (Add Expense/Budget/Recurring) */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.quick-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+  text-decoration: none;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s, transform 0.05s;
+}
+.quick-action:hover {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+}
+.quick-action:active {
+  transform: translateY(1px);
+}
+.quick-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+.quick-action-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+@media (max-width: 480px) {
+  .quick-actions { gap: 8px; }
+  .quick-action { padding: 12px 8px; }
+  .quick-action-label { font-size: 12px; }
+}
+
 /* Collapsible card header — full-width themed band */
 .collapse-header {
   display: flex;

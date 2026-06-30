@@ -155,7 +155,8 @@ after each Vercel deploy.
   as a summary row; columns are sortable and the Overall row stays pinned),
   daily spend trend (past 7 days)
   and weekly spend trend (past 5 weeks) line charts, 6-month trend, monthly AI
-  insight (on demand).
+  insight (on demand), and a **Quick actions** row (Add Expense / Add Budget /
+  Add Recurring) that deep-links straight into each page's Add form.
 - **Expenses** — full CRUD with three views: **List view** (grouped by month, collapsible, sortable), **Grid view** (responsive cards showing category, date, amount, merchant, and a receipt pill, sorted newest first, no month grouping), and **Calendar view** (monthly grid showing daily totals; click any day to see and edit that day's expenses). Filters (search, category) apply in all three views.
 - **Receipt scan (mobile)** — camera or gallery → AI vision extracts
   `amount`, `merchant`, `date`, `category guess`, `description`,

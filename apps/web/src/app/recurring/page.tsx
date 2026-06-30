@@ -90,6 +90,12 @@ export default function RecurringPage() {
     })();
   }, [user, refreshKey]);
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') {
+      setShowForm(true);
+    }
+  }, []);
+
   function startEdit(r: RecurringExpense) {
     setEditingId(r.id);
     setAmountInput(String(r.amount));
