@@ -120,6 +120,17 @@ export type Reminder = {
 
 export type ReminderInput = Omit<Reminder, 'id' | 'user_id' | 'created_at'>;
 
+// Weekly Maya savings tracker: one row per user. done_weeks holds the 1-based
+// week numbers already transferred. The schedule/amounts are computed in app
+// code (lib/maya-savings.ts), so only the completed-week set is persisted.
+export type MayaSavings = {
+  id: string;
+  user_id: string;
+  done_weeks: number[];
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type User = {
   id: string;
   username: string;

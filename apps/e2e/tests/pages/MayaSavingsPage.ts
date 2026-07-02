@@ -1,41 +1,20 @@
 import { Locator, Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 
-// localStorage key holding the JSON array of completed week numbers.
-// Mirrors LS_DONE_KEY in apps/web/src/lib/maya-savings.ts.
-export const LS_DONE_KEY = 'maya-savings-done';
-
 // Page object for the Maya Weekly Savings tracker (/income/maya): a deterministic
-// ₱100-per-week Friday savings plan whose only stateful part (which weeks are
-// "done") lives in localStorage — no DB, no network. Tests control the done-state
-// via seedDoneWeeks() (an addInitScript before navigation) to stay date-robust.
+// ₱100-per-week Friday savings plan. The stateful part (which weeks are "done")
+// is persisted per-user in the Supabase `maya_savings` table (done_weeks int[]) —
+// no localStorage. Tests control the done-state by writing the DB row directly
+// (helpers/supabase.ts `maya.set`/`maya.reset`) BEFORE navigating, so assertions
+// stay date-robust, then read it back to confirm what the UI persisted.
 export class MayaSavingsPage extends BasePage {
   constructor(page: Page) {
     super(page);
   }
 
-  // Prime localStorage BEFORE the app boots so the page reads a known done-state
-  // (rather than the time-relative first-visit seed). Pass a raw string to
-  // simulate corrupt / non-array values.
-  async seedDoneWeeks(value: number[] | string): Promise<void> {
-    const raw = typeof value === 'string' ? value : JSON.stringify(value);
-    await this.page.addInitScript(
-      ([key, stored]) => {
-        window.localStorage.setItem(key, stored);
-      },
-      [LS_DONE_KEY, raw] as const,
-    );
-  }
-
   async goto(): Promise<void> {
     await this.page.goto('/income/maya');
     await this.waitForLoad();
-  }
-
-  // Read the current localStorage array back out (parsed) for assertions.
-  async storedDoneWeeks(): Promise<unknown> {
-    const raw = await this.page.evaluate((key) => window.localStorage.getItem(key), LS_DONE_KEY);
-    return raw === null ? null : JSON.parse(raw);
   }
 
   heading(): Locator {
@@ -44,6 +23,11 @@ export class MayaSavingsPage extends BasePage {
 
   backLink(): Locator {
     return this.page.getByRole('link', { name: /Back to Income/ });
+  }
+
+  // The Income-page ghost link into the tracker (renamed to "💜 Maya Savings").
+  incomeLink(): Locator {
+    return this.page.getByRole('link', { name: /Maya Savings/ });
   }
 
   // ── Summary stat cards ──
@@ -103,5 +87,14 @@ export class MayaSavingsPage extends BasePage {
 
   columnHeaders(): Locator {
     return this.scheduleTable().locator('thead th');
+  }
+
+  // ── Error surfaces ──
+  saveError(): Locator {
+    return this.page.locator('.field-error');
+  }
+
+  loadErrorBanner(): Locator {
+    return this.page.locator('p').filter({ hasText: 'Could not load your Maya savings' });
   }
 }

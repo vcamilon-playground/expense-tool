@@ -9,6 +9,7 @@ import type {
   IncomeSourceInput,
   IncomeTransaction,
   IncomeTransactionKind,
+  MayaSavings,
   RecurringExpense,
   RecurringInput,
   Reminder,
@@ -445,5 +446,49 @@ export async function updateReminder(
 
 export async function deleteReminder(id: string): Promise<void> {
   const { error } = await supabase.from('reminders').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- Maya savings ----------
+// One row per user; done_weeks is the set of completed week numbers. Returns
+// null when the user has no row yet (first-ever visit → the page seeds one).
+export async function getMayaSavings(userId: string): Promise<MayaSavings | null> {
+  const { data, error } = await supabase
+    .from('maya_savings')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ?? null;
+}
+
+// Return the user's completed-week set, creating the row (seeded) if absent.
+// Idempotent under concurrent/duplicate mounts (React StrictMode, rapid
+// re-entry): if two callers race to insert, the loser hits the unique
+// constraint (23505) and we simply re-read the winner's row instead of erroring.
+export async function ensureMayaSavings(userId: string, seed: number[]): Promise<number[]> {
+  const existing = await getMayaSavings(userId);
+  if (existing) return existing.done_weeks;
+
+  const { data, error } = await supabase
+    .from('maya_savings')
+    .insert({ user_id: userId, done_weeks: seed })
+    .select('done_weeks')
+    .single();
+  if (!error && data) return data.done_weeks;
+
+  if (error?.code === '23505') {
+    const winner = await getMayaSavings(userId);
+    if (winner) return winner.done_weeks;
+  }
+  if (error) throw error;
+  return seed;
+}
+
+export async function setMayaSavingsWeeks(userId: string, doneWeeks: number[]): Promise<void> {
+  const { error } = await supabase
+    .from('maya_savings')
+    .update({ done_weeks: doneWeeks, updated_at: new Date().toISOString() })
+    .eq('user_id', userId);
   if (error) throw error;
 }

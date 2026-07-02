@@ -395,6 +395,47 @@ export const seed = {
   },
 };
 
+// Maya Weekly Savings state lives in one `maya_savings` row per user
+// (done_weeks integer[]). Tests establish a KNOWN done-set before navigating so
+// assertions are deterministic regardless of the run date, then read the row
+// back to confirm what the UI persisted. Reset removes the row entirely so the
+// next first-visit test sees the seed path.
+export const maya = {
+  // Read the E2E user's done_weeks, or null when no row exists.
+  get: async (): Promise<number[] | null> => {
+    const uid = loadE2EUserId();
+    if (!uid) return null;
+    const rows = await get<{ done_weeks: number[] }>(
+      'maya_savings',
+      `user_id=eq.${uid}&select=done_weeks`,
+    );
+    return rows.length > 0 ? rows[0]!.done_weeks : null;
+  },
+  // Read the whole row set for the user (to assert "exactly one row" invariants).
+  rows: async (): Promise<{ done_weeks: number[] }[]> => {
+    const uid = loadE2EUserId();
+    if (!uid) return [];
+    return get<{ done_weeks: number[] }>('maya_savings', `user_id=eq.${uid}&select=done_weeks`);
+  },
+  // Force the row to a known done-set (delete-then-insert so we never depend on
+  // whether a row already exists).
+  set: async (doneWeeks: number[]): Promise<void> => {
+    const uid = loadE2EUserId();
+    if (!uid) {
+      console.warn('[seed] skipped maya_savings — no E2E user id');
+      return;
+    }
+    await del('maya_savings', `user_id=eq.${uid}`);
+    await post('maya_savings', { user_id: uid, done_weeks: doneWeeks });
+  },
+  // Remove the row entirely (for first-visit-seed coverage and cleanup).
+  reset: (): Promise<void> => {
+    const uid = loadE2EUserId();
+    const filter = uid ? `user_id=eq.${uid}` : 'user_id=is.null';
+    return del('maya_savings', filter);
+  },
+};
+
 export const categoryBudget = {
   // Sum of every per-category budget limit for the E2E user. The Budgets page
   // footer and the dashboard "Overall" row both display this total.

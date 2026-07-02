@@ -4,7 +4,9 @@
 // 2026-01-09, and every following Friday the amount grows by ₱100 (₱200, ₱300,
 // …). The schedule runs through the last Friday of MAYA_END_YEAR. The only
 // stateful part — which weeks have actually been transferred — is tracked by the
-// user via manual "Done" toggles, persisted in localStorage under LS_DONE_KEY.
+// user via manual "Done" toggles, persisted per-user in the `maya_savings` table
+// so it syncs across devices (see db.ts getMayaSavings/ensureMayaSavings/
+// setMayaSavingsWeeks).
 
 // First Friday of the plan (₱100).
 export const MAYA_START_YEAR = 2026;
@@ -16,9 +18,6 @@ export const MAYA_END_YEAR = 2026;
 
 // Each Friday the transfer grows by this amount over the previous one.
 export const MAYA_WEEKLY_INCREMENT = 100;
-
-// localStorage key holding the JSON array of completed week numbers.
-export const LS_DONE_KEY = 'maya-savings-done';
 
 export type MayaWeek = {
   week: number; // 1-based; week N transfers N * MAYA_WEEKLY_INCREMENT

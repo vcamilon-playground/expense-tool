@@ -88,7 +88,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/budgets.spec.ts` | Smoke | Page load, form labels, edit/cancel flow, inline validation errors, column sorting |
 | `tests/settings.spec.ts` | Smoke | Session expiry, profile section, global save/cancel, navigation guard, change password, theme colours, categories, past-edit toggle, profile menu |
 | `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + global eye toggle + per-card eye reveal, Add Source modal fields, cash hides name field, inline validation; the "Transaction History" button navigates to the standalone `/income/history` page (heading, back link, "Show archived" toggle, month-grouped 5-column tables / empty state) |
-| `tests/maya-savings.spec.ts` | Smoke | `/income/maya` page load (reached via the "Transfer to Maya Savings" Income-header link), four summary cards (Total Saved / Weeks Completed N/51 / Year-End Goal / Remaining), progress bar, "This Friday" current-week card with mark/undo toggle, weekly schedule table (Week/Friday/Transfer/Running Total/Done) + negative/edge cases |
+| `tests/maya-savings.spec.ts` | Smoke | `/income/maya` page load (reached via the "💜 Maya Savings" Income-header link), four summary cards (Total Saved / Weeks Completed N/51 / Year-End Goal / Remaining), progress bar, "This Friday" current-week card with mark/undo toggle, weekly schedule table (Week/Friday/Transfer/Running Total/Done) driven from a DB-seeded state (empty / full-51), logged-out redirect to /login |
 | `tests/notifications.spec.ts` | Smoke | Page load, Add Reminder form (title/repeat/date), repeat cadence options, empty-title validation, form open/close toggle |
 | `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, personalized today date line (`Today is yyyy/mm/dd, DDD`), theme pill toggles data-theme, notification bell links to /notifications; date line absent on /login |
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
@@ -100,7 +100,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/recurring.regression.spec.ts` | Regression | Create/edit/delete recurring expense; confirm YES adds expense + advances date; confirm NO advances date without adding expense |
 | `tests/settings.regression.spec.ts` | Regression | Add category with custom icon; add category without icon uses default; deleting category does not delete linked expenses |
 | `tests/income.regression.spec.ts` | Regression | Create/edit/delete a bank source; transfer moves balance between sources; transfer rejects an over-balance amount; add money tops up a source balance; add money rejects a non-positive amount; the `/income/history` page logs deduct/add/transfer/balance-edit rows (sign, colour, note, before→after) grouped by month, source deletion retains rows (snapshot label persists), "Show archived" reveals archived rows, privacy eye masks history amounts, and name-only / same-value edits log nothing |
-| `tests/maya-savings.regression.spec.ts` | Regression | Marking a week Done/undone updates the summary cards, progress bar, and Running Total and persists across reload via the `maya-savings-done` localStorage key (no DB writes — localStorage-only) |
+| `tests/maya-savings.regression.spec.ts` | Regression | DB-seeded summaries; toggling a week updates the cards/progress and writes the `maya_savings` row (read back, sorted/deduped); "This Friday" mark/undo persists; first-visit seeding creates exactly one row (weeks before today); empty-array honored; save-failure shows the `.field-error` banner + resyncs UI to DB; load-failure shows the banner-only view |
 | `tests/notifications.regression.spec.ts` | Regression | Create/delete a reminder; mark a due one-time reminder Done (removed); mark a due recurring reminder Done (date advances) |
 | `tests/password-reset.regression.spec.ts` | Regression | Forgot-password rejects an invalid email inline; returns a generic success for any valid email (no account enumeration); reset-password rejects mismatched passwords inline and an invalid/expired token |
 
@@ -230,11 +230,12 @@ cd apps/e2e && npx playwright show-report
 ### `maya-savings.spec.ts` — Maya Weekly Savings
 
 **Maya Weekly Savings page**
-- the Income header link navigates to `/income/maya`
+- the Income header "💜 Maya Savings" link navigates to `/income/maya`
 - page renders heading, four summary cards (Total Saved, Weeks Completed N/51, Year-End Goal, Remaining), and the progress bar
 - the "This Friday" card shows the current week with a mark/undo toggle
-- the weekly schedule table renders Week / Friday / Transfer / Running Total / Done columns
-- toggling a week's Done checkbox updates the summary cards and progress
+- the weekly schedule table renders Week / Friday / Transfer / Running Total / Done columns and exactly 51 rows (week 1 ₱100, week 51 ₱5,100 / ₱132,600 goal)
+- a DB-seeded empty state shows ₱0 / 0 of 51 / 0%; a full 51-week state shows the goal at 100%
+- deep-linking `/income/maya` while logged out redirects to `/login`
 
 ---
 
@@ -492,10 +493,13 @@ cd apps/e2e && npx playwright show-report
 
 ### `maya-savings.regression.spec.ts` — Maya Weekly Savings state
 
-**Maya Weekly Savings — done-state persistence** (localStorage-only, no DB)
-- marking a week Done updates Total Saved, Remaining, Weeks Completed, and the Running Total
-- undoing a marked week reverts the totals
-- the done state persists across a page reload (via `maya-savings-done`)
+**Maya Weekly Savings — done-state persistence** (DB-backed via the `maya_savings` row)
+- a DB-seeded `[1,2,3]` state drives Total Saved (₱600), Weeks Completed (3/51), Remaining, and the "Saved" badges
+- an empty-array state is honored (0 saved)
+- toggling a checkbox updates the summary and writes the row back (read from the DB, sorted + deduped)
+- the "This Friday" card button marks/undoes the current week and persists
+- first visit with no row seeds every Friday before today and creates exactly one row
+- a save failure shows the `.field-error` banner and resyncs the UI to the DB; a load failure shows the banner-only view (heading + Back link, no table)
 
 ---
 

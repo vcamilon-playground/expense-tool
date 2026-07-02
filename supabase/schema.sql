@@ -174,6 +174,21 @@ create table if not exists reminders (
 );
 create index if not exists reminders_user_id_idx on reminders (user_id);
 
+-- ---------- maya savings (weekly savings tracker) ----------
+-- One row per user. done_weeks holds the 1-based week numbers already
+-- transferred to Maya. Row ABSENCE means "not yet initialised" — the app seeds
+-- the row on first open (every Friday before today), then edits it on each
+-- toggle. Deterministic schedule/amounts live in app code (lib/maya-savings.ts),
+-- so only the completed-week set is persisted. No money movement.
+create table if not exists maya_savings (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade unique,
+  done_weeks integer[] not null default '{}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists maya_savings_user_id_idx on maya_savings (user_id);
+
 -- ---------- RLS: disabled, anon key has full read/write ----------
 -- The anon key gets full read/write. Do NOT expose this DB beyond your own use.
 alter table users disable row level security;
@@ -184,6 +199,7 @@ alter table recurring_expenses disable row level security;
 alter table income_sources disable row level security;
 alter table income_transactions disable row level security;
 alter table reminders disable row level security;
+alter table maya_savings disable row level security;
 
 -- ---------- Privileges for anon role ----------
 grant usage on schema public to anon;

@@ -419,7 +419,7 @@ export default function IncomePage() {
             </button>
           )}
           <Link href="/income/maya" className="ghost" style={{ width: 'auto', display: 'inline-flex', alignItems: 'center' }}>
-            💜 Transfer to Maya Savings
+            💜 Maya Savings
           </Link>
           <Link href="/income/history" className="ghost" style={{ width: 'auto', display: 'inline-flex', alignItems: 'center' }}>
             🧾 Transaction History
