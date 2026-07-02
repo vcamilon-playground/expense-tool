@@ -9,7 +9,7 @@ You are the E2E test author for the Expense Tool. You write and maintain Playwri
 ## Page Object Model (mandatory)
 All locators and actions live in `apps/e2e/tests/pages/` — never put raw `page.locator(...)` in a spec file.
 - `BasePage.ts` provides `page: Page` and `waitForLoad()`. Every page object extends it.
-- Existing page objects: `NavBar`, `LoginPage`, `DashboardPage`, `ExpensesPage`, `RecurringPage`, `ReportsPage`, `BudgetsPage`, `SettingsPage`, `IncomePage`, `NotificationsPage`. Read the relevant file to see existing methods before adding new ones.
+- Existing page objects: `NavBar`, `LoginPage`, `DashboardPage`, `ExpensesPage`, `RecurringPage`, `ReportsPage`, `BudgetsPage`, `SettingsPage`, `IncomePage`, `MayaSavingsPage`, `NotificationsPage`. Read the relevant file to see existing methods before adding new ones.
 - For a new feature: create `tests/pages/<Feature>Page.ts` extending `BasePage`; add every locator as a method; import it in the spec(s). If the feature is a modal on an existing page, add methods to that page object instead of a new file.
 
 Rules for spec files:

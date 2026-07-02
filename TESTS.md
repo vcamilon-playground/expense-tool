@@ -88,6 +88,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/budgets.spec.ts` | Smoke | Page load, form labels, edit/cancel flow, inline validation errors, column sorting |
 | `tests/settings.spec.ts` | Smoke | Session expiry, profile section, global save/cancel, navigation guard, change password, theme colours, categories, past-edit toggle, profile menu |
 | `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + global eye toggle + per-card eye reveal, Add Source modal fields, cash hides name field, inline validation; the "Transaction History" button navigates to the standalone `/income/history` page (heading, back link, "Show archived" toggle, month-grouped 5-column tables / empty state) |
+| `tests/maya-savings.spec.ts` | Smoke | `/income/maya` page load (reached via the "Transfer to Maya Savings" Income-header link), four summary cards (Total Saved / Weeks Completed N/51 / Year-End Goal / Remaining), progress bar, "This Friday" current-week card with mark/undo toggle, weekly schedule table (Week/Friday/Transfer/Running Total/Done) + negative/edge cases |
 | `tests/notifications.spec.ts` | Smoke | Page load, Add Reminder form (title/repeat/date), repeat cadence options, empty-title validation, form open/close toggle |
 | `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, personalized today date line (`Today is yyyy/mm/dd, DDD`), theme pill toggles data-theme, notification bell links to /notifications; date line absent on /login |
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
@@ -99,6 +100,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/recurring.regression.spec.ts` | Regression | Create/edit/delete recurring expense; confirm YES adds expense + advances date; confirm NO advances date without adding expense |
 | `tests/settings.regression.spec.ts` | Regression | Add category with custom icon; add category without icon uses default; deleting category does not delete linked expenses |
 | `tests/income.regression.spec.ts` | Regression | Create/edit/delete a bank source; transfer moves balance between sources; transfer rejects an over-balance amount; add money tops up a source balance; add money rejects a non-positive amount; the `/income/history` page logs deduct/add/transfer/balance-edit rows (sign, colour, note, before→after) grouped by month, source deletion retains rows (snapshot label persists), "Show archived" reveals archived rows, privacy eye masks history amounts, and name-only / same-value edits log nothing |
+| `tests/maya-savings.regression.spec.ts` | Regression | Marking a week Done/undone updates the summary cards, progress bar, and Running Total and persists across reload via the `maya-savings-done` localStorage key (no DB writes — localStorage-only) |
 | `tests/notifications.regression.spec.ts` | Regression | Create/delete a reminder; mark a due one-time reminder Done (removed); mark a due recurring reminder Done (date advances) |
 | `tests/password-reset.regression.spec.ts` | Regression | Forgot-password rejects an invalid email inline; returns a generic success for any valid email (no account enumeration); reset-password rejects mismatched passwords inline and an invalid/expired token |
 
@@ -222,6 +224,17 @@ cd apps/e2e && npx playwright show-report
 
 **Transaction History**
 - the "Transaction History" button navigates to `/income/history` (heading, back link, "Show archived" toggle, month-grouped 5-column tables or empty state)
+
+---
+
+### `maya-savings.spec.ts` — Maya Weekly Savings
+
+**Maya Weekly Savings page**
+- the Income header link navigates to `/income/maya`
+- page renders heading, four summary cards (Total Saved, Weeks Completed N/51, Year-End Goal, Remaining), and the progress bar
+- the "This Friday" card shows the current week with a mark/undo toggle
+- the weekly schedule table renders Week / Friday / Transfer / Running Total / Done columns
+- toggling a week's Done checkbox updates the summary cards and progress
 
 ---
 
@@ -474,6 +487,15 @@ cd apps/e2e && npx playwright show-report
 - deleting a source retains its history rows (snapshot label persists)
 - "Show archived" reveals/hides archived rows (tagged `(archived)`); the privacy eye masks history amounts (incl. `•••••• → ••••••`)
 - a name-only edit and a same-value balance edit log no new row
+
+---
+
+### `maya-savings.regression.spec.ts` — Maya Weekly Savings state
+
+**Maya Weekly Savings — done-state persistence** (localStorage-only, no DB)
+- marking a week Done updates Total Saved, Remaining, Weeks Completed, and the Running Total
+- undoing a marked week reverts the totals
+- the done state persists across a page reload (via `maya-savings-done`)
 
 ---
 

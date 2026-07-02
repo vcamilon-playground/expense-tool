@@ -186,6 +186,13 @@ after each Vercel deploy.
   Deleting a source keeps its past history; entries older than 3 months
   auto-archive behind a "Show archived" toggle, and entries older than 6 months
   are deleted.
+  A **Maya Weekly Savings** tracker (the "Transfer to Maya Savings" link in the
+  Income header) follows a deterministic escalating plan — ₱100 the first Friday
+  (2026-01-09), +₱100 each Friday through the last Friday of 2026, a ₱132,600
+  full-year goal over 51 weeks. It shows summary cards, a progress bar, a "This
+  Friday" card, and the full schedule; which weeks are transferred is a manual,
+  localStorage-only checklist (no database, no money movement — it is a tracker
+  only).
 - **Notifications** — a bell in the header lists recurring payments due within
   a week, a monthly income-update prompt (15th onward), and your own
   reminders. **Reminders** can be one-time (removed when marked Done) or
