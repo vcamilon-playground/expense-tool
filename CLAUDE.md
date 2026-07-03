@@ -38,9 +38,11 @@ Multi-user expense tracking tool with custom authentication. Each user's data is
 │   └── workflows/e2e.yml  — CI: runs Playwright after every successful Vercel deploy
 ├── .claude/
 │   └── agents/            — Focused subagents (QA loop: test-scenario-designer → e2e-author → qa-reviewer · then docs-sync, change-shipper, e2e-healer)
-├── CLAUDE.md             — This file (lean reference + router)
-├── CODING_STANDARDS.md   — Naming, TypeScript, form, CSS, and test conventions
-└── TESTS.md              — E2E test suite documentation
+├── CLAUDE.md                    — This file (lean reference + router)
+├── WORKFLOW.md                  — Agent-driven SDLC diagram (Mermaid) + per-stage narrative
+├── CODING_STANDARDS.md          — App dev: naming, TypeScript, form, CSS conventions
+├── TEST_AUTOMATION_STANDARDS.md — How Playwright E2E tests are written (POM, selectors, coverage, cleanup)
+└── TESTS.md                     — E2E test suite catalogue + how to run it
 ```
 
 ---
@@ -53,7 +55,7 @@ Multi-user expense tracking tool with custom authentication. Each user's data is
 - **Freeware-first** — stick to free tiers; introduce no paid services.
 - Sync with `main` (`git pull origin main`) before starting fresh work.
 
-**Delegate the detailed workflows to the focused agents** (each carries the full procedure so this file stays small). For any feature, bug fix, or UI change, run them **in this order**:
+**Delegate the detailed workflows to the focused agents** (each carries the full procedure so this file stays small). For any feature, bug fix, or UI change, run them **in this order** (see [`WORKFLOW.md`](WORKFLOW.md) for the end-to-end SDLC diagram):
 
 | Step | Use agent | It owns |
 |---|---|---|
@@ -61,7 +63,7 @@ Multi-user expense tracking tool with custom authentication. Each user's data is
 | 2. Author automated specs for the automatable scenarios; execute the not-automatable ones via Playwright MCP; assess/update/delete existing scripts | `e2e-author` | Page Object Model, the team coding standard, coverage, cleanup tagging, MCP manual execution, the run-validation loop |
 | — Manual test run (user ↔ `e2e-author`) — | user + `e2e-author` | The user runs the ✅ specs in the **VS Code Playwright Test Explorer** and tells `e2e-author` when done; `e2e-author` reads the results and **gates the run green** (fixes script issues; routes app bugs back to step 1) before the review |
 | 3. Review coverage + specs + the automated run results + the manual-test report + deletions | `qa-reviewer` | Verdict APPROVED / NEEDS_REWORK, routed to `test-scenario-designer` / `e2e-author` |
-| 4. Sync the docs | `docs-sync` | README / TESTS / CODING_STANDARDS / CLAUDE update criteria |
+| 4. Sync the docs | `docs-sync` | README / TESTS / CODING_STANDARDS / TEST_AUTOMATION_STANDARDS / CLAUDE update criteria |
 | 5. Verify and ship (review → typecheck → unit → version bump → commit/push; **no local E2E run** — GitHub Actions confirms) | `change-shipper` | The full pre-commit gate and commit/push workflow |
 | (any time) Fix failing CI E2E tests | `e2e-healer` | Find the failed run, app-first diagnosis, fix page object vs spec, verify, commit |
 

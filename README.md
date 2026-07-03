@@ -265,7 +265,9 @@ See [`TESTS.md`](TESTS.md) for the full test suite breakdown, CI/CD setup, and t
 
 ## Coding standards
 
-See [`CODING_STANDARDS.md`](CODING_STANDARDS.md) for TypeScript rules, data access conventions, form patterns, CSS variable usage, and test standards (Page Object Model, smoke vs regression, cleanup, cross-viewport coverage).
+See [`CODING_STANDARDS.md`](CODING_STANDARDS.md) for TypeScript rules, data access conventions, form patterns, and CSS variable usage, and [`TEST_AUTOMATION_STANDARDS.md`](TEST_AUTOMATION_STANDARDS.md) for how E2E tests are written (Page Object Model, smoke vs regression, cleanup, cross-viewport coverage).
+
+The end-to-end development workflow — how a change moves through the QA/agent pipeline to shipped — is diagrammed in [`WORKFLOW.md`](WORKFLOW.md).
 
 ## Switching AI providers
 
