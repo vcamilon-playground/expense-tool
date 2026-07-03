@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
-import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordResetPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { RegisterPage } from './pages/RegisterPage';
 
 test.describe('Password reset — smoke', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
@@ -14,8 +16,9 @@ test.describe('Password reset — smoke', () => {
   });
 
   test('register page offers an optional email field', async ({ page }) => {
-    await page.goto('/register');
-    await expect(page.getByRole('textbox', { name: /email/i })).toBeVisible();
+    const register = new RegisterPage(page);
+    await register.goto();
+    await expect(register.emailInput()).toBeVisible();
   });
 
   test('forgot-password page renders its form', async ({ page }) => {

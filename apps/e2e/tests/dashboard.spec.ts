@@ -37,7 +37,7 @@ test.describe('Dashboard', () => {
       await expect(headers).toHaveText(['Category', 'Budget', 'Actual', 'Difference', '% of Budget']);
 
       // At least one per-category row with a percentage pill (no legacy .pill/.bar).
-      const firstCategoryRow = table.locator('tbody tr').first();
+      const firstCategoryRow = dashboard.budgetStatusCategoryRows().first();
       await expect(firstCategoryRow).toBeVisible();
       await expect(dashboard.budgetRowPill(firstCategoryRow)).toHaveClass(/pct-(ok|warn|over)/);
       await expect(dashboard.budgetRowPercentLabel(firstCategoryRow)).toHaveText(/^\d+%$/);
@@ -116,6 +116,8 @@ test.describe('Dashboard — refresh on resume after idle', () => {
     await page.clock.fastForward(60 * 1000); // under the 5-minute threshold
     await setVisibility(page, 'visible');
 
+    // Bounded settle to prove the negative — no refetch fires within the window
+    // after a sub-threshold resume (allowed exception, see TEST_AUTOMATION_STANDARDS.md §4).
     await page.waitForTimeout(500);
     expect(refetches).toBe(0);
   });
@@ -130,7 +132,7 @@ test.describe('Dashboard — Upcoming Charges column sorting', () => {
   });
 
   test('sortable headers present and Due Date toggles direction', async ({ page }) => {
-    const table = page.locator('.card').filter({ hasText: 'Upcoming Charges' }).locator('table');
+    const table = dashboard.upcomingTable();
     if (await table.count() === 0) return;
     for (const col of ['Name', 'Amount', 'Due Date', 'Cadence']) {
       await expect(dashboard.sortableHeader(col)).toBeVisible();

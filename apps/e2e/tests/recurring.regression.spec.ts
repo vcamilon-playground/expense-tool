@@ -132,7 +132,7 @@ test.describe('Recurring Expenses — pay now', () => {
     await expect(recurring.confirmPaymentButton(E2E_RECURRING_NAME)).toHaveCount(0);
     await expect(recurring.payNowButton(E2E_RECURRING_NAME)).toBeVisible();
 
-    const chargeDateBefore = await recurring.row(E2E_RECURRING_NAME).locator('td').nth(3).textContent();
+    const chargeDateBefore = await recurring.chargeDateCell(E2E_RECURRING_NAME).textContent();
 
     await recurring.payNowButton(E2E_RECURRING_NAME).click();
     await expect(recurring.earlyPayModal()).toBeVisible();
@@ -140,7 +140,7 @@ test.describe('Recurring Expenses — pay now', () => {
     await expect(recurring.earlyPayModal()).toBeHidden();
 
     // Wait for reload() to complete — date cell must no longer show the old date
-    const dateCell = recurring.row(E2E_RECURRING_NAME).locator('td').nth(3);
+    const dateCell = recurring.chargeDateCell(E2E_RECURRING_NAME);
     await expect(dateCell).not.toContainText(chargeDateBefore!);
 
     // Expense was created

@@ -78,8 +78,8 @@ test.describe('Expenses Grid — search and filter', () => {
     await expenses.goto();
     await expenses.openGrid();
     await expenses.searchInput().fill('zzznomatch999');
-    await expect(page.getByText('No expenses match your search.')).toBeVisible();
-    await expect(page.getByText('No expenses yet.')).toHaveCount(0);
+    await expect(expenses.noResultsMessage()).toBeVisible();
+    await expect(expenses.gridEmptyMessage()).toHaveCount(0);
     await expect(expenses.grid()).toHaveCount(0);
   });
 });

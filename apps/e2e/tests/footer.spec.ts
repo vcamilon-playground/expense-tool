@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { FooterPage } from './pages/FooterPage';
+import { NavBar } from './pages/NavBar';
+import { LoginPage } from './pages/LoginPage';
 
 test.describe('Site footer', () => {
   let footer!: FooterPage;
@@ -7,7 +9,7 @@ test.describe('Site footer', () => {
   test.beforeEach(async ({ page }) => {
     footer = new FooterPage(page);
     await page.goto('/');
-    await expect(page.locator('nav.sidenav')).toBeVisible();
+    await expect(new NavBar(page).nav()).toBeVisible();
   });
 
   test('shows About, Contact, and a copyright on an authed page', async () => {
@@ -83,7 +85,7 @@ test.describe('Site footer — unauthenticated', () => {
     await context.clearCookies();
     await page.goto('/login');
     const footer = new FooterPage(page);
-    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
+    await expect(new LoginPage(page).submitButton).toBeVisible();
     await expect(footer.footer()).toHaveCount(0);
   });
 });

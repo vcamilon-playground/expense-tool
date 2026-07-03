@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { NavBar } from './pages/NavBar';
+import { LoginPage } from './pages/LoginPage';
 
 test.describe('Site header', () => {
   let nav!: NavBar;
@@ -7,7 +8,7 @@ test.describe('Site header', () => {
   test.beforeEach(async ({ page }) => {
     nav = new NavBar(page);
     await page.goto('/');
-    await expect(page.locator('nav.sidenav')).toBeVisible();
+    await expect(nav.nav()).toBeVisible();
   });
 
   test('shows a time-based greeting with the user first name', async () => {
@@ -48,7 +49,7 @@ test.describe('Site header — unauthenticated', () => {
     await context.clearCookies();
     await page.goto('/login');
     const nav = new NavBar(page);
-    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
+    await expect(new LoginPage(page).submitButton).toBeVisible();
     await expect(nav.dateLine()).toHaveCount(0);
   });
 });

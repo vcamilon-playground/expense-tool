@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { DashboardPage } from './pages/DashboardPage';
 
 test.describe('Login page', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
@@ -31,13 +33,14 @@ test.describe('Register page', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test('register page renders all required elements', async ({ page }) => {
-    await page.goto('/register');
-    await expect(page.getByRole('heading', { name: /create account/i })).toBeVisible();
-    await expect(page.getByRole('textbox', { name: /first name/i })).toBeVisible();
-    await expect(page.getByRole('textbox', { name: /last name/i })).toBeVisible();
-    await expect(page.getByRole('textbox', { name: /username/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /create account/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /sign in/i })).toBeVisible();
+    const register = new RegisterPage(page);
+    await register.goto();
+    await expect(register.heading()).toBeVisible();
+    await expect(register.firstNameInput()).toBeVisible();
+    await expect(register.lastNameInput()).toBeVisible();
+    await expect(register.usernameInput()).toBeVisible();
+    await expect(register.createAccountButton()).toBeVisible();
+    await expect(register.signInLink()).toBeVisible();
   });
 });
 
@@ -46,6 +49,6 @@ test.describe('Auth — authenticated access', () => {
     await page.goto('/');
     await expect(page).not.toHaveURL('/login');
     // The Home page has no <h1>; the header greeting confirms an authenticated session.
-    await expect(page.locator('.site-welcome')).toBeVisible();
+    await expect(new DashboardPage(page).greeting()).toBeVisible();
   });
 });

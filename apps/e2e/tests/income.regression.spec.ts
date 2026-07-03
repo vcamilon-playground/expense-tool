@@ -214,10 +214,10 @@ test.describe('Income — transaction history', () => {
     await history.revealAmounts();
 
     // Newest-first: the top-up is the first history row.
-    const firstRow = history.rows().first();
+    const firstRow = history.latestRow();
     await expect(firstRow).toContainText('Add Money');
     await expect(firstRow).toContainText(E2E_INCOME_NAME);
-    await expect(firstRow.locator('td').nth(3)).toHaveText(/\+.*75\.00/);
+    await expect(history.amountCell(firstRow)).toHaveText(/\+.*75\.00/);
   });
 
   test('creating an expense with a deduct source logs a Deduction row with a − amount and the merchant note', async ({ page }) => {
@@ -287,12 +287,12 @@ test.describe('Income — transaction history', () => {
     await history.goto();
     await history.revealAmounts();
 
-    const editRow = history.rows().first();
+    const editRow = history.latestRow();
     await expect(editRow).toContainText('Balance Edit');
     await expect(editRow).toContainText(E2E_INCOME_NAME);
     // before → after, increasing balance ⇒ + sign.
-    await expect(editRow.locator('td').nth(4)).toHaveText(/₱300\.00.*→.*₱450\.00/);
-    await expect(editRow.locator('td').nth(3)).toHaveText(/\+.*150\.00/);
+    await expect(history.detailsCell(editRow)).toHaveText(/₱300\.00.*→.*₱450\.00/);
+    await expect(history.amountCell(editRow)).toHaveText(/\+.*150\.00/);
   });
 
   test('history rows are retained after the source is deleted', async ({ page }) => {
@@ -309,8 +309,8 @@ test.describe('Income — transaction history', () => {
     // The snapshot source_label keeps the history row visible after deletion.
     const history = new IncomeHistoryPage(page);
     await history.goto();
-    await expect(history.row(E2E_INCOME_NAME).first()).toBeVisible();
-    await expect(history.row(E2E_INCOME_NAME).first()).toContainText('Add Money');
+    await expect(history.firstRowMatching(E2E_INCOME_NAME)).toBeVisible();
+    await expect(history.firstRowMatching(E2E_INCOME_NAME)).toContainText('Add Money');
   });
 
   test('"Show archived" reveals rows older than 3 months', async ({ page }) => {
@@ -346,7 +346,7 @@ test.describe('Income — transaction history', () => {
     // The current-month group heading (e.g. "June 2026") wraps at least one row.
     const monthLabel = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
     await expect(history.monthHeadings().filter({ hasText: monthLabel })).toBeVisible();
-    await expect(history.rows().first()).toBeVisible();
+    await expect(history.latestRow()).toBeVisible();
   });
 
   test('the amount privacy toggle masks and reveals history amounts', async ({ page }) => {
@@ -360,12 +360,12 @@ test.describe('Income — transaction history', () => {
     await history.goto();
     await history.revealAmounts();
 
-    const row = history.rows().first();
-    await expect(row.locator('td').nth(3)).toContainText('88.00');
+    const row = history.latestRow();
+    await expect(history.amountCell(row)).toContainText('88.00');
 
     // Hide amounts → history amount becomes the mask.
     await history.privacyToggle().click();
-    await expect(row.locator('td').nth(3)).toHaveText('+••••••');
+    await expect(history.amountCell(row)).toHaveText('+••••••');
 
     // Create an edit row, then confirm both sides of "before → after" mask
     // (the hidden preference persists across the navigation).
@@ -377,9 +377,9 @@ test.describe('Income — transaction history', () => {
     await expect(income.dialog()).toBeHidden();
 
     await history.goto();
-    const editRow = history.rows().first();
+    const editRow = history.latestRow();
     await expect(editRow).toContainText('Balance Edit');
-    await expect(editRow.locator('td').nth(4)).toHaveText('•••••• → ••••••');
+    await expect(history.detailsCell(editRow)).toHaveText('•••••• → ••••••');
   });
 });
 

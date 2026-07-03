@@ -92,13 +92,13 @@ test.describe('Settings — navigation guard', () => {
 
   test('navigating away with unsaved changes shows the guard modal', async ({ page }) => {
     await settings.firstNameInput().fill('Changed');
-    await page.locator('nav.sidenav').getByRole('link', { name: 'Expenses', exact: true }).click();
+    await new NavBar(page).link('Expenses').click();
     await expect(settings.navGuardModal()).toBeVisible();
   });
 
   test('"Stay on page" closes modal and keeps user on settings with changes intact', async ({ page }) => {
     await settings.firstNameInput().fill('Changed');
-    await page.locator('nav.sidenav').getByRole('link', { name: 'Expenses', exact: true }).click();
+    await new NavBar(page).link('Expenses').click();
     await settings.navGuardStayButton().click();
     await expect(settings.navGuardModal()).not.toBeVisible();
     await expect(page).toHaveURL(/\/settings/);
@@ -109,7 +109,7 @@ test.describe('Settings — navigation guard', () => {
 
   test('"Leave without saving" navigates away and discards changes', async ({ page }) => {
     await settings.firstNameInput().fill('Changed');
-    await page.locator('nav.sidenav').getByRole('link', { name: 'Expenses', exact: true }).click();
+    await new NavBar(page).link('Expenses').click();
     await settings.navGuardLeaveButton().click();
     await expect(page).toHaveURL(/\/expenses/);
   });
@@ -123,13 +123,12 @@ test.describe('Settings — Change Password section', () => {
     await settings.goto();
   });
 
-  test('submitting with wrong current password shows error', async ({ page }) => {
-    const pwCard = page.locator('.card').filter({ hasText: 'Change Password' });
-    await pwCard.locator('input[type="password"]').nth(0).fill('wrongpassword');
-    await pwCard.locator('input[type="password"]').nth(1).fill('newpassword123');
-    await pwCard.locator('input[type="password"]').nth(2).fill('newpassword123');
+  test('submitting with wrong current password shows error', async () => {
+    await settings.currentPasswordInput().fill('wrongpassword');
+    await settings.newPasswordInput().fill('newpassword123');
+    await settings.confirmPasswordInput().fill('newpassword123');
     await settings.updatePasswordButton().click();
-    await expect(pwCard.locator('[role="alert"]')).toBeVisible();
+    await expect(settings.passwordCard().getByRole('alert')).toBeVisible();
   });
 });
 
@@ -202,9 +201,9 @@ test.describe('Settings — Categories section', () => {
 
   test('submitting with empty name keeps the list unchanged', async () => {
     await expect(settings.categoryRow('Groceries')).toBeVisible();
-    const before = await settings.page.locator('.card').filter({ hasText: 'Categories' }).locator('.cat-chip').count();
+    const before = await settings.categoryChips().count();
     await settings.addCategoryButton().click();
-    const after = await settings.page.locator('.card').filter({ hasText: 'Categories' }).locator('.cat-chip').count();
+    const after = await settings.categoryChips().count();
     expect(after).toBe(before);
   });
 });
@@ -220,7 +219,7 @@ test.describe('Settings — past expense editing toggle', () => {
   });
 
   test('expense editing section renders with toggle off and note hidden', async () => {
-    await expect(settings.page.getByRole('heading', { name: 'Expense Editing' })).toBeVisible();
+    await expect(settings.expenseEditingHeading()).toBeVisible();
     await expect(settings.pastEditToggle()).toBeVisible();
     await expect(settings.pastEditToggle()).not.toBeChecked();
     await expect(settings.pastEditEnabledNote()).toHaveCount(0);

@@ -26,9 +26,8 @@ test.describe('Expenses page', () => {
 
   test('required fields have required attribute in modal', async () => {
     await expenses.openAddModal();
-    const dialog = expenses.dialog();
-    await expect(dialog.locator('input[type="number"][required]')).toBeAttached();
-    await expect(dialog.locator('input[type="date"][required]')).toBeAttached();
+    await expect(expenses.amountInput()).toHaveJSProperty('required', true);
+    await expect(expenses.dateInput()).toHaveJSProperty('required', true);
   });
 
   test('modal closes on Cancel, Escape, and backdrop click', async () => {
@@ -48,24 +47,22 @@ test.describe('Expenses page', () => {
   test('submitting an empty or negative amount keeps modal open and shows inline error', async () => {
     await expenses.openAddModal();
     const dialog = expenses.dialog();
-    const amountError = dialog.locator('label').filter({ hasText: 'Amount' }).locator('.field-error');
 
-    await dialog.locator('input[type="number"]').fill('');
+    await expenses.amountInput().fill('');
     await dialog.getByRole('button', { name: 'Add Expense' }).click();
     await expect(dialog).toBeVisible();
-    await expect(amountError).toBeVisible();
+    await expect(expenses.amountError()).toBeVisible();
 
-    await dialog.locator('input[type="number"]').fill('-1');
+    await expenses.amountInput().fill('-1');
     await dialog.getByRole('button', { name: 'Add Expense' }).click();
     await expect(dialog).toBeVisible();
-    await expect(amountError).toBeVisible();
+    await expect(expenses.amountError()).toBeVisible();
   });
 
   test('Category select shows the "— Select category —" placeholder and defaults to it', async () => {
     await expenses.openAddModal();
-    const select = expenses.categorySelect();
-    await expect(select).toHaveValue('');
-    await expect(select.locator('option').first()).toHaveText('— Select category —');
+    await expect(expenses.categorySelect()).toHaveValue('');
+    await expect(expenses.categoryPlaceholderOption()).toHaveText('— Select category —');
   });
 
   test('submitting with no category shows "Category is required" inline error and aria-invalid; selecting one clears it', async () => {
@@ -73,7 +70,7 @@ test.describe('Expenses page', () => {
     const dialog = expenses.dialog();
 
     // Provide valid amount/date so only the category gate can block submission.
-    await dialog.locator('input[type="number"]').fill('100');
+    await expenses.amountInput().fill('100');
 
     await dialog.getByRole('button', { name: 'Add Expense' }).click();
     await expect(dialog).toBeVisible();
@@ -90,23 +87,21 @@ test.describe('Expenses page', () => {
     await expenses.openAddModal();
     const dialog = expenses.dialog();
 
-    await dialog.locator('input[type="number"]').fill('');
-    await dialog.locator('input[type="date"]').fill('');
+    await expenses.amountInput().fill('');
+    await expenses.dateInput().fill('');
     await dialog.getByRole('button', { name: 'Add Expense' }).click();
 
     await expect(dialog).toBeVisible();
-    await expect(dialog.locator('label').filter({ hasText: 'Amount' }).locator('.field-error'))
-      .toHaveText('Amount is required');
-    await expect(dialog.locator('label').filter({ hasText: 'Date' }).locator('.field-error'))
-      .toHaveText('Date is required');
+    await expect(expenses.amountError()).toHaveText('Amount is required');
+    await expect(expenses.dateError()).toHaveText('Date is required');
     await expect(expenses.categoryError()).toHaveText('Category is required');
   });
 
   test('searching with no matches shows the no-results message; clearing restores the list', async () => {
     await expenses.searchInput().fill('zzznomatch999');
-    await expect(expenses.page.getByText('No expenses match your search.')).toBeVisible();
+    await expect(expenses.noResultsMessage()).toBeVisible();
     await expenses.searchInput().fill('');
-    await expect(expenses.page.getByText('No expenses match your search.')).not.toBeVisible();
+    await expect(expenses.noResultsMessage()).not.toBeVisible();
   });
 });
 
@@ -171,7 +166,7 @@ test.describe('Expenses — month group collapse behaviour', () => {
       await expect(expenses.monthGroupHeader(currentLabel)).toHaveAttribute('aria-expanded', 'true');
       await expect(expenses.monthGroupBody(currentLabel)).toBeVisible();
     }
-    const allGroups = expenses.page.locator('.date-group');
+    const allGroups = expenses.dateGroups();
     const total = await allGroups.count();
     for (let i = 0; i < total; i++) {
       const header = allGroups.nth(i).locator('.date-group-header');
@@ -186,7 +181,7 @@ test.describe('Expenses — month group collapse behaviour', () => {
     const currentLabel = expenses.currentMonthLabel();
 
     // Expand a collapsed past-month group, if any exist.
-    const allGroups = expenses.page.locator('.date-group');
+    const allGroups = expenses.dateGroups();
     const total = await allGroups.count();
     for (let i = 0; i < total; i++) {
       const header = allGroups.nth(i).locator('.date-group-header');
@@ -217,15 +212,15 @@ test.describe('Expenses — column sorting', () => {
     await expenses.goto();
   });
 
-  test('Date, Category, Merchant and Amount headers are sortable', async ({ page }) => {
-    if (await page.locator('.expense-table').count() === 0) return;
+  test('Date, Category, Merchant and Amount headers are sortable', async () => {
+    if (await expenses.table().count() === 0) return;
     for (const col of ['Date', 'Category', 'Merchant', 'Amount']) {
       await expect(expenses.sortableHeader(col)).toBeVisible();
     }
   });
 
-  test('Amount sort toggles direction and a different header moves the active indicator', async ({ page }) => {
-    if (await page.locator('.expense-table').count() === 0) return;
+  test('Amount sort toggles direction and a different header moves the active indicator', async () => {
+    if (await expenses.table().count() === 0) return;
     await expenses.sortableHeader('Amount').click();
     await expect(expenses.sortableHeader('Amount').locator('.sort-active')).toBeVisible();
     const first = await expenses.sortableHeader('Amount').locator('.sort-active').textContent();
@@ -268,7 +263,7 @@ test.describe('Expenses — List / Grid / Calendar view', () => {
     // The grid container shows when at least one expense exists; otherwise the
     // empty-state message renders. Either way the calendar and table are hidden.
     await expect(expenses.calendarGrid()).toHaveCount(0);
-    await expect(expenses.page.locator('.expense-table')).toHaveCount(0);
+    await expect(expenses.table()).toHaveCount(0);
 
     await expenses.listViewButton().click();
     await expect(expenses.grid()).toHaveCount(0);
@@ -278,9 +273,9 @@ test.describe('Expenses — List / Grid / Calendar view', () => {
   test('Grid view shows the no-match page message when a search matches nothing', async () => {
     await expenses.gridViewButton().click();
     await expenses.searchInput().fill('zzznomatch999');
-    await expect(expenses.page.getByText('No expenses match your search.')).toBeVisible();
+    await expect(expenses.noResultsMessage()).toBeVisible();
     // The grid's own "No expenses yet." empty state must NOT show while filtering.
-    await expect(expenses.page.getByText('No expenses yet.')).toHaveCount(0);
+    await expect(expenses.gridEmptyMessage()).toHaveCount(0);
   });
 
   test('switching to Calendar shows the grid and nav, switching back to List hides it', async () => {
@@ -319,6 +314,6 @@ test.describe('Expenses — Grid view on mobile', () => {
     await expenses.gridViewButton().click();
     await expect(expenses.gridViewButton()).toHaveClass(/primary/);
     await expect(expenses.calendarGrid()).toHaveCount(0);
-    await expect(expenses.page.locator('.expense-table')).toHaveCount(0);
+    await expect(expenses.table()).toHaveCount(0);
   });
 });

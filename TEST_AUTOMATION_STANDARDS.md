@@ -56,7 +56,7 @@ await page.getByRole('button', { name: '+ Add Expense' }).click();
 | Rule |
 |---|
 | Every locator is a method — no raw `page.locator()` / `page.getByRole()` in spec files. |
-| `expect()` calls belong in spec files, not page objects. Page objects contain **actions and getters only**. |
+| Test **assertions** (`expect()` that verifies the behaviour under test) live in spec files. A page object may use `expect(locator).toBeVisible()/toBeHidden()` or `locator.waitFor()` **only as a synchronization wait** after an action (e.g. waiting for a modal to open/close) — never to assert the thing under test. |
 | Use `let page!: MyPage` (definite assignment) when assigning in `beforeEach`. |
 | Reuse an existing page object when a feature reuses its page (e.g. a new modal on Expenses). |
 
@@ -85,6 +85,7 @@ await page.getByRole('button', { name: '+ Add Expense' }).click();
 - Use **explicit** waits — `waitForSelector`, `waitForResponse`, `waitForFunction`, `waitForLoad()` — and wait on network/page state.
 - **Never** `waitForLoadState('networkidle')` (Next.js keeps connections open) — use `waitForLoad()` from `BasePage`.
 - **Never** `page.waitForTimeout(...)` except while actively debugging — a fixed wait hides real flakiness.
+- **Proving a negative** — asserting an event does *not* happen within a window (e.g. no refetch after a short resume) — is the one legitimate case for a single bounded wait. Keep it short and add a comment saying why.
 
 ---
 
@@ -140,7 +141,7 @@ Write every applicable category. **Bug fixes included** — every fix needs a te
 - **Avoid redundant UI steps:** don't repeat a UI flow just to reach a precondition — reach it via the seed helpers.
 - **Setup & teardown:** use `beforeAll`/`beforeEach`/`afterEach`/`afterAll` for a clean state per test; teardown must clear the rows the test created (see §7).
 - **Soft assertions:** for a scenario checking several independent things, prefer `expect.soft(...)` so one failure doesn't hide the rest — but a genuinely blocking precondition still hard-asserts.
-- **Keep assertions in specs:** page objects expose actions/getters only; all `expect()` live in the spec.
+- **Keep assertions in specs:** all test `expect()` live in the spec. Page objects expose actions/getters; the only `expect()` permitted inside them is a **non-assertion synchronization wait** (e.g. `await expect(this.dialog()).toBeVisible()` to wait for a modal), never a behavioural assertion.
 - **Simplify method signatures:** ≤ 3 parameters; group related values into an object/interface (`fillExpense({ amount, category, date })`).
 - **Method documentation:** JSDoc every page-object method — purpose, `@param`s, return:
   ```ts
@@ -235,6 +236,6 @@ expect(color).not.toMatch(/^rgba?\(255,\s*255,\s*255/); // not white-on-white
 | `test.skip()` a failing test | Fix the feature or the locator |
 | Weaken an assertion (`toBeVisible` instead of `toHaveText`) to make it pass | Fix what broke |
 | `page.waitForTimeout(2000)` | Find the right locator/event to wait for |
-| Put `expect()` inside a page object | Keep assertions in the spec file |
+| Put a **behavioural** `expect()` (the thing under test) inside a page object | Keep test assertions in the spec; page objects may only `expect(...).toBeVisible()/toBeHidden()` as a sync-wait |
 | Assert `toBeVisible()` on colored text | Use `evaluate(el => getComputedStyle(el).color)` |
 | Delete rows by ID in cleanup | Use the tag-based cleanup helpers |

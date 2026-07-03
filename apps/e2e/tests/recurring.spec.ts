@@ -31,7 +31,7 @@ test.describe('Recurring Expenses page', () => {
     await recurring.addButton().click();
     const dialog = recurring.dialog();
     await expect(dialog.getByRole('heading', { name: 'Add Recurring Expense' })).toHaveText('Add Recurring Expense');
-    await expect(dialog.locator('input[required]').first()).toBeAttached();
+    await expect(recurring.nameInput()).toHaveJSProperty('required', true);
     const options = await recurring.cadenceSelect().locator('option').allTextContents();
     for (const opt of options) {
       expect(opt[0]).toBe(opt[0]?.toUpperCase());
@@ -245,15 +245,15 @@ test.describe('Recurring Expenses — column sorting', () => {
     await recurring.goto();
   });
 
-  test('Name, Category, Cadence, Next Charge, Amount, Active headers are sortable', async ({ page }) => {
-    if (await page.locator('.recurring-table').count() === 0) return;
+  test('Name, Category, Cadence, Next Charge, Amount, Active headers are sortable', async () => {
+    if (await recurring.table().count() === 0) return;
     for (const col of ['Name', 'Category', 'Cadence', 'Next Charge', 'Amount', 'Active']) {
       await expect(recurring.sortableHeader(col)).toBeVisible();
     }
   });
 
-  test('Name sort activates and toggles direction', async ({ page }) => {
-    if (await page.locator('.recurring-table').count() === 0) return;
+  test('Name sort activates and toggles direction', async () => {
+    if (await recurring.table().count() === 0) return;
     await recurring.sortableHeader('Name').click();
     await expect(recurring.sortableHeader('Name').locator('.sort-active')).toBeVisible();
     const first = await recurring.sortableHeader('Name').locator('.sort-active').textContent();

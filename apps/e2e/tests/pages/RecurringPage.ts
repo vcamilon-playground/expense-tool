@@ -1,162 +1,253 @@
 import { expect, Locator, Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 
+/** Page object for the `/recurring` page: recurring-expense rows, the Add/Edit form, and the pay/confirm/reminder modals. */
 export class RecurringPage extends BasePage {
   constructor(page: Page) {
     super(page);
   }
 
+  /** Navigate to the recurring page and wait for the initial load to settle. */
   async goto(): Promise<void> {
     await this.page.goto('/recurring');
     await this.waitForLoad();
   }
 
+  /** The `<h1>` "Recurring Expenses" page heading. */
   heading(): Locator {
     return this.page.getByRole('heading', { level: 1, name: 'Recurring Expenses' });
   }
 
+  /** The intro description text. */
   descriptionText(): Locator {
     return this.page.getByText(/Track subscriptions/i);
   }
 
-  // The "Current Recurring" section title — a `.card > h2` carrying the accent left bar.
+  /** The "Current Recurring" section title (a `.card > h2` with the accent bar). */
   cardTitle(): Locator {
     return this.page.locator('.card > h2').filter({ hasText: 'Current Recurring' });
   }
 
+  /** The "+ Add Recurring" button. */
   addButton(): Locator {
     return this.page.getByRole('button', { name: '+ Add Recurring' });
   }
 
+  /** The Add/Edit recurring-expense modal dialog. */
   dialog(): Locator {
     return this.page.getByRole('dialog');
   }
 
+  /** The "Add Recurring Expense" heading inside the modal. */
   addModalHeading(): Locator {
     return this.dialog().getByRole('heading', { name: 'Add Recurring Expense' });
   }
 
+  /**
+   * The Cadence `<select>`. Positional (`.first()` select) — the form's selects
+   * have no stable hook yet (blocked on the data-testid backlog).
+   */
   cadenceSelect(): Locator {
     return this.dialog().locator('select').first();
   }
 
+  /** The recurring-expenses `<table>` (present only when ≥1 recurring exists). */
+  table(): Locator {
+    return this.page.locator('.recurring-table');
+  }
+
+  /**
+   * A recurring-expense row matched by name.
+   * @param name - the recurring expense's name
+   */
   row(name: string): Locator {
     return this.page.locator('.recurring-table tbody tr').filter({ hasText: name });
   }
 
+  /**
+   * The Next Charge date cell (4th column) of a row. Positional column access —
+   * the table cells have no per-column hook (blocked on the data-testid backlog).
+   * @param name - the recurring expense's name
+   */
+  chargeDateCell(name: string): Locator {
+    return this.row(name).locator('td').nth(3);
+  }
+
+  /** The Name `<input>` in the Add/Edit form. */
+  nameInput(): Locator {
+    return this.dialog().locator('label').filter({ hasText: 'Name' }).locator('input');
+  }
+
+  /** Open the Add Recurring modal and wait for it to appear. */
   async openAddModal(): Promise<void> {
     await this.addButton().click();
     await expect(this.dialog().getByRole('heading', { name: 'Add Recurring Expense' })).toBeVisible();
   }
 
+  /**
+   * Fill the Add/Edit form's name and amount.
+   * @param data - the field values to enter
+   */
   async fillForm(data: { name: string; amount: string }): Promise<void> {
     const d = this.dialog();
     await d.locator('label').filter({ hasText: 'Name' }).locator('input').fill(data.name);
     await d.locator('label').filter({ hasText: 'Amount' }).locator('input[type="number"]').fill(data.amount);
   }
 
+  /**
+   * Fill only the Amount field.
+   * @param amount - the amount to enter
+   */
   async fillAmount(amount: string): Promise<void> {
     await this.dialog().locator('label').filter({ hasText: 'Amount' }).locator('input[type="number"]').fill(amount);
   }
 
+  /** Submit the Add form and wait for the modal to close. */
   async submitAdd(): Promise<void> {
     await this.dialog().getByRole('button', { name: 'Add Recurring' }).click();
     await expect(this.dialog()).toBeHidden();
   }
 
+  /** Submit the Edit form and wait for the modal to close. */
   async submitEdit(): Promise<void> {
     await this.dialog().getByRole('button', { name: 'Update' }).click();
     await expect(this.dialog()).toBeHidden();
   }
 
+  /** Cancel the open form via its Cancel button. */
   async cancel(): Promise<void> {
     await this.page.getByRole('button', { name: 'Cancel' }).click();
   }
 
+  /**
+   * Open the Edit form for a row and wait for the Edit heading.
+   * @param name - the recurring expense's name
+   */
   async editRow(name: string): Promise<void> {
     await this.row(name).getByRole('button', { name: 'Edit' }).click();
     await expect(this.dialog().getByRole('heading', { name: 'Edit Recurring Expense' })).toBeVisible();
   }
 
+  /** The delete-confirmation dialog. */
   deleteDialog(): Locator {
     return this.page.getByRole('dialog').filter({ hasText: 'Are you really sure' });
   }
 
+  /** The delete dialog's "Close" (X) button. */
   deleteXButton(): Locator {
     return this.deleteDialog().getByRole('button', { name: 'Close' });
   }
 
+  /** The delete dialog's "No, keep it" button. */
   deleteNoButton(): Locator {
     return this.deleteDialog().getByRole('button', { name: 'No, keep it' });
   }
 
+  /** The delete dialog's "Yes, remove" button. */
   deleteYesButton(): Locator {
     return this.deleteDialog().getByRole('button', { name: 'Yes, remove' });
   }
 
+  /**
+   * Open the delete-confirmation modal for a row and wait for it to appear.
+   * @param name - the recurring expense's name
+   */
   async openDeleteModal(name: string): Promise<void> {
     await this.row(name).getByRole('button', { name: 'Delete' }).click();
     await expect(this.deleteDialog()).toBeVisible();
   }
 
+  /**
+   * Delete a row via the confirmation modal and wait for it to close.
+   * @param name - the recurring expense's name
+   */
   async deleteRow(name: string): Promise<void> {
     await this.openDeleteModal(name);
     await this.deleteYesButton().click();
     await expect(this.deleteDialog()).toBeHidden();
   }
 
+  /**
+   * The "overdue" due badge on a row.
+   * @param name - the recurring expense's name
+   */
   dueBadge(name: string): Locator {
     return this.row(name).locator('.pill.over');
   }
 
+  /**
+   * The "Confirm Payment" button on a due row.
+   * @param name - the recurring expense's name
+   */
   confirmPaymentButton(name: string): Locator {
     return this.row(name).getByRole('button', { name: 'Confirm Payment' });
   }
 
+  /** The "already been paid" confirmation modal. */
   confirmModal(): Locator {
     return this.page.getByRole('dialog').filter({ hasText: /already been paid/ });
   }
 
+  /** The confirm modal's "Yes" button. */
   confirmYesButton(): Locator {
     return this.confirmModal().getByRole('button', { name: /Yes/ });
   }
 
+  /** The confirm modal's "No" button. */
   confirmNoButton(): Locator {
     return this.confirmModal().getByRole('button', { name: /No/ });
   }
 
+  /**
+   * The "Pay Now" button on a not-yet-due row.
+   * @param name - the recurring expense's name
+   */
   payNowButton(name: string): Locator {
     return this.row(name).getByRole('button', { name: 'Pay Now' });
   }
 
+  /** The "Record Early Payment" modal. */
   earlyPayModal(): Locator {
     return this.page.getByRole('dialog').filter({ hasText: /Record Early Payment/ });
   }
 
+  /** The early-pay modal's "Yes, record it" button. */
   earlyPayConfirmButton(): Locator {
     return this.earlyPayModal().getByRole('button', { name: 'Yes, record it' });
   }
 
+  /** The early-pay modal's "Cancel" button. */
   earlyPayCancelButton(): Locator {
     return this.earlyPayModal().getByRole('button', { name: 'Cancel' });
   }
 
+  /** The "will not be added" reminder modal. */
   reminderModal(): Locator {
     return this.page.getByRole('dialog').filter({ hasText: /will not be added/ });
   }
 
+  /** The reminder modal's "OK" button. */
   reminderOkButton(): Locator {
     return this.reminderModal().getByRole('button', { name: 'OK' });
   }
 
+  /**
+   * A sortable column header matched by name (case-insensitive).
+   * @param name - the column name
+   */
   sortableHeader(name: string): Locator {
     return this.page.locator('.recurring-table th.sortable').filter({ hasText: new RegExp(name, 'i') });
   }
 
+  /**
+   * A table header cell matched by name (case-insensitive).
+   * @param name - the column name
+   */
   headerCell(name: string): Locator {
     return this.page.locator('.recurring-table thead th').filter({ hasText: new RegExp(name, 'i') });
   }
 
+  /** The active-sort indicator on whichever header is currently sorted. */
   activeSortIcon(): Locator {
     return this.page.locator('.recurring-table th.sortable .sort-active');
   }

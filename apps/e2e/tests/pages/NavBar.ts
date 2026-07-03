@@ -1,4 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test';
+import { BasePage } from './BasePage';
 
 /**
  * Navigation model for the redesigned shell:
@@ -9,8 +10,10 @@ import { expect, Locator, Page } from '@playwright/test';
  *   (`nav.bottom-nav`, aria-label "Mobile navigation") is shown. The profile
  *   popup is opened by tapping the avatar in the site header.
  */
-export class NavBar {
-  constructor(private readonly page: Page) {}
+export class NavBar extends BasePage {
+  constructor(page: Page) {
+    super(page);
+  }
 
   // ── Desktop sidebar ──────────────────────────────────────────────────────
   nav(): Locator {

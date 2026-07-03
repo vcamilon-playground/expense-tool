@@ -27,8 +27,8 @@ test.describe('Settings — category CRUD regression', () => {
 
     // DELETE
     await settings.categoryDeleteButton(E2E_CATEGORY_NAME).click();
-    await expect(settings.page.getByRole('dialog').filter({ hasText: 'Are you really sure' })).toBeVisible();
-    await settings.page.getByRole('button', { name: 'Yes, remove' }).click();
+    await expect(settings.deleteDialog()).toBeVisible();
+    await settings.deleteYesButton().click();
 
     // Verify removed
     await expect(settings.categoryRow(E2E_CATEGORY_NAME)).toHaveCount(0);
@@ -70,7 +70,7 @@ test.describe('Settings — deleting a category does not delete linked expenses'
 
     // Soft-delete the category
     await settings.categoryDeleteButton(E2E_CATEGORY_NAME).click();
-    await page.getByRole('button', { name: 'Yes, remove' }).click();
+    await settings.deleteYesButton().click();
     // Category no longer appears in the settings list (it is inactive)
     await expect(settings.categoryRow(E2E_CATEGORY_NAME)).toHaveCount(0);
 

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordResetPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 
 const E2E_USERNAME = process.env.E2E_USERNAME || 'e2e_tester';
 const E2E_PASSWORD = process.env.E2E_PASSWORD || 'E2eTestPass123';

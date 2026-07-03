@@ -4,7 +4,7 @@ import { NavBar } from './pages/NavBar';
 test.describe('Navigation — desktop sidebar', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('nav.sidenav')).toBeVisible();
+    await expect(new NavBar(page).nav()).toBeVisible();
   });
 
   test('nav links navigate to correct pages', async ({ page }) => {
@@ -50,7 +50,7 @@ test.describe('Navigation — desktop sidebar', () => {
 test.describe('Navigation — logout / switch-user (desktop)', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('nav.sidenav')).toBeVisible();
+    await expect(new NavBar(page).nav()).toBeVisible();
   });
 
   test('sidebar Log Out button opens confirmation modal', async ({ page }) => {
@@ -96,7 +96,7 @@ test.describe('Navigation — mobile bottom tab bar', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('nav.bottom-nav')).toBeVisible();
+    await expect(new NavBar(page).bottomNav()).toBeVisible();
   });
 
   test('sidebar is hidden and the bottom tab bar is shown on mobile', async ({ page }) => {

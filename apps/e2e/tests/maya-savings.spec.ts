@@ -38,7 +38,7 @@ test.describe('Maya Weekly Savings — smoke', () => {
 
   test('renders heading, descriptive text, and Back to Income link', async () => {
     await expect(maya_.heading()).toBeVisible();
-    await expect(maya_.page.getByText(/Every Friday you transfer to Maya/)).toBeVisible();
+    await expect(maya_.introText()).toBeVisible();
     await expect(maya_.backLink()).toBeVisible();
   });
 
@@ -52,7 +52,7 @@ test.describe('Maya Weekly Savings — smoke', () => {
   });
 
   test('renders a progress bar with a percent label', async () => {
-    await expect(maya_.page.getByText('Progress to goal')).toBeVisible();
+    await expect(maya_.progressToGoalText()).toBeVisible();
     await expect(maya_.progressPercent()).toHaveText(/^\d{1,3}%$/);
   });
 
@@ -106,7 +106,7 @@ test.describe('Maya Weekly Savings — smoke', () => {
   test('the Income page "💜 Maya Savings" button links to the tracker', async ({ page }) => {
     const income = new IncomePage(page);
     await income.goto();
-    const link = page.getByRole('link', { name: /Maya Savings/ });
+    const link = maya_.incomeLink();
     await expect(link).toBeVisible();
     await link.click();
     await expect(page).toHaveURL(/\/income\/maya$/);
