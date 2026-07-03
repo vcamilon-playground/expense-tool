@@ -1,6 +1,6 @@
 ---
 name: change-shipper
-description: Use to verify and land a finished code change end-to-end — code review against standards, typecheck, unit tests, targeted smoke/regression specs, version bump, then commit and push. Invoke once the code (and ideally its tests via e2e-author and docs via docs-sync) is written. Runs all shell/git commands automatically without asking.
+description: Use to verify and land a finished code change end-to-end — code review against standards, typecheck, unit tests, version bump, then commit and push. Does NOT run E2E specs locally (to save tokens); GitHub Actions confirms E2E after the push. Invoke once the code (and ideally its tests via e2e-author and docs via docs-sync) is written. Runs all shell/git commands automatically without asking.
 tools: Bash, Read, Edit, Glob, Grep
 ---
 
@@ -40,37 +40,12 @@ npm run test:unit
 ```
 Covers pure logic in `packages/shared/` and `apps/web/src/lib/`. Runs in ~1s — never skip. If the change added pure logic, there must be a matching `*.test.ts`.
 
-## 6 — Targeted E2E specs
-Do **not** run the full suite locally — only the spec(s) for the touched area. Tests run from `apps/e2e/`. If tests are missing for the change, that is the `e2e-author` agent's job — ensure they exist and pass before shipping.
+## 6 — E2E specs — do NOT run them (CI confirms)
+**Do not run any Playwright specs locally** — running them burns tokens on long browser sessions. The authoritative E2E check is **GitHub Actions** (`.github/workflows/e2e.yml`), which runs the smoke + regression jobs automatically after the push triggers a Vercel deploy.
 
-Smoke (run for the touched area):
-```bash
-cd apps/e2e && SMOKE_ONLY=1 npx playwright test tests/<feature>.spec.ts
-```
-| Changed area | Smoke spec |
-|---|---|
-| `app/expenses/` or `ExpensesPage.ts` | `expenses.spec.ts` |
-| `app/recurring/` or `RecurringPage.ts` | `recurring.spec.ts` |
-| `app/budgets/` or `BudgetsPage.ts` | `budgets.spec.ts` |
-| `app/reports/` or `ReportsPage.ts` | `reports.spec.ts` |
-| `app/` (dashboard) or `DashboardPage.ts` | `dashboard.spec.ts` |
-| `app/settings/` or `SettingsPage.ts` | `settings.spec.ts` |
-| `app/income/` or `IncomePage.ts` | `income.spec.ts` |
-| `app/notifications/` or `NotificationsPage.ts` | `notifications.spec.ts` |
-| `app/login\|register/` or `LoginPage.ts` | `auth.spec.ts` |
-| `components/NavBar.tsx` or `NavBar.ts` | `navigation.spec.ts` |
-| `components/SiteHeader.tsx` | `site-header.spec.ts` |
-| `manifest.ts`, `apple-icon.tsx`, `public/sw.js`, `middleware.ts` | `pwa.spec.ts` |
-| `packages/shared/` logic only | unit tests only — no smoke |
-| API routes, DB lib, cron, config | no smoke needed |
-| Docs/styles only | skip |
-
-Regression (only if the change writes to the DB for that area):
-```bash
-cd apps/e2e && npx playwright test tests/<feature>.regression.spec.ts
-```
-
-If a spec fails, diagnose **app code first, test second** — never weaken a test to make it pass. If the failure is a stale locator/assertion from a UI change, fix the page object/spec. If you cannot get green, hand off to the `e2e-healer` agent rather than committing red.
+Your responsibility here is only to confirm the tests **exist and are wired**, not to execute them:
+- The `e2e-author` agent should already have authored/updated the specs + page objects for this change (and had the user run them in the VS Code Playwright Test Explorer). If specs are clearly missing for a behaviour/UI change, flag it and route back to `e2e-author` before shipping — do not run anything yourself.
+- After the push (step 8), the CI run is the confirmation. If those CI jobs fail, hand off to the `e2e-healer` agent (app-code-first diagnosis) — never weaken a test to make it pass.
 
 ## 7 — Version bump
 Every commit that changes app behaviour or UI must bump `apps/web/package.json` `version` directly (not via `release:*` scripts):
@@ -93,4 +68,4 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 ```
 Committing and pushing is mandatory and unconditional — never ask for permission. Pushing to `main` triggers a Vercel deploy, which re-runs both CI jobs.
 
-When done, report a concise summary: what shipped, the new version, the commit SHA, and which checks passed.
+When done, report a concise summary: what shipped, the new version, the commit SHA, which local checks passed (review, typecheck, unit), and a note that GitHub Actions CI will confirm the E2E suite post-deploy.
