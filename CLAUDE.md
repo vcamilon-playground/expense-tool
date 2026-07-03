@@ -49,7 +49,7 @@ Multi-user expense tracking tool with custom authentication. Each user's data is
 
 **Non-negotiables (always apply, every task):**
 - **Run all shell and git commands automatically — never ask for permission.** No "should I run this?" / "should I commit?". Just do it.
-- **Every code change ships complete:** it includes tests, passes typecheck + unit + targeted E2E, bumps `apps/web/package.json`, and is committed and pushed to `main` — with no manual step left for the user.
+- **Every code change ships complete:** it includes tests (authored by `e2e-author`, run green by the user in the Test Explorer), passes typecheck + unit locally with E2E confirmed by GitHub Actions post-push, bumps `apps/web/package.json`, and is committed and pushed to `main` — with no manual step left for the user.
 - **Freeware-first** — stick to free tiers; introduce no paid services.
 - Sync with `main` (`git pull origin main`) before starting fresh work.
 
@@ -57,17 +57,24 @@ Multi-user expense tracking tool with custom authentication. Each user's data is
 
 | Step | Use agent | It owns |
 |---|---|---|
-| 1. Design test scenarios for the change (positive / negative / edge / exploratory) | `test-scenario-designer` | A scoped, numbered scenario list |
-| 2. Write/update the automated Playwright tests for the change | `e2e-author` | Page Object Model, coverage (smoke/regression/negative), cross-viewport, cleanup tagging, locator pitfalls |
-| — Manual interaction (you ↔ user) — | _(none)_ | A pause between `e2e-author` and `qa-reviewer` for the user to review/interact before the QA gate |
-| 3. Review the scenario list + the authored tests, loop back on gaps/findings until approved | `qa-reviewer` | Coverage + test-authoring review; verdict APPROVED / NEEDS_REWORK |
+| 1. Design test scenarios for the change (positive / negative / edge / exploratory) | `test-scenario-designer` | A consolidated scenario **table** (automatable Yes/No, literal test data, recommended regression scripts) |
+| 2. Author automated specs for the automatable scenarios; execute the not-automatable ones via Playwright MCP; assess/update/delete existing scripts | `e2e-author` | Page Object Model, the team coding standard, coverage, cleanup tagging, MCP manual execution, the run-validation loop |
+| — Manual test run (user ↔ `e2e-author`) — | user + `e2e-author` | The user runs the ✅ specs in the **VS Code Playwright Test Explorer** and tells `e2e-author` when done; `e2e-author` reads the results and **gates the run green** (fixes script issues; routes app bugs back to step 1) before the review |
+| 3. Review coverage + specs + the automated run results + the manual-test report + deletions | `qa-reviewer` | Verdict APPROVED / NEEDS_REWORK, routed to `test-scenario-designer` / `e2e-author` |
 | 4. Sync the docs | `docs-sync` | README / TESTS / CODING_STANDARDS / CLAUDE update criteria |
-| 5. Verify and ship (review → typecheck → unit → targeted E2E → version bump → commit/push) | `change-shipper` | The full pre-commit gate and commit/push workflow |
+| 5. Verify and ship (review → typecheck → unit → version bump → commit/push; **no local E2E run** — GitHub Actions confirms) | `change-shipper` | The full pre-commit gate and commit/push workflow |
 | (any time) Fix failing CI E2E tests | `e2e-healer` | Find the failed run, app-first diagnosis, fix page object vs spec, verify, commit |
 
-**The QA loop (steps 1–3) runs on the change before it ships.** Subagents cannot spawn each other, so **you (the main thread) orchestrate it:** invoke `test-scenario-designer`, pass its scenario list to `e2e-author` to write/update the tests, then **pause for the user's manual interaction** before the review gate. After that, pass both the scenario list and the authored tests to `qa-reviewer`. If the verdict is `NEEDS_REWORK`, act on its findings — re-invoke `test-scenario-designer` to add missed scenarios, `e2e-author` to cover them, and **fix any app defects it flags** — then re-invoke `qa-reviewer`. Repeat until `APPROVED`, then proceed to steps 4→5.
+**The QA loop (steps 1–3) runs on the change before it ships.** Subagents cannot spawn each other, so **you (the main thread) orchestrate it:**
+1. Invoke `test-scenario-designer` → get the scenario table.
+2. Invoke `e2e-author` → it writes/updates specs for the automatable scenarios, executes the not-automatable ones via Playwright MCP, then hands the user a bullet list of specs to run.
+3. **The user runs those specs in the VS Code Playwright Test Explorer** and reports back; re-invoke `e2e-author` to **validate the run**. It gates the run green:
+   - **Script issue** → it fixes the spec/page object; user re-runs **all** specs.
+   - **App bug** → **you fix the app**, then loop back to `test-scenario-designer` (existing + new scenarios for the fix) → `e2e-author` → user re-runs **all** specs.
+   Only once the run is fresh + fully green does it hand off to review.
+4. Invoke `qa-reviewer` with the scenario table, the authored specs, the automated run results, the manual-test report, and the deletions list. On `NEEDS_REWORK`, act on its routed findings (`test-scenario-designer` / `e2e-author`, or fix app defects) and re-invoke until `APPROVED`, then proceed to steps 4→5.
 
-> The `manual-tester` agent is no longer part of this flow. `e2e-author`'s specific responsibilities in this position will be updated separately.
+Nobody auto-runs the E2E suite: the user runs targeted specs in the Test Explorer during authoring, and GitHub Actions is the authoritative gate after the push. `change-shipper` runs only review → typecheck → unit locally.
 
 This QA loop applies to app behaviour/UI changes. Skip it (go straight to docs-sync / change-shipper) for docs-only, test-only, or CI/config-only changes. Agents may also auto-trigger from their descriptions; you can always invoke them explicitly.
 
@@ -187,9 +194,9 @@ Key variables: `var(--bad)` for errors, `var(--muted)` for secondary text, `var(
 1. Add or update types in `packages/shared/src/types.ts`.
 2. Add DB functions in `apps/web/src/lib/db.ts` — each accepts `userId: string`.
 3. Build the page in `apps/web/src/app/<route>/page.tsx`. Read `const { user } = useAuth()` at the top; return early if null. If it fetches data, wire `refreshKey` into the load effect (see Live data refresh above).
-4. QA loop → **`test-scenario-designer`** → **`e2e-author`** (page object, smoke, regression, negative) → **[manual interaction with the user]** → **`qa-reviewer`**; loop until APPROVED (fix any defects it finds).
+4. QA loop → **`test-scenario-designer`** → **`e2e-author`** (authors specs + runs not-automatable via MCP) → **user runs the specs in the VS Code Playwright Test Explorer**, `e2e-author` validates/gates them green → **`qa-reviewer`**; loop until APPROVED (fix any app defects it finds).
 5. Docs → use the **`docs-sync`** agent.
-6. Ship → use the **`change-shipper`** agent.
+6. Ship → use the **`change-shipper`** agent (no local E2E run — CI confirms).
 
 ---
 
@@ -206,6 +213,6 @@ The app version lives in `apps/web/package.json` (`version` field), injected at 
 
 Full details: [`TESTS.md`](TESTS.md) and the `e2e-author` / `e2e-healer` agents.
 
-- Tests live in `apps/e2e/`, use the Page Object Model (`tests/pages/`), and run against the **real** Supabase DB (no mocking). Run targeted specs from `apps/e2e/`, e.g. `cd apps/e2e && SMOKE_ONLY=1 npx playwright test tests/<feature>.spec.ts`.
+- Tests live in `apps/e2e/`, use the Page Object Model (`tests/pages/`), and run against the **real** Supabase DB (no mocking). In the agent workflow the **user runs targeted specs via the VS Code Playwright Test Explorer** and `e2e-author` validates the results (from `test-results/`); agents don't auto-run the suite. The CLI equivalent is `cd apps/e2e && SMOKE_ONLY=1 npx playwright test tests/<feature>.spec.ts`.
 - CI (`.github/workflows/e2e.yml`) runs two parallel Chromium jobs after every Vercel deploy: `e2e-smoke` and `e2e-regression`. Each posts a markdown summary to the run page and uploads an HTML-report artifact. It can also be dispatched manually (`gh workflow run e2e.yml -f suite=<both|smoke|regression> -f base_url=<url>`).
 - Vercel Authentication must be **disabled** (Deployment Protection → Off) or CI hangs. Required GitHub secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `E2E_USERNAME`, `E2E_PASSWORD`.

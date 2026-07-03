@@ -18,6 +18,8 @@ This downloads the Chromium binary (~260 MB) to your local Playwright cache. You
 
 ## Running Tests
 
+**In the agent workflow, tests are run by the user via the VS Code Playwright Test Explorer** (Testing sidebar → expand `apps/e2e` → run the file/test node). The `e2e-author` agent hands over a bullet list of exactly which specs to run, then **validates the results** by reading `test-results/.last-run.json`, `apps/e2e/test-results.json`, and the per-failure folders under `test-results/` — it does not launch the run itself. `change-shipper` no longer runs E2E locally either; **GitHub Actions is the authoritative gate** after each push (see the **CI / CD Integration** section below). The CLI commands below are the manual/reference equivalents.
+
 **Important:** all Playwright commands must be run from the `apps/e2e/` directory. Running from the repo root skips the config file and leaves `baseURL` unset.
 
 ### Smoke tests only (fast, no DB writes)

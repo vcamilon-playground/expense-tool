@@ -303,7 +303,7 @@ await page.getByRole('button', { name: '+ Add Expense' }).click();
 | **Smoke** | `<feature>.spec.ts` | No | UI visibility, text, navigation, localStorage state, form validation |
 | **Regression** | `<feature>.regression.spec.ts` | Yes | Create / edit / delete against real database |
 
-Run only the spec for the feature you changed:
+Run only the spec for the feature you changed. In the agent workflow these are run by the **user via the VS Code Playwright Test Explorer** (the `e2e-author` agent validates the results and `change-shipper` does not run E2E locally — GitHub Actions is the gate); the commands below are the manual/reference equivalents:
 ```sh
 # targeted smoke run
 cd apps/e2e && SMOKE_ONLY=1 npx playwright test tests/<feature>.spec.ts
