@@ -117,4 +117,58 @@ export class ReportsPage extends BasePage {
   activeSortIcon(): Locator {
     return this.byCategoryTable().locator('th.sortable .sort-active');
   }
+
+  // ── Export Report card ─────────────────────────────────────────────────────
+
+  /** The always-visible "Export Report" `.card` (scoped to disambiguate its buttons/banner). */
+  exportCard(): Locator {
+    return this.page.locator('.card').filter({ hasText: 'Export Report' });
+  }
+
+  /** The `<h2>` "Export Report" heading. */
+  exportHeading(): Locator {
+    return this.exportCard().getByRole('heading', { level: 2, name: 'Export Report' });
+  }
+
+  /** The muted description paragraph inside the Export Report card ("… for <from> → <to>."). */
+  exportDescription(): Locator {
+    return this.exportCard().locator('p.muted');
+  }
+
+  /** The "⬇ CSV" export button (label stays static unless CSV is the active export). */
+  csvExportButton(): Locator {
+    return this.exportCard().getByRole('button', { name: '⬇ CSV', exact: true });
+  }
+
+  /** The "⬇ Excel" export button. */
+  excelExportButton(): Locator {
+    return this.exportCard().getByRole('button', { name: '⬇ Excel', exact: true });
+  }
+
+  /** The "⬇ PDF" export button. */
+  pdfExportButton(): Locator {
+    return this.exportCard().getByRole('button', { name: '⬇ PDF', exact: true });
+  }
+
+  /** The export button currently mid-flight (its label swaps to "Exporting…"). */
+  exportingButton(): Locator {
+    return this.exportCard().getByRole('button', { name: 'Exporting…', exact: true });
+  }
+
+  /** The inline `.field-error` banner shown below the buttons when an export fails. */
+  exportErrorBanner(): Locator {
+    return this.exportCard().locator('p.field-error');
+  }
+
+  /**
+   * Read the report scope (from/to dates) currently shown in the Export Report
+   * card description, so a spec can assert the download filename matches.
+   * @returns the `{ from, to }` ISO dates parsed from the description text
+   */
+  async exportScopeRange(): Promise<{ from: string; to: string }> {
+    const text = (await this.exportDescription().textContent()) ?? '';
+    const match = text.match(/(\d{4}-\d{2}-\d{2})\s*→\s*(\d{4}-\d{2}-\d{2})/);
+    if (!match) throw new Error(`[ReportsPage] could not parse scope range from: "${text}"`);
+    return { from: match[1]!, to: match[2]! };
+  }
 }

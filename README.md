@@ -162,8 +162,11 @@ after each Vercel deploy.
   `amount`, `merchant`, `date`, `category guess`, `description`,
   `confidence`. You confirm before saving. Provider configurable via
   `AI_PROVIDER` (default Gemini, free).
-- **Reports** — switch between day / week / month / year, with category
-  totals and percentages.
+- **Reports** — switch between day / week / month / year (or a custom date
+  range), with category totals and percentages. An **Export Report** card
+  downloads the currently-scoped report (summary metrics, by-category
+  breakdown, and expense list) as **CSV**, **Excel**, or **PDF**
+  (`expense-report-<from>-<to>.{csv,xlsx,pdf}`).
 - **Budgets** — per-category monthly limits, with an Overall total computed as
   the sum of every category limit. Dashboard warns at ≥ 80% and flags
   over-budget once spending exceeds the limit.

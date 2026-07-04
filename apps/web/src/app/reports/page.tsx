@@ -15,6 +15,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import LoadingScreen from '@/components/LoadingScreen';
 import { useDataRefresh } from '@/contexts/DataRefreshContext';
 import { useSortState, SortIcon, sortRows } from '@/lib/sort';
+import { exportCSV, exportExcel, exportPDF } from '@/lib/export';
+
+type ExportFormat = 'csv' | 'excel' | 'pdf';
 
 type ViewMode = 'preset' | 'custom';
 
@@ -87,6 +90,8 @@ export default function ReportsPage() {
   const [optionsExpanded, setOptionsExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -127,6 +132,20 @@ export default function ReportsPage() {
 
   const { sortCol: catSortCol, sortDir: catSortDir, handleSort: catHandleSort } =
     useSortState<'category' | 'count' | 'total' | 'pct'>('total', 'desc');
+
+  async function handleExport(format: ExportFormat) {
+    setExportError(null);
+    setExporting(format);
+    try {
+      if (format === 'csv') exportCSV(summary, periodExpenses, categories);
+      else if (format === 'excel') await exportExcel(summary, periodExpenses, categories);
+      else await exportPDF(summary, periodExpenses, categories);
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : 'Export failed. Please try again.');
+    } finally {
+      setExporting(null);
+    }
+  }
 
   if (!user || loading) return <LoadingScreen />;
   if (err) return <p style={{ color: 'var(--bad)' }}>{err}</p>;
@@ -249,6 +268,47 @@ export default function ReportsPage() {
             {summary.count ? formatMoney(summary.total / summary.count) : formatMoney(0)}
           </div>
         </div>
+      </div>
+
+      <div className="card">
+        <div
+          className="row"
+          style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}
+        >
+          <div>
+            <h2 style={{ margin: 0 }}>Export Report</h2>
+            <p className="muted" style={{ margin: '4px 0 0', fontSize: 13 }}>
+              Summary, category breakdown, and expense list for {summary.from} → {summary.to}.
+            </p>
+          </div>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button
+              className="ghost"
+              style={{ width: 'auto' }}
+              disabled={exporting !== null}
+              onClick={() => handleExport('csv')}
+            >
+              {exporting === 'csv' ? 'Exporting…' : '⬇ CSV'}
+            </button>
+            <button
+              className="ghost"
+              style={{ width: 'auto' }}
+              disabled={exporting !== null}
+              onClick={() => handleExport('excel')}
+            >
+              {exporting === 'excel' ? 'Exporting…' : '⬇ Excel'}
+            </button>
+            <button
+              className="ghost"
+              style={{ width: 'auto' }}
+              disabled={exporting !== null}
+              onClick={() => handleExport('pdf')}
+            >
+              {exporting === 'pdf' ? 'Exporting…' : '⬇ PDF'}
+            </button>
+          </div>
+        </div>
+        {exportError && <p className="field-error" style={{ marginTop: 12 }}>{exportError}</p>}
       </div>
 
       {compare && prevSummary && (

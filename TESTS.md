@@ -87,6 +87,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/expenses.spec.ts` | Smoke | Page load, Add Expense modal, required fields, inline validation errors, search/filter, delete modal, month group collapse, column sorting, List/Grid/Calendar view toggle + Grid cards + month navigation |
 | `tests/recurring.spec.ts` | Smoke | Page load, Add Recurring modal, required fields, inline validation errors, themed table header, payment confirmation flow, delete modal, column sorting |
 | `tests/reports.spec.ts` | Smoke | Page load, period select, preset/date-range mode toggle, compare period, column sorting |
+| `tests/report-export.spec.ts` | Smoke | Export Report card: per-format (CSV/Excel/PDF) downloads of the scoped report, failure banner, scope→filename, zero-expense range, in-progress disabled state, mobile 375px, reload / Back-Forward |
 | `tests/budgets.spec.ts` | Smoke | Page load, form labels, edit/cancel flow, inline validation errors, column sorting |
 | `tests/settings.spec.ts` | Smoke | Session expiry, profile section, global save/cancel, navigation guard, change password, theme colours, categories, past-edit toggle, profile menu |
 | `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + global eye toggle + per-card eye reveal, Add Source modal fields, cash hides name field, inline validation; the "Transaction History" button navigates to the standalone `/income/history` page (heading, back link, "Show archived" toggle, month-grouped 5-column tables / empty state) |
@@ -339,6 +340,19 @@ cd apps/e2e && npx playwright show-report
 **Reports — By Category column sorting**
 - Category, Count, Total and % headers are sortable
 - Total active by default; Category moves the indicator; Total toggles direction
+
+---
+
+### `report-export.spec.ts` — Report export
+
+**Report export**
+- the Export Report card and its CSV / Excel / PDF buttons render after the summary stat grid
+- each button downloads the scoped report in its format *(CSV, Excel `.xlsx`, PDF)*
+- the download filename encodes the active scope *(`expense-report-<from>-<to>.{csv,xlsx,pdf}`)*
+- a zero-expense range still exports (summary + empty breakdown)
+- while exporting, all three buttons disable and the active one shows "Exporting…"
+- an export failure renders an inline `.field-error` banner
+- the card works at a 375px mobile viewport and survives reload / Back-Forward navigation
 
 ---
 
