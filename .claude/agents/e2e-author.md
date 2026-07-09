@@ -52,13 +52,28 @@ Please run these in the VS Code Playwright Test Explorer, then let me know when 
 
 (For reference only, the CLI equivalent is `cd apps/e2e && npx playwright test tests/<feature>.spec.ts` — but leave the run to the user.)
 
+### Temporary `@qa-run` tag — make the required set runnable in ONE aggregated run
+The Test Explorer's JSON/HTML reporters **overwrite on each run**, so running the required specs one file at a time leaves only the last file's results in the report (everything else looks "missing"). To let the user run the whole required set in a single aggregated pass, **tag every spec/test in your run list with a temporary Playwright tag `@qa-run`** as part of authoring:
+
+- Add the tag to the `describe`/`test` you want run, using Playwright's tag option (not a title hack):
+  ```ts
+  test.describe('Export Report', { tag: '@qa-run' }, () => { … });
+  // or per test:
+  test('downloads CSV', { tag: '@qa-run' }, async ({ page }) => { … });
+  ```
+- **Tag the entire required set** — the specs you created/updated **and** the blast-radius regression specs. Prefer tagging at the `describe` level so a whole file's suite is covered by one annotation. If a required file has multiple top-level describes, tag each.
+- Tell the user to run them all at once by filtering on the tag: in the Testing sidebar's filter box type **`@qa-run`**, then run the filtered tree (or run the parent `apps/e2e` node with the tag filter active). One run → one aggregated `test-results.json` / HTML report covering the full set.
+- Still give the bullet list above (it documents *what* the tag covers and why each file is included); the tag is just the mechanism to run them together.
+
+**The tag is temporary QA scaffolding, not permanent metadata** — you remove it once the run is confirmed fresh + fully green (see the validation loop's step 2). Never leave `@qa-run` in a committed spec.
+
 ## Automated-run validation loop (you gate the run green before qa-reviewer)
 You do **not** hand off to `qa-reviewer` until the automated run is green. After the user says the run is done, validate it and drive this loop:
 
 1. **Validate the run by reading the artifacts** (don't re-run): `test-results/.last-run.json` (verdict + failed hashes), `apps/e2e/test-results.json` (per-test name/status/error), `test-results/<test-title>/` (per-failure `error-context.md`, trace, screenshots), `apps/e2e/playwright-report/index.html`. **Check freshness** — if the artifacts are older than your changes, the run didn't actually cover them; ask the user to run again.
-2. **All passed →** hand over to `qa-reviewer`: report that the automated run is fresh + green (with the counts) and that the manual scenarios are done, so review can start.
+2. **All passed →** first **remove the temporary `@qa-run` tag** from every spec/describe/test you added it to (leave the specs otherwise untouched) and `typecheck` to confirm nothing broke; then hand over to `qa-reviewer`: report that the automated run is fresh + green (with the counts), that the manual scenarios are done, and that the `@qa-run` tags have been stripped, so review can start. **Never hand off to `qa-reviewer` (or let the change ship) with `@qa-run` still in the specs.**
 3. **Any failed →** open each failing spec's failure context and diagnose **script issue vs application bug** (app-code-first — never weaken a test to make it pass):
-   - **Script issue** (stale locator, wrong assertion, test-only bug): **fix the spec/page object**, then ask the user to **re-run ALL the scripts — including the ones that already passed** (a fix can ripple) — and tell you when done. Go back to step 1.
+   - **Script issue** (stale locator, wrong assertion, test-only bug): **fix the spec/page object**, keep the `@qa-run` tag in place on the whole required set (add it to any spec newly pulled into the set by the fix), then ask the user to **re-run ALL the scripts — including the ones that already passed** (a fix can ripple; running the `@qa-run` filter again re-runs them together) — and tell you when done. Go back to step 1. The tag stays until step 2 confirms green.
    - **Application bug** (the app genuinely behaves wrong): **do not patch the test to hide it.** Report the bug (repro + likely fix location) and hand back to the main thread with this required sequence:
      1. the **app bug is fixed** (main thread / app owner),
      2. back to **`test-scenario-designer`** to refresh the scenario set — **the existing scenarios plus any new scenarios needed to cover the fix**,
