@@ -45,7 +45,7 @@ export class RecurringPage extends BasePage {
 
   /**
    * The Cadence `<select>`. Positional (`.first()` select) — the form's selects
-   * have no stable hook yet (blocked on the data-testid backlog).
+   * carry no per-field testid.
    */
   cadenceSelect(): Locator {
     return this.dialog().locator('select').first();
@@ -53,7 +53,7 @@ export class RecurringPage extends BasePage {
 
   /** The recurring-expenses `<table>` (present only when ≥1 recurring exists). */
   table(): Locator {
-    return this.page.locator('.recurring-table');
+    return this.page.getByTestId('recurring-table');
   }
 
   /**
@@ -61,12 +61,12 @@ export class RecurringPage extends BasePage {
    * @param name - the recurring expense's name
    */
   row(name: string): Locator {
-    return this.page.locator('.recurring-table tbody tr').filter({ hasText: name });
+    return this.table().locator('tbody tr').filter({ hasText: name });
   }
 
   /**
    * The Next Charge date cell (4th column) of a row. Positional column access —
-   * the table cells have no per-column hook (blocked on the data-testid backlog).
+   * table cells carry no per-column testid.
    * @param name - the recurring expense's name
    */
   chargeDateCell(name: string): Locator {
@@ -236,7 +236,7 @@ export class RecurringPage extends BasePage {
    * @param name - the column name
    */
   sortableHeader(name: string): Locator {
-    return this.page.locator('.recurring-table th.sortable').filter({ hasText: new RegExp(name, 'i') });
+    return this.table().locator('th.sortable').filter({ hasText: new RegExp(name, 'i') });
   }
 
   /**
@@ -244,11 +244,11 @@ export class RecurringPage extends BasePage {
    * @param name - the column name
    */
   headerCell(name: string): Locator {
-    return this.page.locator('.recurring-table thead th').filter({ hasText: new RegExp(name, 'i') });
+    return this.table().locator('thead th').filter({ hasText: new RegExp(name, 'i') });
   }
 
   /** The active-sort indicator on whichever header is currently sorted. */
   activeSortIcon(): Locator {
-    return this.page.locator('.recurring-table th.sortable .sort-active');
+    return this.table().locator('th.sortable .sort-active');
   }
 }

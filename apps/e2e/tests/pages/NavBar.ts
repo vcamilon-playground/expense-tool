@@ -17,7 +17,7 @@ export class NavBar extends BasePage {
 
   // ── Desktop sidebar ──────────────────────────────────────────────────────
   nav(): Locator {
-    return this.page.locator('nav.sidenav');
+    return this.page.getByTestId('sidebar-nav');
   }
 
   sidebarNav(): Locator {
@@ -30,48 +30,48 @@ export class NavBar extends BasePage {
   }
 
   navLabel(name: string): Locator {
-    return this.page.locator('.nav-label').filter({ hasText: name });
+    return this.page.getByTestId('nav-label').filter({ hasText: name });
   }
 
   // Profile card at the top of the sidebar
   profileCard(): Locator {
-    return this.page.locator('.sidebar-profile');
+    return this.page.getByTestId('sidebar-profile');
   }
 
   userName(): Locator {
-    return this.page.locator('.sidebar-user-name');
+    return this.page.getByTestId('sidebar-user-name');
   }
 
   userHandle(): Locator {
-    return this.page.locator('.sidebar-user-handle');
+    return this.page.getByTestId('sidebar-user-handle');
   }
 
   // Direct actions at the bottom of the sidebar (desktop)
   sidebarSwitchUserButton(): Locator {
-    return this.nav().locator('.sidebar-action-btn', { hasText: 'Switch User' });
+    return this.page.getByTestId('sidebar-switch-user');
   }
 
   sidebarLogoutButton(): Locator {
-    return this.nav().locator('.sidebar-action-btn.sidebar-logout');
+    return this.page.getByTestId('sidebar-logout');
   }
 
   // ── Mobile bottom tab bar ────────────────────────────────────────────────
   bottomNav(): Locator {
-    return this.page.locator('nav.bottom-nav');
+    return this.page.getByTestId('bottom-nav');
   }
 
   /** Bottom tab by its visible label (Home, Income, Expenses, Budgets, Recurring, Reports). */
   bottomTab(name: string): Locator {
-    return this.bottomNav().locator('.bottom-nav-tab').filter({ hasText: name });
+    return this.bottomNav().getByTestId('bottom-nav-tab').filter({ hasText: name });
   }
 
   // ── Profile popup (opened by the site-header avatar on mobile) ────────────
   headerAvatar(): Locator {
-    return this.page.locator('.header-avatar');
+    return this.page.getByTestId('header-avatar');
   }
 
   profileMenu(): Locator {
-    return this.page.locator('.nav-profile-menu');
+    return this.page.getByTestId('nav-profile-menu');
   }
 
   settingsMenuItem(): Locator {
@@ -103,15 +103,15 @@ export class NavBar extends BasePage {
 
   // ── Site header (greeting, theme pill, notification bell) ─────────────────
   greeting(): Locator {
-    return this.page.locator('.site-welcome');
+    return this.page.getByTestId('site-welcome');
   }
 
   dateLine(): Locator {
-    return this.page.locator('.site-date');
+    return this.page.getByTestId('site-date');
   }
 
   themePill(): Locator {
-    return this.page.locator('.theme-toggle-pill');
+    return this.page.getByTestId('theme-toggle-pill');
   }
 
   themePillButton(mode: 'light' | 'dark'): Locator {
@@ -119,16 +119,16 @@ export class NavBar extends BasePage {
   }
 
   notifBell(): Locator {
-    return this.page.locator('.site-notif-btn');
+    return this.page.getByTestId('site-notif-btn');
   }
 
   notifBadge(): Locator {
-    return this.page.locator('.notif-badge');
+    return this.page.getByTestId('notif-badge');
   }
 
   // ── Footer ────────────────────────────────────────────────────────────────
   footer(): Locator {
-    return this.page.locator('footer.site-footer');
+    return this.page.getByTestId('site-footer');
   }
 
   /** Navigate by visible label: desktop uses the sidebar link, mobile the bottom tab. */

@@ -11,9 +11,9 @@ export default function DeleteModal({ open, itemLabel, onConfirm, onCancel }: Pr
   if (!open) return null;
 
   return (
-    <div className="modal-overlay" onClick={onCancel}>
+    <div className="modal-overlay" data-testid="modal-overlay" onClick={onCancel}>
       <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+        <div className="modal-header" data-testid="delete-modal-header">
           <h3>Remove {itemLabel}?</h3>
           <button className="ghost close-btn" onClick={onCancel} aria-label="Close">
             ✕

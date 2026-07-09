@@ -119,12 +119,12 @@ export class BudgetsPage extends BasePage {
 
   /** The per-category budgets `<table>` (present only when ≥1 budget exists). */
   table(): Locator {
-    return this.page.locator('table.budget-table');
+    return this.page.getByTestId('budget-table');
   }
 
   /** All per-category budget rows (in `<tbody>`). */
   rows(): Locator {
-    return this.page.locator('table tbody tr');
+    return this.table().locator('tbody tr');
   }
 
   /**
@@ -132,12 +132,12 @@ export class BudgetsPage extends BasePage {
    * @param label - text (e.g. category name) to match within the row
    */
   row(label: string): Locator {
-    return this.page.locator('table tbody tr').filter({ hasText: label });
+    return this.table().locator('tbody tr').filter({ hasText: label });
   }
 
   /** The computed, read-only "Overall" total row in the table footer. */
   overallFooterRow(): Locator {
-    return this.page.locator('table tfoot tr.budget-overall-row');
+    return this.table().locator('tfoot tr.budget-overall-row');
   }
 
   /**
@@ -197,11 +197,11 @@ export class BudgetsPage extends BasePage {
    * @param name - the column name (Category, Monthly Limit)
    */
   sortableHeader(name: string): Locator {
-    return this.page.locator('table th.sortable').filter({ hasText: new RegExp(name, 'i') });
+    return this.table().locator('th.sortable').filter({ hasText: new RegExp(name, 'i') });
   }
 
   /** The active-sort indicator on whichever header is currently sorted. */
   activeSortIcon(): Locator {
-    return this.page.locator('table th.sortable .sort-active');
+    return this.table().locator('th.sortable .sort-active');
   }
 }

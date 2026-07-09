@@ -13,9 +13,9 @@ export class ForgotPasswordPage extends BasePage {
     super(page);
     this.emailInput = page.getByRole('textbox', { name: /email/i });
     this.submitButton = page.getByRole('button', { name: /send reset link/i });
-    this.successBanner = page.locator('.banner-success');
-    this.errorBanner = page.locator('.banner-danger');
-    this.fieldError = page.locator('.field-error');
+    this.successBanner = page.getByTestId('auth-success-banner');
+    this.errorBanner = page.getByTestId('auth-error-banner');
+    this.fieldError = page.getByTestId('auth-field-error');
   }
 
   /** Navigate to the forgot-password page and wait for the initial load to settle. */

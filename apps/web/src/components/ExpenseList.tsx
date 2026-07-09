@@ -112,9 +112,10 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete, al
         );
 
         return (
-          <div key={key} className={`date-group${isArchived ? ' date-group-archived' : ''}`}>
+          <div key={key} className={`date-group${isArchived ? ' date-group-archived' : ''}`} data-testid="date-group">
             <div
               className="date-group-header"
+              data-testid="date-group-header"
               onClick={() => toggleMonth(key)}
               role="button"
               aria-expanded={!isCollapsed}
@@ -133,8 +134,8 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete, al
             </div>
 
             {!isCollapsed && (
-              <div className="date-group-body">
-                <table className="expense-table">
+              <div className="date-group-body" data-testid="date-group-body">
+                <table className="expense-table" data-testid="expense-table">
                   <thead>
                     <tr>
                       <th className="sortable" onClick={() => handleSort('date')}>
@@ -158,7 +159,7 @@ export default function ExpenseList({ expenses, categories, onEdit, onDelete, al
                       const cat = e.category_id ? catMap.get(e.category_id) : null;
                       const editable = allowPastEdit || e.occurred_at.startsWith(currentMonth);
                       return (
-                        <tr key={e.id}>
+                        <tr key={e.id} data-testid="expense-row">
                           <td data-label="Date">{formatDateShort(e.occurred_at)}</td>
                           <td data-label="Category">
                             {cat ? `${cat.icon ?? ''} ${cat.name}` : <span className="muted">—</span>}

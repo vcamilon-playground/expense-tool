@@ -64,15 +64,35 @@ await page.getByRole('button', { name: '+ Add Expense' }).click();
 
 ## 3. Selectors & locators (robust)
 
-- Prefer `data-testid` / `data-test` attributes and Playwright's built-in **semantic/role** selectors. **Reconciliation with this repo:** the app currently has few/no `data-testid`s, so today's specs lean on role/label selectors — that's acceptable (they're the sanctioned semantic selectors). When you add or change a component and a stable hook would remove ambiguity, **add a `data-testid` in the app code** and use it.
-- Avoid text-based selectors unless the text is static; avoid deeply nested/brittle CSS or XPath; **never use index-based locators**.
+**`data-testid` is the PRIMARY selector strategy.** The app carries stable `data-testid` hooks (added alongside the CSS `className`s, which are kept for styling), so container/row/table/toggle locators go through `getByTestId(...)`:
+
+```ts
+expenseTable() { return this.page.getByTestId('expense-table'); }
+expenseRow(merchant: string) { return this.page.getByTestId('expense-row').filter({ hasText: merchant }); }
+viewToggle() { return this.page.getByTestId('view-toggle'); }
+```
+
+When you add or change a component that a spec needs to locate, **add a `data-testid` in the app code** and select on it — don't reach back to a CSS class or a positional `.first()`/`.nth()`.
+
+**`data-testid` naming convention:** kebab-case, **area-prefixed**, and **mirror the semantic class name** where a good one exists. Examples: `expense-table`, `expense-row`, `expense-grid-card`, `view-toggle`, `modal-overlay`, `date-group`, `stat-tile`, `quick-actions`, `income-table`, `income-history-table`, `maya-schedule-table`, `recurring-table`, `reminders-table`, `budget-table`, `budget-status-table`, `sidebar-nav`, `bottom-nav-tab`, `nav-profile-menu`, `site-welcome`, `loading-screen`, `settings-save-bar`, `category-chip`, `auth-error-banner` / `auth-success-banner` / `auth-field-error`, `report-options-toggle`, `form-modal-header` / `delete-modal-header`.
+
+**Selectors that are deliberately KEPT (do not migrate these to testids):**
+- Playwright's built-in **semantic** selectors — `getByRole`, `getByLabel`, `getByText` — for buttons, links, inputs, and headings whose accessible name is stable. Use `exact: true` on nav links so `"Expenses"` doesn't match the brand link `"Expense Tool"`.
+- **Semantic attribute selectors:** `input[type="number|date|search"]`, `[title*=…]`, `td[data-label=…]`.
+- **`.card` containers located by their visible heading text** — e.g. `page.locator('.card').filter({ hasText: 'Budget Status' })` — then scoped further (often to a testid'd table inside).
+- **`.field-error`** when scoped by a semantic parent — a dialog plus a label filter, e.g. `dialog().locator('label').filter({ hasText: 'Amount' }).locator('.field-error')`.
+- **Generic layout / utility / functional primitives** — `.row`, `.muted`, `.label`, `.value`, `.pill`, `th.sortable`, `.sort-active` — but only when **scoped by a semantic or testid'd parent**, never on their own.
+- Generic `.banner-*` utility classes are kept, **except on the public auth pages** (`/login`, `/register`, `/forgot-password`, `/reset-password`) where multiple banners collide — those use `auth-error-banner` / `auth-success-banner` / `auth-field-error` testids.
+
+**Always avoid:** text-based selectors when the text is dynamic; deeply nested/brittle CSS or XPath; and **index-based locators (`.first()`, `.nth()`, `.last()`) — never use them to pick a specific element.**
+
 - **Parameterise** locators in the page object rather than duplicating:
   ```ts
   getOptionByText(option: string) {
     return this.page.getByRole('option', { name: option, exact: true });
   }
   ```
-- Scope locators inside dialogs/modals to the dialog element; use `exact: true` on nav links so `"Expenses"` doesn't match the brand link `"Expense Tool"`:
+- Scope locators inside dialogs/modals to the dialog element; combine a testid'd container with a semantic child:
   ```ts
   await expenses.dialog().getByRole('button', { name: 'Save' }).click();
   await page.getByRole('link', { name: 'Expenses', exact: true });
@@ -218,7 +238,7 @@ expect(color).not.toMatch(/^rgba?\(255,\s*255,\s*255/); // not white-on-white
 |---|---|
 | `getByRole('link', { name: 'Expenses' })` matches multiple | `exact: true` + scope to `NavBar.link()` |
 | `getByRole('button', { name: 'Add Expense' })` matches two | Scope to `dialog.getByRole(...)` |
-| `.stat` count wrong | Use `.stat .label` with `.filter({ hasText })` — MonthEndBanner also renders `.stat` |
+| Stat tile count wrong | `getByTestId('stat-tile')` then `.locator('.label').filter({ hasText })` — MonthEndBanner renders `.stat` but has no `stat-tile` testid, so the testid disambiguates |
 | `getByLabel('Period')` finds nothing | `locator('label').filter({ hasText: 'Period' }).locator('select')` |
 | Nav links missing on mobile | Sidebar hidden — use `NavBar.bottomTab(label)` |
 | Profile avatar missing on mobile | In the bottom tab's Profile tab (`.bottom-nav-avatar`) |

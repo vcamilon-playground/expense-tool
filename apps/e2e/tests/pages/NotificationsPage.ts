@@ -101,7 +101,7 @@ export class NotificationsPage extends BasePage {
    * @param title - the reminder title
    */
   reminderRow(title: string): Locator {
-    return this.page.locator('.income-table tbody tr').filter({ hasText: title });
+    return this.page.getByTestId('reminders-table').locator('tbody tr').filter({ hasText: title });
   }
 
   /**

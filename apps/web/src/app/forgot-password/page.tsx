@@ -51,14 +51,14 @@ export default function ForgotPasswordPage() {
         </div>
 
         {sent ? (
-          <div className="banner banner-success" role="status" style={{ marginBottom: 16 }}>
+          <div className="banner banner-success" data-testid="auth-success-banner" role="status" style={{ marginBottom: 16 }}>
             If that email is registered, a reset link is on its way. Check your inbox (and spam
             folder).
           </div>
         ) : (
           <>
             {apiError && (
-              <div className="banner banner-danger" role="alert" style={{ marginBottom: 16 }}>
+              <div className="banner banner-danger" data-testid="auth-error-banner" role="alert" style={{ marginBottom: 16 }}>
                 {apiError}
               </div>
             )}
@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
                   required
                   autoFocus
                 />
-                {fieldError && <p className="field-error">{fieldError}</p>}
+                {fieldError && <p className="field-error" data-testid="auth-field-error">{fieldError}</p>}
               </label>
               <button type="submit" className="primary" disabled={loading} style={{ marginTop: 4 }}>
                 {loading ? 'Sending…' : 'Send reset link'}

@@ -55,20 +55,20 @@ export default function ExpenseGrid({
         onCancel={() => setPendingDelete(null)}
       />
 
-      <div className="expense-grid">
+      <div className="expense-grid" data-testid="expense-grid">
         {visible.map((e) => {
           const cat = e.category_id ? catMap.get(e.category_id) : null;
           const editable = allowPastEdit || e.occurred_at.startsWith(currentMonth);
           return (
-            <div key={e.id} className="expense-grid-card">
+            <div key={e.id} className="expense-grid-card" data-testid="expense-grid-card">
               <div className="expense-grid-card-head">
-                <span className="expense-grid-cat">
+                <span className="expense-grid-cat" data-testid="expense-grid-cat">
                   {cat ? `${cat.icon ?? ''} ${cat.name}` : <span className="muted">Uncategorized</span>}
                 </span>
                 <span className="muted" style={{ fontSize: 12 }}>{formatDateShort(e.occurred_at)}</span>
               </div>
 
-              <div className="expense-grid-amount">
+              <div className="expense-grid-amount" data-testid="expense-grid-amount">
                 {formatMoney(e.amount, e.currency)}
                 {e.conversion_rate && (
                   <span className="muted" style={{ fontSize: 11, fontWeight: 400 }}>
@@ -77,12 +77,12 @@ export default function ExpenseGrid({
                 )}
               </div>
 
-              <div className="expense-grid-meta">
+              <div className="expense-grid-meta" data-testid="expense-grid-meta">
                 <span>{e.merchant ?? <span className="muted">No merchant</span>}</span>
                 {e.source === 'receipt' && <span className="pill ok">receipt</span>}
               </div>
 
-              {e.description && <p className="expense-grid-desc">{e.description}</p>}
+              {e.description && <p className="expense-grid-desc" data-testid="expense-grid-desc">{e.description}</p>}
 
               <div className="expense-grid-actions">
                 {editable ? (
@@ -106,7 +106,7 @@ export default function ExpenseGrid({
       </div>
 
       {remaining > 0 && (
-        <div className="expense-grid-more">
+        <div className="expense-grid-more" data-testid="expense-grid-more">
           <button
             className="grid-more-btn"
             onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}

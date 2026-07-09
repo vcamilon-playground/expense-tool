@@ -42,11 +42,11 @@ const actions = [
 
 export default function QuickActions() {
   return (
-    <div className="quick-actions" aria-label="Quick actions">
+    <div className="quick-actions" data-testid="quick-actions" aria-label="Quick actions">
       {actions.map((a) => (
-        <Link key={a.href} href={a.href} className="quick-action" title={a.label}>
+        <Link key={a.href} href={a.href} className="quick-action" data-testid="quick-action" title={a.label}>
           <span className="quick-action-icon">{a.icon}</span>
-          <span className="quick-action-label">{a.label}</span>
+          <span className="quick-action-label" data-testid="quick-action-label">{a.label}</span>
         </Link>
       ))}
     </div>

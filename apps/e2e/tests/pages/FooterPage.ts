@@ -9,7 +9,7 @@ export class FooterPage extends BasePage {
 
   /** The site footer element. */
   footer(): Locator {
-    return this.page.locator('footer.site-footer');
+    return this.page.getByTestId('site-footer');
   }
 
   /** The footer's "About" button. */
@@ -42,7 +42,7 @@ export class FooterPage extends BasePage {
 
   /** The dialog's header bar. */
   modalHeader(): Locator {
-    return this.dialog().locator('.modal-header');
+    return this.dialog().getByTestId('form-modal-header');
   }
 
   /** The dialog header's title text. */
@@ -52,7 +52,7 @@ export class FooterPage extends BasePage {
 
   /** The app version line in the About dialog. */
   versionLine(): Locator {
-    return this.dialog().locator('.footer-version');
+    return this.dialog().getByTestId('footer-version');
   }
 
   /** The email link in the Contact dialog. */

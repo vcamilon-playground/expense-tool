@@ -88,13 +88,13 @@ export default function ExpenseCalendar({
         onCancel={() => setPendingDelete(null)}
       />
 
-      <div className="cal-nav">
+      <div className="cal-nav" data-testid="cal-nav">
         <button className="ghost btn-sm" onClick={prevMonth}>‹ Prev</button>
-        <span className="cal-month-label">{monthName}</span>
+        <span className="cal-month-label" data-testid="cal-month-label">{monthName}</span>
         <button className="ghost btn-sm" onClick={nextMonth}>Next ›</button>
       </div>
 
-      <div className="cal-grid">
+      <div className="cal-grid" data-testid="cal-grid">
         {DOW.map((d) => (
           <div key={d} className="cal-dow">{d}</div>
         ))}

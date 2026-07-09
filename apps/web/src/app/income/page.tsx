@@ -432,19 +432,19 @@ export default function IncomePage() {
 
       {/* Summary */}
       <div className="grid cols-4 stat-grid">
-        <div className="stat card">
+        <div className="stat card" data-testid="stat-tile">
           <div className="label muted">Bank Total</div>
           <div className="value"><AmountWithEye amount={totalBank} visible={isVisible('sum-bank')} onToggle={() => toggleKey('sum-bank')} /></div>
         </div>
-        <div className="stat card">
+        <div className="stat card" data-testid="stat-tile">
           <div className="label muted">E-Wallet Total</div>
           <div className="value"><AmountWithEye amount={totalEwallet} visible={isVisible('sum-ewallet')} onToggle={() => toggleKey('sum-ewallet')} /></div>
         </div>
-        <div className="stat card">
+        <div className="stat card" data-testid="stat-tile">
           <div className="label muted">Cash on Hand</div>
           <div className="value"><AmountWithEye amount={totalCash} visible={isVisible('sum-cash')} onToggle={() => toggleKey('sum-cash')} /></div>
         </div>
-        <div className="stat card">
+        <div className="stat card" data-testid="stat-tile">
           <div className="label muted">Grand Total</div>
           <div className="value" style={{ color: 'var(--accent)' }}><AmountWithEye amount={grandTotal} visible={isVisible('sum-grand')} onToggle={() => toggleKey('sum-grand')} /></div>
         </div>
@@ -613,6 +613,7 @@ export default function IncomePage() {
         <button
           type="button"
           className="collapse-header"
+          data-testid="income-collapse-header"
           onClick={() => setCashExpanded((v) => !v)}
           aria-expanded={cashExpanded}
         >
@@ -665,6 +666,7 @@ function IncomeSection({
       <button
         type="button"
         className="collapse-header"
+        data-testid="income-collapse-header"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
       >
@@ -679,7 +681,7 @@ function IncomeSection({
           <p className="muted" style={{ marginBottom: 0 }}>{emptyText}</p>
         ) : (
           <div className="table-wrap" style={{ marginTop: 12 }}>
-            <table className="income-table">
+            <table className="income-table" data-testid="income-table">
               <thead>
                 <tr>
                   <th>Name</th>

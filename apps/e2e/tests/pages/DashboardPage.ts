@@ -18,12 +18,12 @@ export class DashboardPage extends BasePage {
    * Home page has no `<h1>`, so this identifies the page.
    */
   greeting(): Locator {
-    return this.page.locator('.site-welcome');
+    return this.page.getByTestId('site-welcome');
   }
 
   /** All KPI stat tiles. */
   stats(): Locator {
-    return this.page.locator('.stat');
+    return this.page.getByTestId('stat-tile');
   }
 
   /**
@@ -31,7 +31,7 @@ export class DashboardPage extends BasePage {
    * @param text - the label text
    */
   statLabel(text: string): Locator {
-    return this.page.locator('.stat .label').filter({ hasText: text });
+    return this.stats().locator('.label').filter({ hasText: text });
   }
 
   /** The `<h2>` "Budget Status" section heading. */
@@ -43,12 +43,12 @@ export class DashboardPage extends BasePage {
 
   /** The quick-actions row container. */
   quickActions(): Locator {
-    return this.page.locator('.quick-actions');
+    return this.page.getByTestId('quick-actions');
   }
 
   /** All quick-action links. */
   quickActionLinks(): Locator {
-    return this.quickActions().locator('a.quick-action');
+    return this.quickActions().getByTestId('quick-action');
   }
 
   /**
@@ -56,12 +56,12 @@ export class DashboardPage extends BasePage {
    * @param label - the action label
    */
   quickAction(label: string): Locator {
-    return this.quickActions().locator('a.quick-action').filter({ hasText: label });
+    return this.quickActions().getByTestId('quick-action').filter({ hasText: label });
   }
 
   /** All quick-action label elements. */
   quickActionLabels(): Locator {
-    return this.quickActions().locator('.quick-action-label');
+    return this.quickActions().getByTestId('quick-action-label');
   }
 
   /** The Budget Status card. */
@@ -71,7 +71,7 @@ export class DashboardPage extends BasePage {
 
   /** The Budget Status table. */
   budgetStatusTable(): Locator {
-    return this.budgetStatusCard().locator('table.budget-status-table');
+    return this.budgetStatusCard().getByTestId('budget-status-table');
   }
 
   /**

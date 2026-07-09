@@ -42,7 +42,7 @@ export class IncomePage extends BasePage {
    * @param label - the card's label text
    */
   summaryCard(label: string): Locator {
-    return this.page.locator('.stat.card').filter({ hasText: label });
+    return this.page.getByTestId('stat-tile').filter({ hasText: label });
   }
 
   /**
@@ -190,7 +190,8 @@ export class IncomePage extends BasePage {
    */
   row(name: string): Locator {
     return this.page
-      .locator('.income-table:not(.history-table) tbody tr')
+      .getByTestId('income-table')
+      .locator('tbody tr')
       .filter({ hasText: name });
   }
 
@@ -233,7 +234,7 @@ export class IncomePage extends BasePage {
    * @param title - the section title
    */
   sectionHeader(title: string): Locator {
-    return this.page.locator('.collapse-header').filter({ hasText: title });
+    return this.page.getByTestId('income-collapse-header').filter({ hasText: title });
   }
 
   /**

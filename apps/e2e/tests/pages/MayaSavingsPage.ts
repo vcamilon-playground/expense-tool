@@ -47,7 +47,7 @@ export class MayaSavingsPage extends BasePage {
    * @param label - the card's label text
    */
   summaryCard(label: string): Locator {
-    return this.page.locator('.stat.card').filter({ hasText: label });
+    return this.page.getByTestId('stat-tile').filter({ hasText: label });
   }
 
   /**
@@ -89,7 +89,7 @@ export class MayaSavingsPage extends BasePage {
 
   /** The weekly schedule `<table>`. */
   scheduleTable(): Locator {
-    return this.page.locator('table.income-table');
+    return this.page.getByTestId('maya-schedule-table');
   }
 
   /** All schedule rows. */
@@ -107,8 +107,8 @@ export class MayaSavingsPage extends BasePage {
   }
 
   /**
-   * The Transfer cell (3rd column) of a week row. Positional column access — the
-   * cells have no per-column hook (blocked on the data-testid backlog).
+   * The Transfer cell (3rd column) of a week row. Positional column access — table
+   * cells carry no per-column testid.
    * @param week - the 1-based week number
    */
   rowTransfer(week: number): Locator {
@@ -149,7 +149,7 @@ export class MayaSavingsPage extends BasePage {
 
   /** The inline save-error message. */
   saveError(): Locator {
-    return this.page.locator('.field-error');
+    return this.page.getByTestId('maya-field-error');
   }
 
   /** The load-failure banner. */

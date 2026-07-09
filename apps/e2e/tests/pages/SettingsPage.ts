@@ -48,12 +48,12 @@ export class SettingsPage extends BasePage {
 
   /** The unsaved-changes save bar. */
   unsavedBar(): Locator {
-    return this.page.locator('.settings-save-bar');
+    return this.page.getByTestId('settings-save-bar');
   }
 
   /** The "Save changes" button in the unsaved bar. */
   saveChangesButton(): Locator {
-    return this.page.locator('.settings-save-bar').getByRole('button', { name: /save changes/i });
+    return this.unsavedBar().getByRole('button', { name: /save changes/i });
   }
 
   /**
@@ -73,7 +73,7 @@ export class SettingsPage extends BasePage {
 
   /** The "Cancel" button in the unsaved bar. */
   cancelChangesButton(): Locator {
-    return this.page.locator('.settings-save-bar').getByRole('button', { name: /^cancel$/i });
+    return this.unsavedBar().getByRole('button', { name: /^cancel$/i });
   }
 
   // ── Navigation guard modal ──
@@ -204,7 +204,7 @@ export class SettingsPage extends BasePage {
 
   /** All category chips in the Categories card. */
   categoryChips(): Locator {
-    return this.categoriesCard().locator('.cat-chip');
+    return this.categoriesCard().getByTestId('category-chip');
   }
 
   /**
@@ -212,7 +212,7 @@ export class SettingsPage extends BasePage {
    * @param name - the category name
    */
   categoryRow(name: string): Locator {
-    return this.categoriesCard().locator('.cat-chip').filter({ hasText: name });
+    return this.categoriesCard().getByTestId('category-chip').filter({ hasText: name });
   }
 
   /**

@@ -31,7 +31,7 @@ export default function ThemeToggle({ compact = false }: { compact?: boolean }) 
 
   if (compact) {
     return (
-      <div className="theme-toggle-pill" role="group" aria-label="Color scheme">
+      <div className="theme-toggle-pill" data-testid="theme-toggle-pill" role="group" aria-label="Color scheme">
         <button
           className={`theme-pill-btn${theme === 'light' ? ' active' : ''}`}
           onClick={() => { if (theme !== 'light') toggle(); }}

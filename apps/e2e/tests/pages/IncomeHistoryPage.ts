@@ -67,15 +67,16 @@ export class IncomeHistoryPage extends BasePage {
 
   /**
    * Column headers of the first month-group table. Positional (`.first()` table) —
-   * there is no per-table hook yet (blocked on the data-testid backlog).
+   * every month group renders its own `income-history-table`, so the testid
+   * matches several; the first is the newest group.
    */
   columnHeaders(): Locator {
-    return this.page.locator('.history-table').first().locator('thead th');
+    return this.page.getByTestId('income-history-table').first().locator('thead th');
   }
 
   /** All history rows across every month group. */
   rows(): Locator {
-    return this.page.locator('.history-table tbody tr');
+    return this.page.getByTestId('income-history-table').locator('tbody tr');
   }
 
   /**
@@ -106,8 +107,8 @@ export class IncomeHistoryPage extends BasePage {
   }
 
   /**
-   * A cell within a row by column index. Positional by necessity — the table cells
-   * have no per-column hook (blocked on the data-testid backlog).
+   * A cell within a row by column index. Positional by necessity — table cells
+   * carry no per-column testid.
    * @param row - the row locator
    * @param columnIndex - zero-based `<td>` index
    */

@@ -504,7 +504,7 @@ export default function RecurringPage() {
           <p className="muted">None yet.</p>
         ) : (
           <div className="table-wrap">
-            <table className="recurring-table">
+            <table className="recurring-table" data-testid="recurring-table">
               <thead>
                 <tr>
                   <th className="sortable" onClick={() => handleSort('name')}>Name <SortIcon col="name" sortCol={sortCol} sortDir={sortDir} /></th>

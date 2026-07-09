@@ -129,6 +129,7 @@ if (!user || loading) return <LoadingScreen />;
 | No new React context providers without a strong reason; `AuthContext`, `NavigationGuardContext`, and `DataRefreshContext` cover the current needs. |
 | Shared UI components go in `apps/web/src/components/`. Only extract a component if it is used in two or more places. |
 | Page-specific logic stays in the page file — don't create a component for something used once. |
+| Components carry stable `data-testid` hooks (kebab-case, area-prefixed, mirroring the semantic class name) alongside their `className`s so the E2E suite can select on them. Add one when a new container/row/table/toggle needs to be located by a test — see [`TEST_AUTOMATION_STANDARDS.md`](TEST_AUTOMATION_STANDARDS.md) §3. |
 
 ---
 

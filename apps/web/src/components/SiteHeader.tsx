@@ -51,6 +51,7 @@ export default function SiteHeader() {
       <div className="site-header-left">
         <div
           className="header-avatar"
+          data-testid="header-avatar"
           ref={avatarRef}
           role="button"
           tabIndex={0}
@@ -67,8 +68,8 @@ export default function SiteHeader() {
           )}
         </div>
         <div className="site-header-greet">
-          <p className="site-welcome">{text} {user.first_name}! {emoji}</p>
-          <p className="site-date">{todayLabel}</p>
+          <p className="site-welcome" data-testid="site-welcome">{text} {user.first_name}! {emoji}</p>
+          <p className="site-date" data-testid="site-date">{todayLabel}</p>
         </div>
       </div>
 
@@ -78,6 +79,7 @@ export default function SiteHeader() {
         <Link
           href="/notifications"
           className="site-notif-btn"
+          data-testid="site-notif-btn"
           aria-label={`Notifications${notifCount > 0 ? ` (${notifCount})` : ''}`}
           style={{ position: 'relative', textDecoration: 'none' }}
         >
@@ -86,7 +88,7 @@ export default function SiteHeader() {
             <path d="M13.73 21a2 2 0 01-3.46 0"/>
           </svg>
           {notifCount > 0 && (
-            <span className="notif-badge" aria-hidden="true">
+            <span className="notif-badge" data-testid="notif-badge" aria-hidden="true">
               {notifCount > 9 ? '9+' : notifCount}
             </span>
           )}

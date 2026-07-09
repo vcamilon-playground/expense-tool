@@ -165,6 +165,7 @@ export default function ReportsPage() {
         <button
           type="button"
           className="collapse-header"
+          data-testid="report-options-toggle"
           onClick={() => setOptionsExpanded((v) => !v)}
           aria-expanded={optionsExpanded}
         >
@@ -254,15 +255,15 @@ export default function ReportsPage() {
       </div>
 
       <div className="grid cols-3 stat-grid">
-        <div className="card stat">
+        <div className="card stat" data-testid="stat-tile">
           <div className="label">Total</div>
           <div className="value">{formatMoney(summary.total)}</div>
         </div>
-        <div className="card stat">
+        <div className="card stat" data-testid="stat-tile">
           <div className="label">Expenses</div>
           <div className="value">{summary.count}</div>
         </div>
-        <div className="card stat">
+        <div className="card stat" data-testid="stat-tile">
           <div className="label">Average</div>
           <div className="value">
             {summary.count ? formatMoney(summary.total / summary.count) : formatMoney(0)}

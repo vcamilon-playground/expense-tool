@@ -137,7 +137,7 @@ export default function ExpensesPage() {
       <div className="row" style={{ justifyContent: 'space-between', marginBottom: 16 }}>
         <h1 style={{ margin: 0 }}>Expenses</h1>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <div className="view-toggle">
+          <div className="view-toggle" data-testid="view-toggle">
             <button
               className={viewMode === 'list' ? 'primary btn-sm' : 'ghost btn-sm'}
               onClick={() => setViewMode('list')}
@@ -165,7 +165,7 @@ export default function ExpensesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+          <select value={categoryFilter} data-testid="expense-category-filter" onChange={(e) => setCategoryFilter(e.target.value)}>
             <option value="">All Categories</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>

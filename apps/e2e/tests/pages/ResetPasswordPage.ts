@@ -9,9 +9,9 @@ export class ResetPasswordPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.errorBanner = page.locator('.banner-danger');
-    this.successBanner = page.locator('.banner-success');
-    this.fieldError = page.locator('.field-error');
+    this.errorBanner = page.getByTestId('auth-error-banner');
+    this.successBanner = page.getByTestId('auth-success-banner');
+    this.fieldError = page.getByTestId('auth-field-error');
   }
 
   /**

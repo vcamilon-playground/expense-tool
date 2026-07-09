@@ -120,7 +120,7 @@ export default function IncomeHistoryPage() {
           <div className="card" key={group.key}>
             <h2 style={{ margin: '0 0 12px' }}>{group.label}</h2>
             <div className="table-wrap">
-              <table className="income-table history-table">
+              <table className="income-table history-table" data-testid="income-history-table">
                 <thead>
                   <tr>
                     <th>Date</th>

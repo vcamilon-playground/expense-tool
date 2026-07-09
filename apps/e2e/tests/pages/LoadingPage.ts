@@ -20,7 +20,7 @@ export class LoadingPage extends BasePage {
   }
 
   container(): Locator {
-    return this.page.locator('.loading-screen');
+    return this.page.getByTestId('loading-screen');
   }
 
   status(): Locator {
@@ -28,14 +28,14 @@ export class LoadingPage extends BasePage {
   }
 
   spinner(): Locator {
-    return this.page.locator('.loading-screen .spinner');
+    return this.container().getByTestId('spinner');
   }
 
   spinnerBars(): Locator {
-    return this.page.locator('.loading-screen .spinner > div');
+    return this.spinner().locator('> div');
   }
 
   label(): Locator {
-    return this.page.locator('.loading-label');
+    return this.page.getByTestId('loading-label');
   }
 }

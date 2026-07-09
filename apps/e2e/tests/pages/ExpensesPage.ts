@@ -23,12 +23,9 @@ export class ExpensesPage extends BasePage {
     return this.page.locator('input[type="search"]');
   }
 
-  /**
-   * The category filter `<select>` in the toolbar. NOTE: positional (`.first()`) —
-   * the control has no stable hook yet; blocked on the data-testid backlog.
-   */
+  /** The category filter `<select>` in the toolbar. */
   categoryFilterSelect(): Locator {
-    return this.page.locator('select').first();
+    return this.page.getByTestId('expense-category-filter');
   }
 
   /** The "+ Add Expense" toolbar button. */
@@ -48,7 +45,7 @@ export class ExpensesPage extends BasePage {
 
   /** The modal backdrop overlay (click to dismiss). */
   modalOverlay(): Locator {
-    return this.page.locator('.modal-overlay');
+    return this.page.getByTestId('modal-overlay');
   }
 
   /** The Amount `<input>` inside the Add/Edit form. */
@@ -76,17 +73,17 @@ export class ExpensesPage extends BasePage {
    * @param merchant - the merchant text to match within the row
    */
   row(merchant: string): Locator {
-    return this.page.locator('.expense-table tbody tr').filter({ hasText: merchant });
+    return this.page.getByTestId('expense-row').filter({ hasText: merchant });
   }
 
   /** The expense list `<table>` (absent when there are no expenses). */
   table(): Locator {
-    return this.page.locator('.expense-table');
+    return this.page.getByTestId('expense-table');
   }
 
   /** All month/date group containers in the list view. */
   dateGroups(): Locator {
-    return this.page.locator('.date-group');
+    return this.page.getByTestId('date-group');
   }
 
   /** The "No expenses match your search." message shown while filtering with no matches. */
@@ -217,7 +214,7 @@ export class ExpensesPage extends BasePage {
 
   /** The delete dialog's header bar. */
   deleteModalHeader(): Locator {
-    return this.deleteDialog().locator('.modal-header');
+    return this.deleteDialog().getByTestId('delete-modal-header');
   }
 
   /** The delete dialog's "Close" (X) button. */
@@ -283,7 +280,7 @@ export class ExpensesPage extends BasePage {
    * @param label - the month/year label
    */
   monthGroup(label: string): Locator {
-    return this.page.locator('.date-group').filter({ hasText: label });
+    return this.page.getByTestId('date-group').filter({ hasText: label });
   }
 
   /**
@@ -291,7 +288,7 @@ export class ExpensesPage extends BasePage {
    * @param label - the month/year label
    */
   monthGroupHeader(label: string): Locator {
-    return this.monthGroup(label).locator('.date-group-header');
+    return this.monthGroup(label).getByTestId('date-group-header');
   }
 
   /**
@@ -299,7 +296,7 @@ export class ExpensesPage extends BasePage {
    * @param label - the month/year label
    */
   monthGroupBody(label: string): Locator {
-    return this.monthGroup(label).locator('.date-group-body');
+    return this.monthGroup(label).getByTestId('date-group-body');
   }
 
   /** The current month's label as the app formats it (e.g. "July 2026"). */
@@ -324,7 +321,7 @@ export class ExpensesPage extends BasePage {
 
   /** The list/grid/calendar view-toggle container. */
   viewToggle(): Locator {
-    return this.page.locator('.view-toggle');
+    return this.page.getByTestId('view-toggle');
   }
 
   /** All buttons within the view toggle. */
@@ -351,12 +348,12 @@ export class ExpensesPage extends BasePage {
 
   /** The grid-view container (present when at least one expense exists). */
   grid(): Locator {
-    return this.page.locator('.expense-grid');
+    return this.page.getByTestId('expense-grid');
   }
 
   /** All grid cards. */
   gridCards(): Locator {
-    return this.page.locator('.expense-grid-card');
+    return this.page.getByTestId('expense-grid-card');
   }
 
   /**
@@ -372,7 +369,7 @@ export class ExpensesPage extends BasePage {
    * @param text - text identifying the card
    */
   gridCardCategory(text: string): Locator {
-    return this.gridCard(text).locator('.expense-grid-cat');
+    return this.gridCard(text).getByTestId('expense-grid-cat');
   }
 
   /**
@@ -380,7 +377,7 @@ export class ExpensesPage extends BasePage {
    * @param text - text identifying the card
    */
   gridCardAmount(text: string): Locator {
-    return this.gridCard(text).locator('.expense-grid-amount');
+    return this.gridCard(text).getByTestId('expense-grid-amount');
   }
 
   /**
@@ -388,7 +385,7 @@ export class ExpensesPage extends BasePage {
    * @param text - text identifying the card
    */
   gridCardMeta(text: string): Locator {
-    return this.gridCard(text).locator('.expense-grid-meta');
+    return this.gridCard(text).getByTestId('expense-grid-meta');
   }
 
   /**
@@ -396,7 +393,7 @@ export class ExpensesPage extends BasePage {
    * @param text - text identifying the card
    */
   gridCardDescription(text: string): Locator {
-    return this.gridCard(text).locator('.expense-grid-desc');
+    return this.gridCard(text).getByTestId('expense-grid-desc');
   }
 
   /**
@@ -433,7 +430,7 @@ export class ExpensesPage extends BasePage {
 
   /** The grid view's "Load more" button. */
   gridLoadMoreButton(): Locator {
-    return this.page.locator('.expense-grid-more button');
+    return this.page.getByTestId('expense-grid-more').getByRole('button');
   }
 
   /** Switch to Grid view and wait for the grid to appear. */
@@ -474,21 +471,21 @@ export class ExpensesPage extends BasePage {
 
   /** The calendar-view grid. */
   calendarGrid(): Locator {
-    return this.page.locator('.cal-grid');
+    return this.page.getByTestId('cal-grid');
   }
 
   /** The calendar's current month label. */
   calendarMonthLabel(): Locator {
-    return this.page.locator('.cal-month-label');
+    return this.page.getByTestId('cal-month-label');
   }
 
   /** The calendar's "Prev" navigation button. */
   calendarPrevButton(): Locator {
-    return this.page.locator('.cal-nav').getByRole('button', { name: /Prev/ });
+    return this.page.getByTestId('cal-nav').getByRole('button', { name: /Prev/ });
   }
 
   /** The calendar's "Next" navigation button. */
   calendarNextButton(): Locator {
-    return this.page.locator('.cal-nav').getByRole('button', { name: /Next/ });
+    return this.page.getByTestId('cal-nav').getByRole('button', { name: /Next/ });
   }
 }

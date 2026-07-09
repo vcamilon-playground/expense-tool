@@ -24,7 +24,7 @@ export default function SummaryCards({
   return (
     <div className="grid cols-4 stat-grid">
       {items.map((item) => (
-        <div key={item.label} className="card stat">
+        <div key={item.label} className="card stat" data-testid="stat-tile">
           <div className="label">{item.label}</div>
           <div className="value">{formatMoney(item.value, currency)}</div>
           <div className="muted" style={{ fontSize: 12 }}>{item.count} expense(s)</div>

@@ -46,7 +46,7 @@ export default function BudgetAlerts({ statuses }: { statuses: BudgetStatus[] })
 
   return (
     <div className="table-wrap">
-      <table className="budget-status-table">
+      <table className="budget-status-table" data-testid="budget-status-table">
         <thead>
           <tr>
             <th className="sortable" onClick={() => handleSort('category')}>Category <SortIcon col="category" sortCol={sortCol} sortDir={sortDir} /></th>

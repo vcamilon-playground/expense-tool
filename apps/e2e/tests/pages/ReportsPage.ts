@@ -20,7 +20,7 @@ export class ReportsPage extends BasePage {
 
   /** The collapsible "Report Options" panel header. */
   optionsHeader(): Locator {
-    return this.page.locator('.collapse-header').filter({ hasText: 'Report Options' });
+    return this.page.getByTestId('report-options-toggle');
   }
 
   /**
@@ -69,7 +69,7 @@ export class ReportsPage extends BasePage {
    * @param text - the label text
    */
   statLabel(text: string): Locator {
-    return this.page.locator('.stat .label').filter({ hasText: text });
+    return this.page.getByTestId('stat-tile').locator('.label').filter({ hasText: text });
   }
 
   /** The `<h2>` "By Category" section heading. */

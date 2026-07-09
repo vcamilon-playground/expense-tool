@@ -182,11 +182,11 @@ export default function NavBar() {
 
   return (
     <>
-      <nav aria-label="Sidebar navigation" className={`sidenav${collapsed ? ' collapsed' : ''}`}>
+      <nav aria-label="Sidebar navigation" data-testid="sidebar-nav" className={`sidenav${collapsed ? ' collapsed' : ''}`}>
 
         {/* User profile card at top of sidebar */}
         {user && (
-          <div className="sidebar-profile">
+          <div className="sidebar-profile" data-testid="sidebar-profile">
             <div className="sidebar-avatar">
               {user.profile_picture_url ? (
                 <img src={user.profile_picture_url} alt={user.first_name} />
@@ -194,8 +194,8 @@ export default function NavBar() {
                 <span>{initials}</span>
               )}
             </div>
-            <div className="sidebar-user-name">{user.first_name} {user.last_name}</div>
-            <div className="sidebar-user-handle">@{user.username}</div>
+            <div className="sidebar-user-name" data-testid="sidebar-user-name">{user.first_name} {user.last_name}</div>
+            <div className="sidebar-user-handle" data-testid="sidebar-user-handle">@{user.username}</div>
           </div>
         )}
 
@@ -220,7 +220,7 @@ export default function NavBar() {
               onClick={(e) => { handleNavClick(l.href, e); setOpen(false); }}
             >
               <span className="nav-icon">{l.icon}</span>
-              <span className="nav-label">{l.label}</span>
+              <span className="nav-label" data-testid="nav-label">{l.label}</span>
             </Link>
           ))}
         </div>
@@ -229,6 +229,7 @@ export default function NavBar() {
         <div className="sidebar-bottom">
           <button
             className="sidebar-action-btn"
+            data-testid="sidebar-switch-user"
             onClick={() => { setOpen(false); setConfirm('switch'); }}
           >
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -237,10 +238,11 @@ export default function NavBar() {
               <path d="M23 21v-2a4 4 0 00-3-3.87"/>
               <path d="M16 3.13a4 4 0 010 7.75"/>
             </svg>
-            <span className="nav-label">Switch User</span>
+            <span className="nav-label" data-testid="nav-label">Switch User</span>
           </button>
           <button
             className="sidebar-action-btn sidebar-logout"
+            data-testid="sidebar-logout"
             onClick={() => { setOpen(false); setConfirm('logout'); }}
           >
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -248,7 +250,7 @@ export default function NavBar() {
               <polyline points="16 17 21 12 16 7"/>
               <line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
-            <span className="nav-label">Log Out</span>
+            <span className="nav-label" data-testid="nav-label">Log Out</span>
           </button>
           <button
             className="sidebar-action-btn sidebar-collapse-toggle"
@@ -261,7 +263,7 @@ export default function NavBar() {
               <polyline points="11 17 6 12 11 7"/>
               <polyline points="18 17 13 12 18 7"/>
             </svg>
-            <span className="nav-label">Collapse</span>
+            <span className="nav-label" data-testid="nav-label">Collapse</span>
           </button>
         </div>
       </nav>
@@ -270,6 +272,7 @@ export default function NavBar() {
       {profileMenuOpen && user && (
         <div
           className="nav-profile-menu"
+          data-testid="nav-profile-menu"
           role="menu"
           ref={popupRef}
           style={{ position: 'fixed', zIndex: 400, ...popupStyle }}
@@ -316,10 +319,11 @@ export default function NavBar() {
       )}
 
       {/* ── Mobile bottom tab bar (hidden on desktop via CSS) ── */}
-      <nav className="bottom-nav" aria-label="Mobile navigation">
+      <nav className="bottom-nav" data-testid="bottom-nav" aria-label="Mobile navigation">
         <Link
           href="/"
           className={`bottom-nav-tab${isActive('/') ? ' active' : ''}`}
+          data-testid="bottom-nav-tab"
           onClick={(e) => handleNavClick('/', e)}
           aria-label="Dashboard"
         >
@@ -332,6 +336,7 @@ export default function NavBar() {
         <Link
           href="/income"
           className={`bottom-nav-tab${isActive('/income') ? ' active' : ''}`}
+          data-testid="bottom-nav-tab"
           onClick={(e) => handleNavClick('/income', e)}
           aria-label="Income"
         >
@@ -345,6 +350,7 @@ export default function NavBar() {
         <Link
           href="/expenses"
           className={`bottom-nav-tab${isActive('/expenses') ? ' active' : ''}`}
+          data-testid="bottom-nav-tab"
           onClick={(e) => handleNavClick('/expenses', e)}
           aria-label="Expenses"
         >
@@ -359,6 +365,7 @@ export default function NavBar() {
         <Link
           href="/budgets"
           className={`bottom-nav-tab${isActive('/budgets') ? ' active' : ''}`}
+          data-testid="bottom-nav-tab"
           onClick={(e) => handleNavClick('/budgets', e)}
           aria-label="Budgets"
         >
@@ -374,6 +381,7 @@ export default function NavBar() {
         <Link
           href="/recurring"
           className={`bottom-nav-tab${isActive('/recurring') ? ' active' : ''}`}
+          data-testid="bottom-nav-tab"
           onClick={(e) => handleNavClick('/recurring', e)}
           aria-label="Recurring"
         >
@@ -389,6 +397,7 @@ export default function NavBar() {
         <Link
           href="/reports"
           className={`bottom-nav-tab${isActive('/reports') ? ' active' : ''}`}
+          data-testid="bottom-nav-tab"
           onClick={(e) => handleNavClick('/reports', e)}
           aria-label="Reports"
         >

@@ -118,23 +118,23 @@ export default function MayaSavingsPage() {
         you&apos;ve made the transfer. Your ticks sync across all your devices.
       </p>
 
-      {saveError && <p className="field-error" style={{ marginBottom: 12 }}>{saveError}</p>}
+      {saveError && <p className="field-error" data-testid="maya-field-error" style={{ marginBottom: 12 }}>{saveError}</p>}
 
       {/* Summary */}
       <div className="grid cols-4 stat-grid">
-        <div className="stat card">
+        <div className="stat card" data-testid="stat-tile">
           <div className="label muted">Total Saved</div>
           <div className="value" style={{ color: 'var(--accent)' }}>{formatMoney(totals.saved)}</div>
         </div>
-        <div className="stat card">
+        <div className="stat card" data-testid="stat-tile">
           <div className="label muted">Weeks Completed</div>
           <div className="value">{totals.doneCount} / {totals.totalWeeks}</div>
         </div>
-        <div className="stat card">
+        <div className="stat card" data-testid="stat-tile">
           <div className="label muted">Year-End Goal</div>
           <div className="value">{formatMoney(totals.goal)}</div>
         </div>
-        <div className="stat card">
+        <div className="stat card" data-testid="stat-tile">
           <div className="label muted">Remaining</div>
           <div className="value">{formatMoney(totals.remaining)}</div>
         </div>
@@ -175,7 +175,7 @@ export default function MayaSavingsPage() {
       <div className="card" style={{ marginTop: 12 }}>
         <h2 style={{ margin: '0 0 12px' }}>Weekly Schedule</h2>
         <div className="table-wrap">
-          <table className="income-table">
+          <table className="income-table" data-testid="maya-schedule-table">
             <thead>
               <tr>
                 <th>Week</th>

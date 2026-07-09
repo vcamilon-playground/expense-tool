@@ -324,6 +324,7 @@ export default function SettingsPage() {
       {isDirty && (
         <div
           className="settings-save-bar"
+          data-testid="settings-save-bar"
           style={{
             position: 'sticky',
             top: 0,
@@ -605,7 +606,7 @@ export default function SettingsPage() {
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
           {categories.filter((c) => c.active !== false).map((cat) => (
-            <span key={cat.id} className="cat-chip">
+            <span key={cat.id} className="cat-chip" data-testid="category-chip">
               <span>{cat.icon ?? '🏷️'}</span>
               <span>{cat.name}</span>
               <button onClick={() => setPendingDelete(cat)} title="Delete" aria-label="Delete">×</button>

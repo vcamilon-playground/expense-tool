@@ -269,7 +269,7 @@ export default function NotificationsPage() {
         <div className="card">
           <h2 style={{ marginTop: 0 }}>Your Reminders</h2>
           <div className="table-wrap">
-            <table className="income-table">
+            <table className="income-table" data-testid="reminders-table">
               <thead>
                 <tr>
                   <th>Reminder</th>

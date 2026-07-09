@@ -20,9 +20,9 @@ export default function FormModal({ open, title, onClose, children }: Props) {
   if (!open) return null;
 
   return (
-    <div className="modal-overlay form-overlay" onClick={onClose}>
+    <div className="modal-overlay form-overlay" data-testid="modal-overlay" onClick={onClose}>
       <div className="modal form-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+        <div className="modal-header" data-testid="form-modal-header">
           <h3>{title}</h3>
           <button className="ghost close-btn" onClick={onClose} aria-label="Close">✕</button>
         </div>

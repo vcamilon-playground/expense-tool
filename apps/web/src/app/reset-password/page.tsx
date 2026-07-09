@@ -54,7 +54,7 @@ function ResetPasswordForm() {
 
   if (!token) {
     return (
-      <div className="banner banner-danger" role="alert">
+      <div className="banner banner-danger" data-testid="auth-error-banner" role="alert">
         This reset link is invalid or incomplete. Please request a new one from the{' '}
         <Link href="/forgot-password" style={{ color: 'var(--accent)', fontWeight: 500 }}>
           forgot password
@@ -66,7 +66,7 @@ function ResetPasswordForm() {
 
   if (done) {
     return (
-      <div className="banner banner-success" role="status">
+      <div className="banner banner-success" data-testid="auth-success-banner" role="status">
         Your password has been reset. Redirecting you to sign in…
       </div>
     );
@@ -75,7 +75,7 @@ function ResetPasswordForm() {
   return (
     <>
       {apiError && (
-        <div className="banner banner-danger" role="alert" style={{ marginBottom: 16 }}>
+        <div className="banner banner-danger" data-testid="auth-error-banner" role="alert" style={{ marginBottom: 16 }}>
           {apiError}
         </div>
       )}
@@ -99,7 +99,7 @@ function ResetPasswordForm() {
             required
             autoFocus
           />
-          {fieldErrors.password && <p className="field-error">{fieldErrors.password}</p>}
+          {fieldErrors.password && <p className="field-error" data-testid="auth-field-error">{fieldErrors.password}</p>}
         </label>
         <label>
           <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Confirm new password</div>
@@ -115,7 +115,7 @@ function ResetPasswordForm() {
             aria-invalid={!!fieldErrors.confirm}
             required
           />
-          {fieldErrors.confirm && <p className="field-error">{fieldErrors.confirm}</p>}
+          {fieldErrors.confirm && <p className="field-error" data-testid="auth-field-error">{fieldErrors.confirm}</p>}
         </label>
         <button type="submit" className="primary" disabled={loading} style={{ marginTop: 4 }}>
           {loading ? 'Resetting…' : 'Reset password'}

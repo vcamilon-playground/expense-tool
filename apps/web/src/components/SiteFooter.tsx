@@ -14,7 +14,7 @@ export default function SiteFooter() {
 
   return (
     <>
-      <footer className="site-footer">
+      <footer className="site-footer" data-testid="site-footer">
         <button type="button" className="footer-link" onClick={() => setAboutOpen(true)}>
           About
         </button>
@@ -34,7 +34,7 @@ export default function SiteFooter() {
         <p style={{ marginBottom: 0, color: 'var(--text)' }}>
           Created by Vegil Camilon &amp; Claude Code
         </p>
-        {version && <p className="footer-version" style={{ marginTop: 4, marginBottom: 0 }}>v{version}</p>}
+        {version && <p className="footer-version" data-testid="footer-version" style={{ marginTop: 4, marginBottom: 0 }}>v{version}</p>}
         <div className="row" style={{ justifyContent: 'flex-end', marginTop: 20 }}>
           <button type="button" className="primary" style={{ width: 'auto' }} onClick={() => setAboutOpen(false)}>
             Close
