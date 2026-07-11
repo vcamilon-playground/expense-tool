@@ -97,6 +97,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
 | `tests/footer.spec.ts` | Smoke | Footer shows About/Contact/copyright on an authed page; About modal shows credit + version; Contact modal shows mailto/tel links; footer absent on the login page |
 | `tests/loading.spec.ts` | Smoke | Page-level loading state shows the themed `LoadingScreen` spinner (`.loading-screen`, `role="status"`, `.spinner` with 12 bars, "Loading" label) while a delayed Supabase request is in flight |
+| `tests/theme-contrast.spec.ts` | Smoke | Light-theme accessibility: computed `--muted` colour raised for WCAG AA secondary-text contrast (real contrast-ratio assertion), hovered primary buttons keep an accent background with white text (not the global grey `button:hover`), and a dark-theme no-regression check |
 | `tests/expenses.regression.spec.ts` | Regression | Create/edit/delete expense; past-month lock with allow-past-edit off and on |
 | `tests/expenses-grid.regression.spec.ts` | Regression | Grid cards render category/amount/merchant/description; receipt pill and ≈PHP conversion; search narrows cards; edit/delete from a card; Load More pagination (20-per-page, accent-styled button); past-month lock with allow-past-edit off and on |
 | `tests/budgets.regression.spec.ts` | Regression | Seed a per-category budget, edit its limit; verify the computed read-only Overall footer row (sum of category limits, no actions) and the dashboard Overall + category rows |
@@ -292,6 +293,15 @@ cd apps/e2e && npx playwright show-report
 
 **Themed loading spinner**
 - shows the themed spinner with 12 bars while data loads *(delays `/rest/v1/` requests to hold the transient state; asserts `.loading-screen`, `role="status"`, `.spinner`, 12 bars, and the "Loading" label)*
+
+---
+
+### `theme-contrast.spec.ts` — Light-theme accessibility
+
+**Theme contrast** *(computed-style assertions via `forceLightTheme` / race-free `hoverBackgroundIsBorderGrey` helpers)*
+- light `--muted` secondary text renders the raised token and clears the WCAG AA contrast ratio against its background
+- a hovered primary button keeps an accent background with white text (not the global grey `button:hover`)
+- dark theme is unaffected (no regression)
 
 ---
 
