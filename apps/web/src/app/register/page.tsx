@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { isValidEmail } from '@expense/shared';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { InlineSpinner } from '@/components/LoadingScreen';
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -284,7 +285,7 @@ export default function RegisterPage() {
             disabled={loading}
             style={{ marginTop: 4 }}
           >
-            {loading ? 'Creating account…' : 'Create Account'}
+            {loading ? <><InlineSpinner />Creating account…</> : 'Create Account'}
           </button>
         </form>
 

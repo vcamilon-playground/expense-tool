@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { InlineSpinner } from '@/components/LoadingScreen';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
@@ -84,7 +85,7 @@ export default function LoginPage() {
             disabled={loading}
             style={{ marginTop: 4 }}
           >
-            {loading ? 'Signing in…' : 'Sign In'}
+            {loading ? <><InlineSpinner />Signing in…</> : 'Sign In'}
           </button>
         </form>
 

@@ -13,6 +13,15 @@ export function Spinner() {
   );
 }
 
+/**
+ * Small inline spinner for buttons and inline loading states. Inherits the text
+ * colour of its context via `currentColor`, so it stays legible on solid accent
+ * buttons (white text) as well as ghost/plain buttons.
+ */
+export function InlineSpinner() {
+  return <span className="btn-spinner" aria-hidden="true" />;
+}
+
 /** Full-height centered loading state with the themed spinner and a label. */
 export default function LoadingScreen({ label = 'Loading' }: { label?: string }) {
   return (

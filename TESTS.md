@@ -97,7 +97,8 @@ cd apps/e2e && npx playwright show-report
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
 | `tests/footer.spec.ts` | Smoke | Footer shows About/Contact/copyright on an authed page; About modal shows credit + version; Contact modal shows mailto/tel links; footer absent on the login page |
 | `tests/loading.spec.ts` | Smoke | Page-level loading state shows the themed `LoadingScreen` spinner (`.loading-screen`, `role="status"`, `.spinner` with 12 bars, "Loading" label) while a delayed Supabase request is in flight |
-| `tests/theme-contrast.spec.ts` | Smoke | Light-theme accessibility: computed `--muted` colour raised for WCAG AA secondary-text contrast (real contrast-ratio assertion), hovered primary buttons keep an accent background with white text (not the global grey `button:hover`), and a dark-theme no-regression check |
+| `tests/inline-spinner.spec.ts` | Smoke | Inline `.btn-spinner` shows inside the submit button (login/register/forgot/reset) and the InsightCard button while the request is in flight and the button stays disabled, then clears once it resolves; reduced-motion slows (not removes) both the inline and themed spinners |
+| `tests/theme-contrast.spec.ts` | Smoke | Light-theme accessibility: computed `--muted` colour raised for WCAG AA secondary-text contrast (real contrast-ratio assertion), hovered primary buttons keep an accent background with white text (not the global grey `button:hover`), a dark-theme no-regression check, and accent-coloured `.card > h2` section headings |
 | `tests/expenses.regression.spec.ts` | Regression | Create/edit/delete expense; past-month lock with allow-past-edit off and on |
 | `tests/expenses-grid.regression.spec.ts` | Regression | Grid cards render category/amount/merchant/description; receipt pill and ≈PHP conversion; search narrows cards; edit/delete from a card; Load More pagination (20-per-page, accent-styled button); past-month lock with allow-past-edit off and on |
 | `tests/budgets.regression.spec.ts` | Regression | Seed a per-category budget, edit its limit; verify the computed read-only Overall footer row (sum of category limits, no actions) and the dashboard Overall + category rows |
@@ -302,6 +303,16 @@ cd apps/e2e && npx playwright show-report
 - light `--muted` secondary text renders the raised token and clears the WCAG AA contrast ratio against its background
 - a hovered primary button keeps an accent background with white text (not the global grey `button:hover`)
 - dark theme is unaffected (no regression)
+- `.card > h2` section headings render in the accent colour (asserted against live `var(--accent)`)
+
+---
+
+### `inline-spinner.spec.ts` — Button loading spinners
+
+**Inline spinner** *(deterministic in-flight state via a route-hold helper)*
+- each auth submit button (login / register / forgot / reset) shows the inline `.btn-spinner` and stays disabled while its request is in flight, then clears the spinner once it resolves
+- the dashboard InsightCard button shows the spinner while the AI insight generates
+- under reduced motion the inline spinner (~1.6s) and the themed loading spinner bars (~2.4s) slow down rather than stop
 
 ---
 

@@ -12,7 +12,9 @@ export class LoginPage extends BasePage {
     super(page);
     this.usernameInput = page.getByRole('textbox', { name: /username/i });
     this.passwordInput = page.locator('input[type="password"]');
-    this.submitButton = page.getByRole('button', { name: /sign in/i });
+    // Located by type, not name: while submitting the label becomes "Signing in…",
+    // so a name-based locator wouldn't match the button for in-flight assertions.
+    this.submitButton = page.locator('button[type="submit"]');
     this.errorBanner = page.locator('[role="alert"]');
   }
 
@@ -46,5 +48,14 @@ export class LoginPage extends BasePage {
   /** The "forgot your password" link. */
   forgotPasswordLink(): Locator {
     return this.page.getByRole('link', { name: /forgot your password/i });
+  }
+
+  /**
+   * The inline `.btn-spinner` shown inside the submit button while signing in.
+   * Anchored on `button[type="submit"]`, not the button's accessible name — while
+   * loading the name becomes "Signing in…", so a name-based locator wouldn't match.
+   */
+  submitSpinner(): Locator {
+    return this.page.locator('button[type="submit"] .btn-spinner');
   }
 }

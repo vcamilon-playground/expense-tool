@@ -117,6 +117,15 @@ export class BudgetsPage extends BasePage {
     return this.page.getByRole('heading', { level: 2, name: 'Current Budgets' });
   }
 
+  /**
+   * A card section heading (`.card > h2`) matched by its text — the elements the
+   * accent-colour rule (`.card > h2 { color: var(--accent) }`) targets.
+   * @param name - the heading text to match
+   */
+  cardSectionHeading(name: string): Locator {
+    return this.page.locator('.card > h2').filter({ hasText: name });
+  }
+
   /** The per-category budgets `<table>` (present only when ≥1 budget exists). */
   table(): Locator {
     return this.page.getByTestId('budget-table');

@@ -33,9 +33,20 @@ export class ResetPasswordPage extends BasePage {
     return this.page.getByPlaceholder('Re-enter your password');
   }
 
-  /** The "Reset password" submit button. */
+  /**
+   * The "Reset password" submit button. Located by type, not name — while
+   * submitting the label becomes "Resetting…", so a name-based locator would miss it.
+   */
   submitButton(): Locator {
-    return this.page.getByRole('button', { name: /reset password/i });
+    return this.page.locator('button[type="submit"]');
+  }
+
+  /**
+   * The inline `.btn-spinner` shown inside the submit button while resetting.
+   * Anchored on `button[type="submit"]` (the name becomes "Resetting…" while loading).
+   */
+  submitSpinner(): Locator {
+    return this.page.locator('button[type="submit"] .btn-spinner');
   }
 
   /**

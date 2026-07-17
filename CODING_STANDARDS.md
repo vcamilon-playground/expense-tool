@@ -124,6 +124,7 @@ if (!user || loading) return <LoadingScreen />;
 |---|
 | Every page reads `const { user } = useAuth()` and returns the loading state if null. |
 | Page-level loading states render the shared `<LoadingScreen />` (`components/LoadingScreen.tsx`) — a themed `var(--accent)` ring spinner with a "Loading" label and `role="status"`. Don't hand-roll a `<p>Loading…</p>` for a page load. |
+| Button-level loading states render the shared `<InlineSpinner />` (also `components/LoadingScreen.tsx`) before the loading text, e.g. `{loading ? <><InlineSpinner />Saving…</> : 'Save'}`. It's a small `currentColor` ring, so it stays legible on solid accent buttons (white) and ghost buttons alike. |
 | A page that fetches data also reads `const { refreshKey } = useDataRefresh()` and adds `refreshKey` to its load-effect deps (`}, [user, refreshKey]);`) so it refetches when the app resumes after a long idle period. |
 | No server components that fetch data — all Supabase calls are client-side. |
 | No new React context providers without a strong reason; `AuthContext`, `NavigationGuardContext`, and `DataRefreshContext` cover the current needs. |

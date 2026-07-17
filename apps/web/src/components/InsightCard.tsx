@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { Category, Expense, MonthlyInsight } from '@expense/shared';
 import { formatMoney } from '@expense/shared';
+import { InlineSpinner } from './LoadingScreen';
 
 export default function InsightCard({
   expenses,
@@ -47,7 +48,7 @@ export default function InsightCard({
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <h2 style={{ margin: 0 }}>🤖 Monthly AI Insight</h2>
         <button className="primary" style={{ width: 'auto' }} onClick={generate} disabled={loading}>
-          {loading ? 'Thinking…' : insight ? 'Refresh' : 'Generate'}
+          {loading ? <><InlineSpinner />Thinking…</> : insight ? 'Refresh' : 'Generate'}
         </button>
       </div>
       {error && <p style={{ color: 'var(--bad)' }}>{error}</p>}

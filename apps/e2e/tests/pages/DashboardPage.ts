@@ -39,6 +39,32 @@ export class DashboardPage extends BasePage {
     return this.page.getByRole('heading', { level: 2, name: 'Budget Status' });
   }
 
+  /**
+   * A card section heading (`.card > h2`) matched by its text — the elements the
+   * accent-colour rule (`.card > h2 { color: var(--accent) }`) targets.
+   * @param name - the heading text to match
+   */
+  cardSectionHeading(name: string): Locator {
+    return this.page.locator('.card > h2').filter({ hasText: name });
+  }
+
+  // ── Monthly AI Insight card ──
+
+  /** The Monthly AI Insight card. */
+  insightCard(): Locator {
+    return this.page.locator('.card').filter({ hasText: 'Monthly AI Insight' });
+  }
+
+  /** The insight card's action button ("Generate" / "Refresh" / "Thinking…"). */
+  insightButton(): Locator {
+    return this.insightCard().getByRole('button');
+  }
+
+  /** The inline `.btn-spinner` shown inside the insight button while thinking. */
+  insightSpinner(): Locator {
+    return this.insightButton().locator('.btn-spinner');
+  }
+
   // ── Quick actions row (below the KPI SummaryCards, above Budget Status) ──
 
   /** The quick-actions row container. */

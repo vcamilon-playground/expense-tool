@@ -12,7 +12,8 @@ export class ForgotPasswordPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.emailInput = page.getByRole('textbox', { name: /email/i });
-    this.submitButton = page.getByRole('button', { name: /send reset link/i });
+    // Located by type, not name (the label becomes "Sending…" while in flight).
+    this.submitButton = page.locator('button[type="submit"]');
     this.successBanner = page.getByTestId('auth-success-banner');
     this.errorBanner = page.getByTestId('auth-error-banner');
     this.fieldError = page.getByTestId('auth-field-error');
@@ -41,5 +42,13 @@ export class ForgotPasswordPage extends BasePage {
   /** The "Back to sign in" link. */
   backToSignInLink(): Locator {
     return this.page.getByRole('link', { name: /back to sign in/i });
+  }
+
+  /**
+   * The inline `.btn-spinner` shown inside the submit button while sending.
+   * Anchored on `button[type="submit"]` (the name becomes "Sending…" while loading).
+   */
+  submitSpinner(): Locator {
+    return this.page.locator('button[type="submit"] .btn-spinner');
   }
 }

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { isValidEmail } from '@expense/shared';
+import { InlineSpinner } from '@/components/LoadingScreen';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -85,7 +86,7 @@ export default function ForgotPasswordPage() {
                 {fieldError && <p className="field-error" data-testid="auth-field-error">{fieldError}</p>}
               </label>
               <button type="submit" className="primary" disabled={loading} style={{ marginTop: 4 }}>
-                {loading ? 'Sending…' : 'Send reset link'}
+                {loading ? <><InlineSpinner />Sending…</> : 'Send reset link'}
               </button>
             </form>
           </>

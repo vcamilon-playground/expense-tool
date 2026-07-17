@@ -1,6 +1,8 @@
 import { test, expect, Locator, Page } from '@playwright/test';
 import { NavBar } from './pages/NavBar';
 import { ExpensesPage } from './pages/ExpensesPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { BudgetsPage } from './pages/BudgetsPage';
 
 /**
  * Coverage for the two light-theme accessibility CSS fixes in globals.css:
@@ -89,6 +91,43 @@ function contrastRatio(foreground: string, background: string): number {
   const darker = Math.min(relativeLuminance(foreground), relativeLuminance(background));
   return (lighter + 0.05) / (darker + 0.05);
 }
+
+/**
+ * Read a `.card > h2`'s own colour and the live-resolved `var(--accent)` in a
+ * single getComputedStyle pass (via a throwaway probe span), so the comparison
+ * is race-free and independent of the E2E account's saved accent.
+ */
+async function headingColourAndAccent(locator: Locator): Promise<{ color: string; accent: string }> {
+  return locator.evaluate((el) => {
+    const color = window.getComputedStyle(el).color;
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--accent)';
+    el.appendChild(probe);
+    const accent = window.getComputedStyle(probe).color;
+    probe.remove();
+    return { color, accent };
+  });
+}
+
+test.describe('Theme contrast — accent card section headings', () => {
+  test('dashboard "Budget Status" card heading is painted with the accent colour', async ({ page }) => {
+    const dashboard = new DashboardPage(page);
+    await dashboard.goto();
+    const heading = dashboard.cardSectionHeading('Budget Status');
+    await expect(heading).toBeVisible();
+    const { color, accent } = await headingColourAndAccent(heading);
+    expect(color, 'card > h2 colour should equal var(--accent)').toBe(accent);
+  });
+
+  test('budgets "Current Budgets" card heading is painted with the accent colour', async ({ page }) => {
+    const budgets = new BudgetsPage(page);
+    await budgets.goto();
+    const heading = budgets.cardSectionHeading('Current Budgets');
+    await expect(heading).toBeVisible();
+    const { color, accent } = await headingColourAndAccent(heading);
+    expect(color, 'card > h2 colour should equal var(--accent)').toBe(accent);
+  });
+});
 
 test.describe('Theme contrast — light muted secondary text', () => {
   let nav!: NavBar;

@@ -3,6 +3,7 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import LoadingScreen, { InlineSpinner } from '@/components/LoadingScreen';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -118,7 +119,7 @@ function ResetPasswordForm() {
           {fieldErrors.confirm && <p className="field-error" data-testid="auth-field-error">{fieldErrors.confirm}</p>}
         </label>
         <button type="submit" className="primary" disabled={loading} style={{ marginTop: 4 }}>
-          {loading ? 'Resetting…' : 'Reset password'}
+          {loading ? <><InlineSpinner />Resetting…</> : 'Reset password'}
         </button>
       </form>
     </>
@@ -137,7 +138,7 @@ export default function ResetPasswordPage() {
           </p>
         </div>
 
-        <Suspense fallback={<p className="muted">Loading…</p>}>
+        <Suspense fallback={<LoadingScreen />}>
           <ResetPasswordForm />
         </Suspense>
 
