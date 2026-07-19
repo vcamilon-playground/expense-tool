@@ -78,9 +78,14 @@ create table if not exists recurring_expenses (
   cadence text not null check (cadence in ('weekly','monthly','yearly')),
   next_charge_date date not null,
   active boolean not null default true,
+  -- When true the amount is not fixed; `amount` holds an optional estimate (may be 0)
+  -- and the real amount is entered at pay time on the Recurring page.
+  is_variable boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+-- Migration for existing databases (run once in the Supabase SQL editor):
+--   alter table recurring_expenses add column if not exists is_variable boolean not null default false;
 
 -- ---------- updated_at trigger ----------
 create or replace function set_updated_at() returns trigger as $$

@@ -112,6 +112,14 @@ export class NotificationsPage extends BasePage {
     return this.reminderRow(title).getByRole('button', { name: 'Delete' });
   }
 
+  /**
+   * A notification card body matched by its text (e.g. a recurring-due message).
+   * @param text - substring of the notification body to match
+   */
+  notificationBody(text: string): Locator {
+    return this.page.getByText(text);
+  }
+
   // ── Due reminder notification cards (Done / View actions) ──
 
   /**

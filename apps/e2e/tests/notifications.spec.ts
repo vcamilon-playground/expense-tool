@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { NotificationsPage } from './pages/NotificationsPage';
+import { E2E_RECURRING_NAME, cleanup, seed } from './helpers/supabase';
 
 test.describe('Notifications page', () => {
   let notifications!: NotificationsPage;
@@ -38,5 +39,30 @@ test.describe('Notifications page', () => {
     await expect(notifications.formHeading()).toBeVisible();
     await notifications.closeFormButton().click(); // the toggle now reads "Close"
     await expect(notifications.formHeading()).toBeHidden();
+  });
+});
+
+// ── FUNC-8: a variable recurring due today shows an "amount varies" body ──
+test.describe('Notifications — variable recurring due body', () => {
+  let notifications!: NotificationsPage;
+
+  test.beforeAll(async () => {
+    await cleanup.recurring();
+    await seed.recurringVariable(0); // variable, no estimate, due today
+  });
+
+  test.afterAll(async () => {
+    await cleanup.recurring();
+  });
+
+  test.beforeEach(async ({ page }) => {
+    notifications = new NotificationsPage(page);
+    await notifications.goto();
+  });
+
+  test('the due-today notification omits a figure and reads "(amount varies)"', async () => {
+    const body = notifications.notificationBody(`${E2E_RECURRING_NAME} is due today (amount varies).`);
+    await expect(body).toBeVisible();
+    await expect(body).not.toContainText('₱');
   });
 });

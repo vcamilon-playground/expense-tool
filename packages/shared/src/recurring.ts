@@ -1,4 +1,16 @@
-import type { RecurringCadence } from './types';
+import type { RecurringCadence, RecurringExpense } from './types';
+import { formatMoney } from './reports';
+
+/**
+ * The label to show for a recurring expense's amount:
+ * - fixed → the formatted amount
+ * - variable with an estimate → `~<estimate>` (a tilde marks it as approximate)
+ * - variable with no estimate → `Varies`
+ */
+export function recurringAmountLabel(r: Pick<RecurringExpense, 'amount' | 'is_variable'>): string {
+  if (!r.is_variable) return formatMoney(r.amount);
+  return r.amount > 0 ? `~${formatMoney(r.amount)}` : 'Varies';
+}
 
 export function advanceDate(dateStr: string, cadence: RecurringCadence): string {
   const d = new Date(dateStr + 'T00:00:00Z');

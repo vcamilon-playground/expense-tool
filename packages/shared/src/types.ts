@@ -47,6 +47,7 @@ export type RecurringExpense = {
   cadence: RecurringCadence;
   next_charge_date: string; // ISO date
   active: boolean;
+  is_variable: boolean; // amount is not fixed; `amount` is an optional estimate, real amount entered at pay time
   created_at?: string;
   updated_at?: string;
 };

@@ -52,7 +52,9 @@ export function computeNotifications(
         id: `rec-today-${r.id}`,
         type: 'recurring_due_today',
         title: 'Due Today',
-        body: `${r.name} — ${formatMoney(r.amount)} is due today.`,
+        body: r.is_variable
+          ? `${r.name} is due today (amount varies).`
+          : `${r.name} — ${formatMoney(r.amount)} is due today.`,
         urgency: 'high',
         href: '/recurring',
         recurringId: r.id,
@@ -62,7 +64,9 @@ export function computeNotifications(
         id: `rec-soon-${r.id}`,
         type: 'recurring_due_soon',
         title: `Due in ${diffDays} day${diffDays === 1 ? '' : 's'}`,
-        body: `${r.name} — ${formatMoney(r.amount)} is due on ${r.next_charge_date}.`,
+        body: r.is_variable
+          ? `${r.name} is due on ${r.next_charge_date} (amount varies).`
+          : `${r.name} — ${formatMoney(r.amount)} is due on ${r.next_charge_date}.`,
         urgency: 'medium',
         href: '/recurring',
         recurringId: r.id,
@@ -72,7 +76,9 @@ export function computeNotifications(
         id: `rec-week-${r.id}`,
         type: 'recurring_due_week',
         title: `Due in ${diffDays} days`,
-        body: `${r.name} — ${formatMoney(r.amount)} is due on ${r.next_charge_date}.`,
+        body: r.is_variable
+          ? `${r.name} is due on ${r.next_charge_date} (amount varies).`
+          : `${r.name} — ${formatMoney(r.amount)} is due on ${r.next_charge_date}.`,
         urgency: 'low',
         href: '/recurring',
         recurringId: r.id,

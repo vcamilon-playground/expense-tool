@@ -57,12 +57,28 @@ describe('computeNotifications — still handles recurring + income', () => {
     cadence: 'monthly',
     next_charge_date: TODAY,
     active: true,
+    is_variable: false,
   };
 
   it('emits a high-urgency notification for recurring due today', () => {
     const result = computeNotifications([dueRecurring], [], TODAY, true);
     const due = result.find((n) => n.type === 'recurring_due_today');
     expect(due?.urgency).toBe('high');
+  });
+
+  it('includes the formatted amount in a fixed recurring notification body', () => {
+    const result = computeNotifications([dueRecurring], [], TODAY, true);
+    const due = result.find((n) => n.type === 'recurring_due_today');
+    expect(due?.body).toContain('549');
+    expect(due?.body).not.toContain('amount varies');
+  });
+
+  it('says "amount varies" instead of a figure for a variable recurring', () => {
+    const variable: RecurringExpense = { ...dueRecurring, is_variable: true, amount: 0 };
+    const result = computeNotifications([variable], [], TODAY, true);
+    const due = result.find((n) => n.type === 'recurring_due_today');
+    expect(due?.body).toContain('amount varies');
+    expect(due?.body).not.toContain('₱');
   });
 
   it('emits the monthly income reminder on/after the 15th when not dismissed', () => {

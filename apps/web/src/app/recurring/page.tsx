@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { Category, IncomeSource, RecurringCadence, RecurringExpense, RecurringInput } from '@expense/shared';
-import { advanceDate, formatMoney } from '@expense/shared';
+import { advanceDate, recurringAmountLabel } from '@expense/shared';
 import { useSortState, SortIcon, sortRows } from '@/lib/sort';
 import {
   createExpense,
@@ -34,6 +34,7 @@ const empty: RecurringInput = {
   cadence: 'monthly',
   next_charge_date: new Date().toISOString().slice(0, 10),
   active: true,
+  is_variable: false,
 };
 
 export default function RecurringPage() {
@@ -56,11 +57,15 @@ export default function RecurringPage() {
   const [confirmStep, setConfirmStep] = useState<'confirm' | 'reminder' | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [confirmIncomeId, setConfirmIncomeId] = useState('');
+  const [confirmAmountInput, setConfirmAmountInput] = useState('');
+  const [confirmAmountError, setConfirmAmountError] = useState<string | null>(null);
 
   // Early payment flow state (not-yet-due items)
   const [pendingEarlyItem, setPendingEarlyItem] = useState<RecurringExpense | null>(null);
   const [earlyPayError, setEarlyPayError] = useState<string | null>(null);
   const [earlyPayIncomeId, setEarlyPayIncomeId] = useState('');
+  const [earlyPayAmountInput, setEarlyPayAmountInput] = useState('');
+  const [earlyPayAmountError, setEarlyPayAmountError] = useState<string | null>(null);
 
   const today = new Date().toISOString().slice(0, 10);
   const isDue = (r: RecurringExpense) => r.active && r.next_charge_date <= today;
@@ -106,6 +111,7 @@ export default function RecurringPage() {
       cadence: r.cadence,
       next_charge_date: r.next_charge_date,
       active: r.active,
+      is_variable: r.is_variable,
     });
     setShowForm(true);
   }
@@ -123,8 +129,14 @@ export default function RecurringPage() {
     e.preventDefault();
     const newErrors: { name?: string; amount?: string; date?: string } = {};
     if (!draft.name.trim()) newErrors.name = 'Name is required';
-    if (!amountInput) newErrors.amount = 'Amount is required';
-    else if (draft.amount <= 0) newErrors.amount = 'Enter a positive amount';
+    if (draft.is_variable) {
+      // Estimate is optional; only reject an explicitly negative value.
+      if (amountInput && draft.amount < 0) newErrors.amount = 'Estimate cannot be negative';
+    } else if (!amountInput) {
+      newErrors.amount = 'Amount is required';
+    } else if (draft.amount <= 0) {
+      newErrors.amount = 'Enter a positive amount';
+    }
     if (!draft.next_charge_date) newErrors.date = 'Date is required';
     if (Object.keys(newErrors).length > 0) {
       setFormErrors(newErrors);
@@ -144,6 +156,8 @@ export default function RecurringPage() {
   function openConfirm(r: RecurringExpense) {
     setPendingItem(r);
     setConfirmStep('confirm');
+    setConfirmAmountInput(r.amount > 0 ? String(r.amount) : '');
+    setConfirmAmountError(null);
   }
 
   function dismissConfirm() {
@@ -153,16 +167,23 @@ export default function RecurringPage() {
 
   async function handleConfirmYes() {
     if (!pendingItem || !user) return;
+    const amount = parseFloat(confirmAmountInput);
+    if (!(amount > 0)) {
+      setConfirmAmountError('Enter a valid amount');
+      return;
+    }
     setConfirmError(null);
+    setConfirmAmountError(null);
     const item = pendingItem;
     const incomeId = confirmIncomeId;
     setPendingItem(null);
     setConfirmStep(null);
     setConfirmIncomeId('');
+    setConfirmAmountInput('');
     try {
       await createExpense(
         {
-          amount: item.amount,
+          amount,
           currency: 'PHP',
           conversion_rate: null,
           category_id: item.category_id,
@@ -174,7 +195,7 @@ export default function RecurringPage() {
         },
         user.id,
       );
-      if (incomeId) await deductFromIncomeSource(incomeId, item.amount, item.name);
+      if (incomeId) await deductFromIncomeSource(incomeId, amount, item.name);
       await updateRecurring(item.id, {
         next_charge_date: advanceDate(item.next_charge_date, item.cadence),
       });
@@ -188,17 +209,30 @@ export default function RecurringPage() {
     setConfirmStep('reminder');
   }
 
+  function openEarlyPay(r: RecurringExpense) {
+    setPendingEarlyItem(r);
+    setEarlyPayAmountInput(r.amount > 0 ? String(r.amount) : '');
+    setEarlyPayAmountError(null);
+  }
+
   async function handleEarlyPayConfirm() {
     if (!pendingEarlyItem || !user) return;
+    const amount = parseFloat(earlyPayAmountInput);
+    if (!(amount > 0)) {
+      setEarlyPayAmountError('Enter a valid amount');
+      return;
+    }
     setEarlyPayError(null);
+    setEarlyPayAmountError(null);
     const item = pendingEarlyItem;
     const incomeId = earlyPayIncomeId;
     setPendingEarlyItem(null);
     setEarlyPayIncomeId('');
+    setEarlyPayAmountInput('');
     try {
       await createExpense(
         {
-          amount: item.amount,
+          amount,
           currency: 'PHP',
           conversion_rate: null,
           category_id: item.category_id,
@@ -210,7 +244,7 @@ export default function RecurringPage() {
         },
         user.id,
       );
-      if (incomeId) await deductFromIncomeSource(incomeId, item.amount, item.name);
+      if (incomeId) await deductFromIncomeSource(incomeId, amount, item.name);
       await updateRecurring(item.id, {
         next_charge_date: advanceDate(item.next_charge_date, item.cadence),
       });
@@ -279,7 +313,7 @@ export default function RecurringPage() {
               {formErrors.name && <p className="field-error">{formErrors.name}</p>}
             </label>
             <label>
-              <div className="muted">Amount</div>
+              <div className="muted">{draft.is_variable ? 'Estimated amount (optional)' : 'Amount'}</div>
               <input
                 type="number"
                 step="0.01"
@@ -292,7 +326,7 @@ export default function RecurringPage() {
                   setFormErrors((p) => ({ ...p, amount: undefined }));
                 }}
                 aria-invalid={!!formErrors.amount}
-                required
+                required={!draft.is_variable}
               />
               {formErrors.amount && <p className="field-error">{formErrors.amount}</p>}
             </label>
@@ -338,6 +372,14 @@ export default function RecurringPage() {
               />
               <span>Active</span>
             </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 20 }}>
+              <input
+                type="checkbox"
+                checked={draft.is_variable}
+                onChange={(e) => { setDraft({ ...draft, is_variable: e.target.checked }); setFormErrors((p) => ({ ...p, amount: undefined })); }}
+              />
+              <span>Variable amount <span className="muted" style={{ fontSize: 12 }}>(enter at pay time)</span></span>
+            </label>
           </div>
           <div className="row" style={{ marginTop: 16 }}>
             <button type="submit" className="primary" style={{ width: 'auto' }}>
@@ -359,8 +401,21 @@ export default function RecurringPage() {
               <button className="ghost close-btn" onClick={dismissConfirm} aria-label="Close">✕</button>
             </div>
             <p style={{ marginBottom: 16 }}>
-              Has <strong>{pendingItem.name}</strong> ({formatMoney(pendingItem.amount)}) already been paid?
+              Has <strong>{pendingItem.name}</strong> ({recurringAmountLabel(pendingItem)}) already been paid?
             </p>
+            <label style={{ display: 'block', marginBottom: 16 }}>
+              <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Amount paid</div>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={confirmAmountInput}
+                onChange={(e) => { setConfirmAmountInput(e.target.value); setConfirmAmountError(null); }}
+                aria-invalid={!!confirmAmountError}
+              />
+              {confirmAmountError && <p className="field-error">{confirmAmountError}</p>}
+            </label>
             {incomeSources.length > 0 && (
               <label style={{ display: 'block', marginBottom: 16 }}>
                 <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Deduct from (optional)</div>
@@ -406,7 +461,7 @@ export default function RecurringPage() {
           <div className="modal" role="dialog" aria-modal="true">
             <h3 style={{ marginBottom: 12 }}>⚠️ Reminder</h3>
             <p style={{ marginBottom: 8 }}>
-              <strong>{pendingItem.name}</strong> ({formatMoney(pendingItem.amount)}) has not been settled.
+              <strong>{pendingItem.name}</strong> ({recurringAmountLabel(pendingItem)}) has not been settled.
             </p>
             <p className="muted" style={{ fontSize: 14, marginBottom: 24 }}>
               This expense will <strong>not</strong> be added to your records. Please add it manually to your expenses once you have paid.
@@ -429,10 +484,23 @@ export default function RecurringPage() {
               <button className="ghost close-btn" onClick={() => setPendingEarlyItem(null)} aria-label="Close">✕</button>
             </div>
             <p style={{ marginBottom: 16 }}>
-              Record an early payment for <strong>{pendingEarlyItem.name}</strong> ({formatMoney(pendingEarlyItem.amount)})?
+              Record an early payment for <strong>{pendingEarlyItem.name}</strong> ({recurringAmountLabel(pendingEarlyItem)})?
               The next charge date will advance from <strong>{pendingEarlyItem.next_charge_date}</strong> to{' '}
               <strong>{advanceDate(pendingEarlyItem.next_charge_date, pendingEarlyItem.cadence)}</strong>.
             </p>
+            <label style={{ display: 'block', marginBottom: 16 }}>
+              <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Amount paid</div>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={earlyPayAmountInput}
+                onChange={(e) => { setEarlyPayAmountInput(e.target.value); setEarlyPayAmountError(null); }}
+                aria-invalid={!!earlyPayAmountError}
+              />
+              {earlyPayAmountError && <p className="field-error">{earlyPayAmountError}</p>}
+            </label>
             {incomeSources.length > 0 && (
               <label style={{ display: 'block', marginBottom: 16 }}>
                 <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Deduct from (optional)</div>
@@ -464,7 +532,7 @@ export default function RecurringPage() {
               <button className="primary" style={{ width: 'auto' }} onClick={handleEarlyPayConfirm}>
                 Yes, record it
               </button>
-              <button className="ghost" style={{ width: 'auto' }} onClick={() => { setPendingEarlyItem(null); setEarlyPayIncomeId(''); }}>
+              <button className="ghost" style={{ width: 'auto' }} onClick={() => { setPendingEarlyItem(null); setEarlyPayIncomeId(''); setEarlyPayAmountInput(''); setEarlyPayAmountError(null); }}>
                 Cancel
               </button>
             </div>
@@ -529,7 +597,7 @@ export default function RecurringPage() {
                         {r.next_charge_date}
                         {due && <span className="pill over" style={{ marginLeft: 6 }}>Due</span>}
                       </td>
-                      <td data-label="Amount" style={{ textAlign: 'right' }}>{formatMoney(r.amount)}</td>
+                      <td data-label="Amount" style={{ textAlign: 'right' }}>{recurringAmountLabel(r)}</td>
                       <td data-label="Active">{r.active ? 'Yes' : 'No'}</td>
                       <td data-label="">
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
@@ -539,7 +607,7 @@ export default function RecurringPage() {
                             </button>
                           )}
                           {r.active && !due && (
-                            <button className="primary btn-sm" onClick={() => setPendingEarlyItem(r)}>
+                            <button className="primary btn-sm" onClick={() => openEarlyPay(r)}>
                               Pay Now
                             </button>
                           )}

@@ -73,9 +73,57 @@ export class RecurringPage extends BasePage {
     return this.row(name).locator('td').nth(3);
   }
 
+  /**
+   * The Amount cell of a row (shows `₱X` / `~₱X` / `Varies`). Located by its
+   * `data-label` rather than by column index.
+   * @param name - the recurring expense's name
+   */
+  amountCell(name: string): Locator {
+    return this.row(name).locator('td[data-label="Amount"]');
+  }
+
   /** The Name `<input>` in the Add/Edit form. */
   nameInput(): Locator {
     return this.dialog().locator('label').filter({ hasText: 'Name' }).locator('input');
+  }
+
+  /**
+   * The Amount `<input>` in the Add/Edit form. Scoped to the label that owns the
+   * number field so the "Variable amount" checkbox label never collides.
+   */
+  amountInput(): Locator {
+    return this.dialog().locator('label').filter({ hasText: 'Amount' }).locator('input[type="number"]');
+  }
+
+  /** The inline validation error below the Amount field in the Add/Edit form. */
+  amountError(): Locator {
+    return this.dialog().locator('label').filter({ hasText: 'Amount' }).locator('.field-error');
+  }
+
+  /**
+   * The "Variable amount" checkbox in the Add/Edit form. Scoped to its own label
+   * so it is not confused with the Amount number field.
+   */
+  variableCheckbox(): Locator {
+    return this.dialog().locator('label').filter({ hasText: 'Variable amount' }).locator('input[type="checkbox"]');
+  }
+
+  /** The fixed-mode Amount field label (`.muted` reads exactly "Amount"). */
+  fixedAmountLabel(): Locator {
+    return this.dialog().getByText('Amount', { exact: true });
+  }
+
+  /** The variable-mode Amount field label ("Estimated amount (optional)"). */
+  estimatedAmountLabel(): Locator {
+    return this.dialog().getByText('Estimated amount (optional)');
+  }
+
+  /**
+   * Set the "Variable amount" checkbox to the desired state.
+   * @param on - true to enable variable mode, false to disable
+   */
+  async setVariable(on: boolean): Promise<void> {
+    await this.variableCheckbox().setChecked(on);
   }
 
   /** Open the Add Recurring modal and wait for it to appear. */
@@ -198,6 +246,16 @@ export class RecurringPage extends BasePage {
     return this.confirmModal().getByRole('button', { name: /No/ });
   }
 
+  /** The "Amount paid" number input inside the Confirm Payment modal. */
+  confirmAmountInput(): Locator {
+    return this.confirmModal().locator('label').filter({ hasText: 'Amount paid' }).locator('input[type="number"]');
+  }
+
+  /** The inline error below the "Amount paid" field in the Confirm Payment modal. */
+  confirmAmountError(): Locator {
+    return this.confirmModal().locator('label').filter({ hasText: 'Amount paid' }).locator('.field-error');
+  }
+
   /**
    * The "Pay Now" button on a not-yet-due row.
    * @param name - the recurring expense's name
@@ -219,6 +277,16 @@ export class RecurringPage extends BasePage {
   /** The early-pay modal's "Cancel" button. */
   earlyPayCancelButton(): Locator {
     return this.earlyPayModal().getByRole('button', { name: 'Cancel' });
+  }
+
+  /** The "Amount paid" number input inside the Record Early Payment modal. */
+  earlyPayAmountInput(): Locator {
+    return this.earlyPayModal().locator('label').filter({ hasText: 'Amount paid' }).locator('input[type="number"]');
+  }
+
+  /** The inline error below the "Amount paid" field in the Record Early Payment modal. */
+  earlyPayAmountError(): Locator {
+    return this.earlyPayModal().locator('label').filter({ hasText: 'Amount paid' }).locator('.field-error');
   }
 
   /** The "will not be added" reminder modal. */

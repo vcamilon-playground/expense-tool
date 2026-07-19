@@ -1,5 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { advanceDate } from './recurring';
+import { advanceDate, recurringAmountLabel } from './recurring';
+import { formatMoney } from './reports';
+
+describe('recurringAmountLabel', () => {
+  it('formats a fixed amount as money', () => {
+    expect(recurringAmountLabel({ amount: 1200, is_variable: false })).toBe(formatMoney(1200));
+  });
+
+  it('prefixes a variable estimate with ~', () => {
+    expect(recurringAmountLabel({ amount: 500, is_variable: true })).toBe(`~${formatMoney(500)}`);
+  });
+
+  it('shows "Varies" for a variable with no estimate (0)', () => {
+    expect(recurringAmountLabel({ amount: 0, is_variable: true })).toBe('Varies');
+  });
+
+  it('shows the fixed amount even when it is 0', () => {
+    expect(recurringAmountLabel({ amount: 0, is_variable: false })).toBe(formatMoney(0));
+  });
+});
 
 describe('advanceDate — weekly', () => {
   it('advances by 7 days', () => {

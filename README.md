@@ -174,7 +174,10 @@ after each Vercel deploy.
   the next charge date. Due items show a "Confirm Payment" flow (record or
   skip). Future-dated items have a "Pay Now" button to record the payment
   ahead of schedule and advance the next charge date. Both flows can
-  optionally deduct from an income source.
+  optionally deduct from an income source. Mark a subscription **variable
+  amount** when the charge differs each cycle — the amount becomes an optional
+  estimate, and you enter the actual amount paid at payment time (used for both
+  the recorded expense and any income deduction).
 - **Income** — track balances across bank accounts, e-wallets, and cash on
   hand. Each bank/e-wallet shows its brand logo (fetched from a free favicon
   service, with a colored initial badge fallback for offline or unknown names).

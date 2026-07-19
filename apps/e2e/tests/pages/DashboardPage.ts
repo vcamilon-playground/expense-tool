@@ -183,6 +183,23 @@ export class DashboardPage extends BasePage {
   }
 
   /**
+   * An Upcoming Charges row matched by recurring-expense name.
+   * @param name - the recurring expense's name
+   */
+  upcomingRow(name: string): Locator {
+    return this.upcomingTable().locator('tbody tr').filter({ hasText: name });
+  }
+
+  /**
+   * The Amount cell (2nd column) of an Upcoming Charges row — shows
+   * `₱X` / `~₱X` / `Varies` via `recurringAmountLabel`.
+   * @param name - the recurring expense's name
+   */
+  upcomingAmountCell(name: string): Locator {
+    return this.upcomingRow(name).locator('td').nth(1);
+  }
+
+  /**
    * A sortable header in the Upcoming Charges table, matched by name.
    * @param name - the column name
    */

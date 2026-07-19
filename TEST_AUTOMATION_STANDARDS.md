@@ -187,7 +187,7 @@ test.afterAll(async () => { await cleanup.expenses(); });
 | Data | Tag | Helper |
 |---|---|---|
 | Expenses | `merchant = 'E2E-TEST'` | `cleanup.expenses()` |
-| Recurring | `name = 'E2E Test Subscription'` | `cleanup.recurring()` |
+| Recurring | `name = 'E2E Test Subscription'` | `cleanup.recurring()` · seed variable rows via `seed.recurringVariable(...)` / `seed.recurringVariableFuture(...)` |
 | Income sources | `name` starts `E2E` | `cleanup.incomeSources()` · seed via `seed.incomeSource(name, balance)` |
 | Reminders | `title` starts `E2E` | `cleanup.reminders()` · seed via `seed.reminder(title, cadence, remind_date)` |
 

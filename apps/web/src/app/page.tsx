@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   budgetStatus,
   formatMoney,
+  recurringAmountLabel,
   summarize,
   type Budget,
   type BudgetStatus,
@@ -166,7 +167,7 @@ export default function DashboardPage() {
                 {upcoming.map((r) => (
                   <tr key={r.id}>
                     <td>{r.name}</td>
-                    <td style={{ textAlign: 'right' }}>{formatMoney(r.amount)}</td>
+                    <td style={{ textAlign: 'right' }}>{recurringAmountLabel(r)}</td>
                     <td>{r.next_charge_date}</td>
                     <td style={{ textTransform: 'capitalize' }}>{r.cadence}</td>
                   </tr>

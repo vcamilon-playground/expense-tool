@@ -86,6 +86,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/dashboard.spec.ts` | Smoke | Page heading, four KPI stat cards, Budget Status, Category Chart, 6-month Trend, Upcoming Charges sections |
 | `tests/expenses.spec.ts` | Smoke | Page load, Add Expense modal, required fields, inline validation errors, search/filter, delete modal, month group collapse, column sorting, List/Grid/Calendar view toggle + Grid cards + month navigation |
 | `tests/recurring.spec.ts` | Smoke | Page load, Add Recurring modal, required fields, inline validation errors, themed table header, payment confirmation flow, delete modal, column sorting |
+| `tests/recurring-variable.spec.ts` | Smoke | Variable-amount recurring: the "Variable amount" checkbox makes Amount an optional estimate; variable-aware Amount label (`~<estimate>` / `Varies`); both pay modals show a required, editable "Amount paid" field prefilled from the stored estimate; dashboard "Upcoming Charges" and the notifications due-body show the amount-varies wording |
 | `tests/reports.spec.ts` | Smoke | Page load, period select, preset/date-range mode toggle, compare period, column sorting |
 | `tests/report-export.spec.ts` | Smoke | Export Report card: per-format (CSV/Excel/PDF) downloads of the scoped report, failure banner, scope→filename, zero-expense range, in-progress disabled state, mobile 375px, reload / Back-Forward |
 | `tests/budgets.spec.ts` | Smoke | Page load, form labels, edit/cancel flow, inline validation errors, column sorting |
@@ -102,7 +103,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/expenses.regression.spec.ts` | Regression | Create/edit/delete expense; past-month lock with allow-past-edit off and on |
 | `tests/expenses-grid.regression.spec.ts` | Regression | Grid cards render category/amount/merchant/description; receipt pill and ≈PHP conversion; search narrows cards; edit/delete from a card; Load More pagination (20-per-page, accent-styled button); past-month lock with allow-past-edit off and on |
 | `tests/budgets.regression.spec.ts` | Regression | Seed a per-category budget, edit its limit; verify the computed read-only Overall footer row (sum of category limits, no actions) and the dashboard Overall + category rows |
-| `tests/recurring.regression.spec.ts` | Regression | Create/edit/delete recurring expense; confirm YES adds expense + advances date; confirm NO advances date without adding expense |
+| `tests/recurring.regression.spec.ts` | Regression | Create/edit/delete recurring expense; confirm YES adds expense + advances date; confirm NO advances date without adding expense; paying a variable-amount recurring records the expense (and deduction) at the amount entered in the pay modal, not the stored estimate |
 | `tests/settings.regression.spec.ts` | Regression | Add category with custom icon; add category without icon uses default; deleting category does not delete linked expenses |
 | `tests/income.regression.spec.ts` | Regression | Create/edit/delete a bank source; transfer moves balance between sources; transfer rejects an over-balance amount; add money tops up a source balance; add money rejects a non-positive amount; the `/income/history` page logs deduct/add/transfer/balance-edit rows (sign, colour, note, before→after) grouped by month, source deletion retains rows (snapshot label persists), "Show archived" reveals archived rows, privacy eye masks history amounts, and name-only / same-value edits log nothing |
 | `tests/maya-savings.regression.spec.ts` | Regression | DB-seeded summaries; toggling a week updates the cards/progress and writes the `maya_savings` row (read back, sorted/deduped); "This Friday" mark/undo persists; first-visit seeding creates exactly one row (weeks before today); empty-array honored; save-failure shows the `.field-error` banner + resyncs UI to DB; load-failure shows the banner-only view |
@@ -348,6 +349,16 @@ cd apps/e2e && npx playwright show-report
 
 ---
 
+### `recurring-variable.spec.ts` — Variable-amount recurring
+
+**Variable-amount recurring**
+- the Add/Edit form "Variable amount" checkbox switches Amount to an optional "Estimated amount (optional)" field (fixed amount stays required and `> 0`)
+- the recurring table Amount cell shows the variable-aware label (`~<estimate>` with an estimate, `Varies` without)
+- the Confirm Payment (due) and Pay Now / Record Early Payment (not-due) modals both expose a required, editable "Amount paid" input, prefilled with the stored estimate when `> 0`
+- the dashboard "Upcoming Charges" cell and the `/notifications` due-body use the amount-varies wording for variable items
+
+---
+
 ### `reports.spec.ts` — Reports
 
 **Reports page**
@@ -491,6 +502,9 @@ cd apps/e2e && npx playwright show-report
 
 **Recurring Expenses — pay now**
 - recording early payment creates expense and advances charge date
+
+**Recurring Expenses — variable-amount pay**
+- paying a variable-amount recurring records the expense (and any income deduction) at the amount entered in the pay modal, not the stored estimate
 
 ---
 

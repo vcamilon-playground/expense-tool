@@ -313,6 +313,38 @@ export const seed = {
       category_id: null,
     });
   },
+  // A variable-amount recurring expense due today. `estimate` is the stored
+  // `amount`: 0 → renders "Varies", > 0 → renders "~<money>".
+  recurringVariable: (estimate = 0) => {
+    const uid = loadE2EUserId();
+    return post('recurring_expenses', {
+      user_id: uid,
+      name: E2E_RECURRING_NAME,
+      amount: estimate,
+      cadence: 'monthly',
+      next_charge_date: new Date().toISOString().slice(0, 10),
+      active: true,
+      category_id: null,
+      is_variable: true,
+    });
+  },
+  // A variable-amount recurring expense due `days` from now (not yet due) with
+  // no estimate — used for dashboard "Upcoming Charges" / Pay Now coverage.
+  recurringVariableFuture: (days = 14, estimate = 0) => {
+    const uid = loadE2EUserId();
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return post('recurring_expenses', {
+      user_id: uid,
+      name: E2E_RECURRING_NAME,
+      amount: estimate,
+      cadence: 'monthly',
+      next_charge_date: d.toISOString().slice(0, 10),
+      active: true,
+      category_id: null,
+      is_variable: true,
+    });
+  },
   // Creates a dedicated E2E category and a per-category budget against it.
   // Returns the category id, category name, and budget id so the regression
   // spec can locate the row in the table.

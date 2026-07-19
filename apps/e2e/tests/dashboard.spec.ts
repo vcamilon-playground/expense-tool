@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { DashboardPage } from './pages/DashboardPage';
+import { E2E_RECURRING_NAME, cleanup, seed } from './helpers/supabase';
 
 test.describe('Dashboard', () => {
   let dashboard!: DashboardPage;
@@ -74,6 +75,29 @@ test.describe('Dashboard', () => {
     } else {
       await expect(dashboard.banner()).not.toBeVisible();
     }
+  });
+});
+
+test.describe('Dashboard — Upcoming Charges variable amount', () => {
+  let dashboard!: DashboardPage;
+
+  test.beforeAll(async () => {
+    await cleanup.recurring();
+    await seed.recurringVariableFuture(10, 0); // variable, no estimate, due within 30 days
+  });
+
+  test.afterAll(async () => {
+    await cleanup.recurring();
+  });
+
+  test.beforeEach(async ({ page }) => {
+    dashboard = new DashboardPage(page);
+    await dashboard.goto();
+  });
+
+  test('a variable-no-estimate charge shows "Varies" in the amount cell', async () => {
+    await expect(dashboard.upcomingRow(E2E_RECURRING_NAME)).toBeVisible();
+    await expect(dashboard.upcomingAmountCell(E2E_RECURRING_NAME)).toHaveText('Varies');
   });
 });
 

@@ -36,6 +36,7 @@ const empty: RecurringInput = {
   cadence: 'monthly',
   next_charge_date: today(),
   active: true,
+  is_variable: false,
 };
 
 export default function RecurringScreen() {
@@ -66,6 +67,7 @@ export default function RecurringScreen() {
       cadence: r.cadence,
       next_charge_date: r.next_charge_date,
       active: r.active,
+      is_variable: r.is_variable,
     });
     setAmountText(String(r.amount));
   }
