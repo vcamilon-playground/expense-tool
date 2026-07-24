@@ -172,6 +172,64 @@ export class DashboardPage extends BasePage {
     return this.page.getByRole('heading', { level: 2, name: 'Upcoming Charges' });
   }
 
+  // ── Weekly Income Trend card ──
+
+  /** The Weekly Income Trend card container. */
+  incomeTrendCard(): Locator {
+    return this.page.locator('.card').filter({ hasText: 'Weekly Income Trend' });
+  }
+
+  /** The `<h2>` "Weekly Income Trend — Past 6 Weeks" card heading. */
+  incomeTrendSection(): Locator {
+    return this.page.getByRole('heading', { level: 2, name: 'Weekly Income Trend — Past 6 Weeks' });
+  }
+
+  /** The empty-state message shown when no completed-week snapshots exist. */
+  incomeTrendEmptyState(): Locator {
+    return this.incomeTrendCard().getByText(
+      'Your weekly income total will chart here as weeks complete.',
+    );
+  }
+
+  /** The Recharts SVG surface inside the Weekly Income Trend card. */
+  incomeTrendChart(): Locator {
+    return this.incomeTrendCard().locator('.recharts-surface');
+  }
+
+  /** Every rendered line dot (one per charted completed week). */
+  incomeTrendDots(): Locator {
+    return this.incomeTrendCard().locator('.recharts-line-dot');
+  }
+
+  /** The x-axis tick value texts, left-to-right (oldest → newest). */
+  incomeTrendXAxisTicks(): Locator {
+    return this.incomeTrendCard().locator('.recharts-xAxis .recharts-cartesian-axis-tick-value');
+  }
+
+  /**
+   * Hover the chart surface to raise the tooltip for the nearest point. Hovering
+   * the surface centre (rather than a positional dot) avoids index-based locators
+   * while reliably triggering Recharts' tooltip.
+   */
+  async hoverIncomeTrendChart(): Promise<void> {
+    await this.incomeTrendChart().hover();
+  }
+
+  /** The Recharts tooltip content box for the income trend card. */
+  incomeTrendTooltip(): Locator {
+    return this.incomeTrendCard().locator('.recharts-default-tooltip');
+  }
+
+  /** The tooltip item name (should read "Total income"). */
+  incomeTrendTooltipName(): Locator {
+    return this.incomeTrendCard().locator('.recharts-tooltip-item-name');
+  }
+
+  /** The tooltip item value (the formatted peso total). */
+  incomeTrendTooltipValue(): Locator {
+    return this.incomeTrendCard().locator('.recharts-tooltip-item-value');
+  }
+
   /** The dashboard error banner. */
   banner(): Locator {
     return this.page.locator('.banner.banner-danger');

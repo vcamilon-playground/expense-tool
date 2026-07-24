@@ -107,6 +107,14 @@ export type IncomeTransaction = {
   created_at: string;
 };
 
+/** A weekly snapshot of the grand total of all income source balances (dashboard trend). */
+export type IncomeSnapshot = {
+  id: string;
+  week_ending: string; // ISO date — the Sunday that ends the week
+  total: number;
+  created_at?: string;
+};
+
 export type ReminderCadence = 'once' | 'weekly' | 'monthly' | 'yearly';
 
 export type Reminder = {

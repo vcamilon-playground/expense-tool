@@ -93,6 +93,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/settings.spec.ts` | Smoke | Session expiry, profile section, global save/cancel, navigation guard, change password, theme colours, categories, past-edit toggle, profile menu |
 | `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + global eye toggle + per-card eye reveal, Add Source modal fields, cash hides name field, inline validation; the "Transaction History" button navigates to the standalone `/income/history` page (heading, back link, "Show archived" toggle, month-grouped 5-column tables / empty state) |
 | `tests/maya-savings.spec.ts` | Smoke | `/income/maya` page load (reached via the "💜 Maya Savings" Income-header link), four summary cards (Total Saved / Weeks Completed N/51 / Year-End Goal / Remaining), progress bar, "This Friday" current-week card with mark/undo toggle, weekly schedule table (Week/Friday/Transfer/Running Total/Done) driven from a DB-seeded state (empty / full-51), logged-out redirect to /login |
+| `tests/income-trend.spec.ts` | Smoke | Dashboard "Weekly Income Trend — Past 6 Weeks" card: empty state until weeks accrue; with DB-seeded `income_snapshots` the chart plots the grand total of income balances over the last 6 completed weeks (Sunday cutoffs); a dashboard visit best-effort upserts the current week's snapshot |
 | `tests/notifications.spec.ts` | Smoke | Page load, Add Reminder form (title/repeat/date), repeat cadence options, empty-title validation, form open/close toggle |
 | `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, personalized today date line (`Today is yyyy/mm/dd, DDD`), theme pill toggles data-theme, notification bell links to /notifications; date line absent on /login |
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
@@ -242,6 +243,15 @@ cd apps/e2e && npx playwright show-report
 - the weekly schedule table renders Week / Friday / Transfer / Running Total / Done columns and exactly 51 rows (week 1 ₱100, week 51 ₱5,100 / ₱132,600 goal)
 - a DB-seeded empty state shows ₱0 / 0 of 51 / 0%; a full 51-week state shows the goal at 100%
 - deep-linking `/income/maya` while logged out redirects to `/login`
+
+---
+
+### `income-trend.spec.ts` — Weekly Income Trend
+
+**Weekly Income Trend (dashboard)**
+- with no snapshots the card shows its empty state
+- with DB-seeded `income_snapshots` the "Weekly Income Trend — Past 6 Weeks" card charts the grand total of income balances across the last 6 completed weeks (Sunday cutoffs)
+- visiting the dashboard best-effort upserts the current week's snapshot (the in-progress week is captured but not charted)
 
 ---
 

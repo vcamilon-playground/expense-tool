@@ -188,7 +188,8 @@ test.afterAll(async () => { await cleanup.expenses(); });
 |---|---|---|
 | Expenses | `merchant = 'E2E-TEST'` | `cleanup.expenses()` |
 | Recurring | `name = 'E2E Test Subscription'` | `cleanup.recurring()` · seed variable rows via `seed.recurringVariable(...)` / `seed.recurringVariableFuture(...)` |
-| Income sources | `name` starts `E2E` | `cleanup.incomeSources()` · seed via `seed.incomeSource(name, balance)` |
+| Income sources | `name` starts `E2E` | `cleanup.incomeSources()` · seed via `seed.incomeSource(name, balance)` / `seed.ewalletSource(...)` |
+| Income snapshots | scoped to the E2E `user_id` | `cleanup.incomeSnapshots()` · seed via `seed.incomeSnapshot(week_ending, total)` (read back via `incomeSnapshots.forWeek(...)`; `income.grandTotal()` computes the live total) |
 | Reminders | `title` starts `E2E` | `cleanup.reminders()` · seed via `seed.reminder(title, cadence, remind_date)` |
 
 - **Never delete rows by ID** — use the tag-based cleanup helpers.

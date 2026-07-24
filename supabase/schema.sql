@@ -194,6 +194,34 @@ create table if not exists maya_savings (
 );
 create index if not exists maya_savings_user_id_idx on maya_savings (user_id);
 
+-- ---------- income snapshots (weekly grand-total trend) ----------
+-- One row per user per week, keyed by the Sunday that ends the week. Captures the
+-- grand total of all income source balances so the dashboard can chart the weekly
+-- trend (the app stores only current balances, so this is snapshotted going forward
+-- on dashboard load — see lib/income-trend.ts). No money movement.
+create table if not exists income_snapshots (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  week_ending date not null,
+  total numeric(12,2) not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, week_ending)
+);
+create index if not exists income_snapshots_user_idx on income_snapshots (user_id, week_ending);
+-- Migration for existing databases (run once in the Supabase SQL editor) — a NEW table
+-- needs its own grant (the blanket grant below only covered tables that existed then):
+--   create table if not exists income_snapshots (
+--     id uuid primary key default gen_random_uuid(),
+--     user_id uuid not null references users(id) on delete cascade,
+--     week_ending date not null,
+--     total numeric(12,2) not null,
+--     created_at timestamptz not null default now(),
+--     unique (user_id, week_ending)
+--   );
+--   create index if not exists income_snapshots_user_idx on income_snapshots (user_id, week_ending);
+--   alter table income_snapshots disable row level security;
+--   grant select, insert, update, delete on income_snapshots to anon;
+
 -- ---------- RLS: disabled, anon key has full read/write ----------
 -- The anon key gets full read/write. Do NOT expose this DB beyond your own use.
 alter table users disable row level security;
@@ -205,6 +233,7 @@ alter table income_sources disable row level security;
 alter table income_transactions disable row level security;
 alter table reminders disable row level security;
 alter table maya_savings disable row level security;
+alter table income_snapshots disable row level security;
 
 -- ---------- Privileges for anon role ----------
 grant usage on schema public to anon;

@@ -5,6 +5,7 @@ import type {
   CategoryInput,
   Expense,
   ExpenseInput,
+  IncomeSnapshot,
   IncomeSource,
   IncomeSourceInput,
   IncomeTransaction,
@@ -406,6 +407,32 @@ export async function listIncomeTransactions(
   const { data, error } = await query;
   if (error) throw error;
   return data ?? [];
+}
+
+// ---------- Income snapshots (weekly grand-total trend) ----------
+
+export async function listIncomeSnapshots(userId: string): Promise<IncomeSnapshot[]> {
+  const { data, error } = await supabase
+    .from('income_snapshots')
+    .select('*')
+    .eq('user_id', userId)
+    .order('week_ending', { ascending: false })
+    .limit(10);
+  if (error) throw error;
+  return data ?? [];
+}
+
+// Record (or refresh) this week's grand-total snapshot. Best-effort — a failure
+// must never break the dashboard, so errors are swallowed to the console.
+export async function upsertIncomeSnapshot(
+  userId: string,
+  weekEnding: string,
+  total: number,
+): Promise<void> {
+  const { error } = await supabase
+    .from('income_snapshots')
+    .upsert({ user_id: userId, week_ending: weekEnding, total }, { onConflict: 'user_id,week_ending' });
+  if (error) console.error('Failed to upsert income snapshot', error);
 }
 
 // ---------- Reminders ----------

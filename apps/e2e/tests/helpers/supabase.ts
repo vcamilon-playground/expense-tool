@@ -184,6 +184,17 @@ export const cleanup = {
       : 'source_label=like.E2E*';
     return del('income_transactions', filter);
   },
+  // Weekly grand-total income snapshots have no name/tag column, so every row
+  // belongs to the test user and is removed by user_id. Loading the dashboard
+  // upserts the current-week row, so snapshot tests clean before AND after.
+  incomeSnapshots: () => {
+    const uid = loadE2EUserId();
+    if (!uid) {
+      console.warn('[cleanup] skipped income_snapshots — no E2E user id');
+      return Promise.resolve();
+    }
+    return del('income_snapshots', `user_id=eq.${uid}`);
+  },
 };
 
 export const seed = {
@@ -374,6 +385,28 @@ export const seed = {
       balance,
     });
   },
+  // An e-wallet source (distinct type) so the dashboard grand total spans more
+  // than one income type. E2E-tagged name for cleanup.
+  ewalletSource: (name: string, balance: number) => {
+    const uid = loadE2EUserId();
+    return postReturn<{ id: string; balance: number }>('income_sources', {
+      user_id: uid,
+      type: 'ewallet',
+      brand: 'GCash',
+      name,
+      balance,
+    });
+  },
+  // A weekly grand-total income snapshot. `weekEnding` is the Sunday that ends
+  // the week (ISO date); `total` is the grand total charted for that point.
+  incomeSnapshot: (weekEnding: string, total: number) => {
+    const uid = loadE2EUserId();
+    return post('income_snapshots', {
+      user_id: uid,
+      week_ending: weekEnding,
+      total,
+    });
+  },
   // Seeds an income history row dated > 3 months ago so it is treated as
   // archived (hidden by default, revealed by "Show archived"). The note is used
   // by the spec to locate the row. source_label is E2E-tagged for cleanup.
@@ -465,6 +498,33 @@ export const maya = {
     const uid = loadE2EUserId();
     const filter = uid ? `user_id=eq.${uid}` : 'user_id=is.null';
     return del('maya_savings', filter);
+  },
+};
+
+// Weekly grand-total income snapshots (the dashboard "Weekly Income Trend" card).
+export const incomeSnapshots = {
+  // All snapshot rows for a given week-ending Sunday (to assert the current-week
+  // capture and that no duplicate is created).
+  forWeek: async (weekEnding: string): Promise<{ total: number }[]> => {
+    const uid = loadE2EUserId();
+    if (!uid) return [];
+    const rows = await get<{ total: number }>(
+      'income_snapshots',
+      `user_id=eq.${uid}&week_ending=eq.${weekEnding}&select=total`,
+    );
+    // PostgREST may serialise numeric as a string — coerce for numeric asserts.
+    return rows.map((r) => ({ total: Number(r.total) }));
+  },
+};
+
+export const income = {
+  // Grand total of ALL income source balances for the E2E user (bank + ewallet +
+  // cash) — the value the dashboard captures into the current-week snapshot.
+  grandTotal: async (): Promise<number> => {
+    const uid = loadE2EUserId();
+    if (!uid) return 0;
+    const rows = await get<{ balance: number }>('income_sources', `user_id=eq.${uid}&select=balance`);
+    return rows.reduce((sum, r) => sum + Number(r.balance), 0);
   },
 };
 

@@ -10,10 +10,20 @@ import {
   type BudgetStatus,
   type Category,
   type Expense,
+  type IncomeSnapshot,
   type PeriodSummary,
   type RecurringExpense,
 } from '@expense/shared';
-import { listBudgets, listCategories, listExpenses, listRecurring } from '@/lib/db';
+import {
+  listBudgets,
+  listCategories,
+  listExpenses,
+  listIncomeSnapshots,
+  listIncomeSources,
+  listRecurring,
+  upsertIncomeSnapshot,
+} from '@/lib/db';
+import { currentWeekSunday, incomeWeeklyTrend } from '@/lib/income-trend';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingScreen from '@/components/LoadingScreen';
 import { useDataRefresh } from '@/contexts/DataRefreshContext';
@@ -28,6 +38,7 @@ import MonthEndBanner from '@/components/MonthEndBanner';
 import QuickActions from '@/components/QuickActions';
 import MonthProjectionChart from '@/components/MonthProjectionChart';
 import SpendOutlookChart from '@/components/SpendOutlookChart';
+import IncomeTrendChart from '@/components/IncomeTrendChart';
 import { dailyTrend, weeklyTrend } from '@/lib/trends';
 
 export default function DashboardPage() {
@@ -37,6 +48,7 @@ export default function DashboardPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [recurring, setRecurring] = useState<RecurringExpense[]>([]);
+  const [incomeSnapshots, setIncomeSnapshots] = useState<IncomeSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -44,16 +56,22 @@ export default function DashboardPage() {
     if (!user) return;
     (async () => {
       try {
-        const [cats, exps, buds, recs] = await Promise.all([
+        const [cats, exps, buds, recs, incomeSources, snaps] = await Promise.all([
           listCategories(user.id),
           listExpenses(user.id),
           listBudgets(user.id),
           listRecurring(user.id),
+          listIncomeSources(user.id),
+          listIncomeSnapshots(user.id),
         ]);
         setCategories(cats);
         setExpenses(exps);
         setBudgets(buds);
         setRecurring(recs);
+        setIncomeSnapshots(snaps);
+        // Best-effort: record this week's grand-total income snapshot (going forward).
+        const grandTotal = incomeSources.reduce((sum, s) => sum + s.balance, 0);
+        void upsertIncomeSnapshot(user.id, currentWeekSunday(new Date()), grandTotal);
       } catch (e) {
         setLoadError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
@@ -95,6 +113,8 @@ export default function DashboardPage() {
     total: c.total,
   }));
 
+  const incomeTrend = incomeWeeklyTrend(incomeSnapshots, 6, new Date());
+
   return (
     <div>
       <MonthEndBanner />
@@ -121,6 +141,16 @@ export default function DashboardPage() {
           <h2 style={{ marginTop: 0 }}>Weekly Spend — Past 5 Weeks</h2>
           <LineTrendChart data={weeklyTrend(expenses, 5)} />
         </div>
+      </div>
+
+      {/* Weekly grand-total income trend */}
+      <div className="card chart-card">
+        <h2 style={{ marginTop: 0 }}>Weekly Income Trend — Past 6 Weeks</h2>
+        {incomeTrend.length === 0 ? (
+          <p className="muted">Your weekly income total will chart here as weeks complete.</p>
+        ) : (
+          <IncomeTrendChart data={incomeTrend} />
+        )}
       </div>
 
       {/* Charts — side by side on desktop, stacked on mobile */}
