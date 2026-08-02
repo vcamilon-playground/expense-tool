@@ -201,6 +201,13 @@ after each Vercel deploy.
   Friday" card, and the full schedule; which weeks are transferred is a manual
   checklist persisted per-user in the database, so it **syncs across all your
   devices** (no money movement — it is a tracker only).
+- **Portfolio** — investments and debts side by side. Each investment records
+  what you put in and what it is worth now, so gain/loss shows in pesos and
+  percent; each debt records the original amount, remaining balance, monthly
+  payment, optional interest rate and due day, with a progress bar for how much
+  is paid off. The headline **Net Worth** combines your income balances with
+  investment value, minus outstanding debt. Values are updated by you — the page
+  moves no money and creates no expenses.
 - **Notifications** — a bell in the header lists recurring payments due within
   a week, a monthly income-update prompt (15th onward), and your own
   reminders. **Reminders** can be one-time (removed when marked Done) or

@@ -194,6 +194,48 @@ create table if not exists maya_savings (
 );
 create index if not exists maya_savings_user_id_idx on maya_savings (user_id);
 
+-- ---------- investments (portfolio: what you own) ----------
+-- Track-only: no money movement, no link to income_sources. `principal` is the
+-- total put in (cost basis) and `current_value` is what it is worth now — the
+-- user updates the latter manually (no market-data API on the free tier).
+-- Gain/loss is computed in app code (lib/portfolio.ts), never stored.
+create table if not exists investments (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  name text not null,
+  type text not null default 'fund'
+    check (type in ('fund', 'stocks', 'crypto', 'savings', 'retirement', 'other')),
+  platform text,
+  principal numeric(14,2) not null default 0 check (principal >= 0),
+  current_value numeric(14,2) not null default 0 check (current_value >= 0),
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists investments_user_id_idx on investments (user_id);
+
+-- ---------- debts (portfolio: what you owe) ----------
+-- Track-only, same as investments. `principal` is the original amount borrowed
+-- and `balance` is what is still outstanding; payoff progress is derived from
+-- the two. `due_day` is the day-of-month a payment falls due (1-31, optional).
+create table if not exists debts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  name text not null,
+  kind text not null default 'loan'
+    check (kind in ('credit_card', 'loan', 'personal', 'installment', 'other')),
+  lender text,
+  principal numeric(14,2) not null default 0 check (principal >= 0),
+  balance numeric(14,2) not null default 0 check (balance >= 0),
+  monthly_payment numeric(14,2) not null default 0 check (monthly_payment >= 0),
+  interest_rate numeric(6,3) check (interest_rate >= 0),
+  due_day integer check (due_day between 1 and 31),
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists debts_user_id_idx on debts (user_id);
+
 -- ---------- income snapshots (weekly grand-total trend) ----------
 -- One row per user per week, keyed by the Sunday that ends the week. Captures the
 -- grand total of all income source balances so the dashboard can chart the weekly
@@ -234,6 +276,8 @@ alter table income_transactions disable row level security;
 alter table reminders disable row level security;
 alter table maya_savings disable row level security;
 alter table income_snapshots disable row level security;
+alter table investments disable row level security;
+alter table debts disable row level security;
 
 -- ---------- Privileges for anon role ----------
 grant usage on schema public to anon;

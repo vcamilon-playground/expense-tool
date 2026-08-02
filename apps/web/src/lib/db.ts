@@ -8,8 +8,12 @@ import type {
   IncomeSnapshot,
   IncomeSource,
   IncomeSourceInput,
+  Debt,
+  DebtInput,
   IncomeTransaction,
   IncomeTransactionKind,
+  Investment,
+  InvestmentInput,
   MayaSavings,
   RecurringExpense,
   RecurringInput,
@@ -517,5 +521,89 @@ export async function setMayaSavingsWeeks(userId: string, doneWeeks: number[]): 
     .from('maya_savings')
     .update({ done_weeks: doneWeeks, updated_at: new Date().toISOString() })
     .eq('user_id', userId);
+  if (error) throw error;
+}
+
+// ---------- Portfolio: investments ----------
+
+export async function listInvestments(userId: string): Promise<Investment[]> {
+  const { data, error } = await supabase
+    .from('investments')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('active', true)
+    .order('created_at');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createInvestment(
+  input: InvestmentInput,
+  userId: string,
+): Promise<Investment> {
+  const { data, error } = await supabase
+    .from('investments')
+    .insert({ ...input, user_id: userId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateInvestment(
+  id: string,
+  patch: Partial<InvestmentInput>,
+): Promise<Investment> {
+  const { data, error } = await supabase
+    .from('investments')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteInvestment(id: string): Promise<void> {
+  const { error } = await supabase.from('investments').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- Portfolio: debts ----------
+
+export async function listDebts(userId: string): Promise<Debt[]> {
+  const { data, error } = await supabase
+    .from('debts')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('active', true)
+    .order('created_at');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createDebt(input: DebtInput, userId: string): Promise<Debt> {
+  const { data, error } = await supabase
+    .from('debts')
+    .insert({ ...input, user_id: userId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateDebt(id: string, patch: Partial<DebtInput>): Promise<Debt> {
+  const { data, error } = await supabase
+    .from('debts')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteDebt(id: string): Promise<void> {
+  const { error } = await supabase.from('debts').delete().eq('id', id);
   if (error) throw error;
 }

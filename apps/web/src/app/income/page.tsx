@@ -418,6 +418,9 @@ export default function IncomePage() {
               ⇄ Transfer
             </button>
           )}
+          <Link href="/portfolio" className="ghost" style={{ width: 'auto', display: 'inline-flex', alignItems: 'center' }}>
+            📊 Portfolio
+          </Link>
           <Link href="/income/maya" className="ghost" style={{ width: 'auto', display: 'inline-flex', alignItems: 'center' }}>
             💜 Maya Savings
           </Link>

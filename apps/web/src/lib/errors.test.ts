@@ -16,6 +16,15 @@ describe('errorMessage', () => {
     expect(msg).toContain('schema.sql');
   });
 
+  it('maps a missing PostgREST schema-cache table (PGRST205) to the same migration hint', () => {
+    const msg = errorMessage({
+      message: "Could not find the table 'public.investments' in the schema cache",
+      code: 'PGRST205',
+    });
+    expect(msg).toContain('not set up in the database');
+    expect(msg).toContain('schema.sql');
+  });
+
   it('maps insufficient_privilege (42501) to an RLS hint', () => {
     const msg = errorMessage({ message: 'permission denied', code: '42501' });
     expect(msg).toContain('permission denied');

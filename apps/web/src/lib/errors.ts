@@ -19,8 +19,9 @@ export function errorMessage(err: unknown, fallback = 'Something went wrong'): s
   if (err && typeof err === 'object') {
     const e = err as SupabaseLikeError;
 
-    // 42P01 = undefined_table — the migration for this table has not been run yet.
-    if (e.code === '42P01') {
+    // 42P01 = undefined_table (direct Postgres); PGRST205 = PostgREST cannot find
+    // the table in its schema cache. Both mean the migration has not been run.
+    if (e.code === '42P01' || e.code === 'PGRST205') {
       return 'This table is not set up in the database yet. Run the latest migration from supabase/schema.sql in the Supabase SQL editor.';
     }
     // 42501 = insufficient_privilege — RLS is on or grants were not applied.

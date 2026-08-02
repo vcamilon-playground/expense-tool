@@ -129,6 +129,46 @@ export type Reminder = {
 
 export type ReminderInput = Omit<Reminder, 'id' | 'user_id' | 'created_at'>;
 
+// ── Portfolio: investments (what you own) and debts (what you owe) ──
+// Both are track-only — no money movement, no link to income sources.
+
+export type InvestmentType = 'fund' | 'stocks' | 'crypto' | 'savings' | 'retirement' | 'other';
+
+export type Investment = {
+  id: string;
+  user_id: string;
+  name: string;
+  type: InvestmentType;
+  platform: string | null;
+  principal: number; // total put in (cost basis)
+  current_value: number; // worth today; updated manually
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type InvestmentInput = Omit<Investment, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
+
+export type DebtKind = 'credit_card' | 'loan' | 'personal' | 'installment' | 'other';
+
+export type Debt = {
+  id: string;
+  user_id: string;
+  name: string;
+  kind: DebtKind;
+  lender: string | null;
+  principal: number; // original amount borrowed
+  balance: number; // still outstanding
+  monthly_payment: number;
+  interest_rate: number | null; // annual %, optional
+  due_day: number | null; // day of month (1-31), optional
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type DebtInput = Omit<Debt, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
+
 // Weekly Maya savings tracker: one row per user. done_weeks holds the 1-based
 // week numbers already transferred. The schedule/amounts are computed in app
 // code (lib/maya-savings.ts), so only the completed-week set is persisted.
