@@ -400,7 +400,7 @@ export default function IncomePage() {
 
       <div className="row" style={{ justifyContent: 'space-between', marginBottom: 4 }}>
         <h1 style={{ margin: 0 }}>Income</h1>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <button
             className="ghost"
             style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}

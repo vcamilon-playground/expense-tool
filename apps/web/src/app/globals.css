@@ -1507,6 +1507,39 @@ button.footer-link:hover {
   .recurring-table td[data-label=""] { justify-content: flex-end; gap: 8px; margin-top: 6px; }
   .recurring-table td[data-label=""]::before { display: none; }
 
+  /* Portfolio investments table: labelled card view (6 columns is too wide to
+     squeeze, so each cell stacks with its column name). */
+  .portfolio-table thead { display: none; }
+  .portfolio-table tbody tr {
+    display: block;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .portfolio-table tbody tr:last-child { border-bottom: none; }
+  .portfolio-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: none;
+    padding: 3px 0;
+    font-size: 13px;
+    text-align: left !important;
+    word-break: break-word;
+  }
+  .portfolio-table tbody td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-right: 10px;
+    line-height: 1.7;
+    min-width: 90px;
+  }
+  .portfolio-table td[data-label=""] { justify-content: flex-end; gap: 8px; margin-top: 6px; }
+  .portfolio-table td[data-label=""]::before { display: none; }
+
   /* Calendar: hide amounts in cells on small screens — detail panel shows them */
   .cal-cell { min-height: 48px; padding: 4px; }
   .cal-day-num { font-size: 11px; }

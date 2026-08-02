@@ -577,7 +577,7 @@ export default function PortfolioPage() {
           </p>
         ) : (
           <div className="table-wrap">
-            <table className="income-table">
+            <table className="portfolio-table">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -594,22 +594,24 @@ export default function PortfolioPage() {
                   const color = gain.amount > 0 ? 'var(--ok)' : gain.amount < 0 ? 'var(--bad)' : 'var(--muted)';
                   return (
                     <tr key={investment.id}>
-                      <td style={{ fontWeight: 500 }}>
+                      <td data-label="Name" style={{ fontWeight: 500 }}>
                         {investment.name}
                         {investment.platform && (
                           <div className="muted" style={{ fontSize: 12 }}>{investment.platform}</div>
                         )}
                       </td>
-                      <td><span className="pill">{INVESTMENT_TYPE_LABELS[investment.type]}</span></td>
-                      <td style={{ textAlign: 'right' }}>{money(investment.principal, amountsVisible)}</td>
-                      <td style={{ textAlign: 'right', fontWeight: 600 }}>{money(investment.current_value, amountsVisible)}</td>
-                      <td style={{ textAlign: 'right', color, whiteSpace: 'nowrap' }}>
-                        {gain.amount >= 0 ? '+' : '−'}{money(Math.abs(gain.amount), amountsVisible)}
-                        {investment.principal > 0 && (
-                          <span style={{ fontSize: 11 }}> ({gain.percent.toFixed(1)}%)</span>
-                        )}
+                      <td data-label="Type"><span className="pill">{INVESTMENT_TYPE_LABELS[investment.type]}</span></td>
+                      <td data-label="Invested" style={{ textAlign: 'right' }}>{money(investment.principal, amountsVisible)}</td>
+                      <td data-label="Value" style={{ textAlign: 'right', fontWeight: 600 }}>{money(investment.current_value, amountsVisible)}</td>
+                      <td data-label="Gain / Loss" style={{ textAlign: 'right', color, whiteSpace: 'nowrap' }}>
+                        <span>
+                          {gain.amount >= 0 ? '+' : '−'}{money(Math.abs(gain.amount), amountsVisible)}
+                          {investment.principal > 0 && (
+                            <span style={{ fontSize: 11 }}> ({gain.percent.toFixed(1)}%)</span>
+                          )}
+                        </span>
                       </td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td data-label="" style={{ textAlign: 'right' }}>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                           <button className="btn-sm" onClick={() => openEditInvestment(investment)}>Edit</button>
                           <button className="danger btn-sm" onClick={() => setPendingDeleteInvestment(investment)}>Delete</button>
