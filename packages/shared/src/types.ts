@@ -162,6 +162,7 @@ export type Debt = {
   monthly_payment: number;
   interest_rate: number | null; // annual %, optional
   due_day: number | null; // day of month (1-31), optional
+  last_paid_month?: string | null; // 'YYYY-MM' this debt was last marked paid; pure status, never touches balance/net worth
   active: boolean;
   created_at?: string;
   updated_at?: string;

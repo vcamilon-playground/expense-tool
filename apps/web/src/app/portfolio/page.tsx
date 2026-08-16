@@ -25,11 +25,14 @@ import { errorMessage } from '@/lib/errors';
 import {
   DEBT_KIND_LABELS,
   INVESTMENT_TYPE_LABELS,
+  currentYearMonth,
+  debtInstallments,
   debtPaidAmount,
   debtPaidPercent,
   debtTotals,
   investmentGain,
   investmentTotals,
+  isDebtPaidThisMonth,
   netWorth,
   ordinalDay,
   sortDebtsByDueDay,
@@ -293,6 +296,17 @@ export default function PortfolioPage() {
   async function handleDeleteDebt(id: string) {
     if (!user) return;
     await deleteDebt(id);
+    await reload(user.id);
+  }
+
+  // Toggle this month's paid status. Pure status flag — it only sets/clears
+  // last_paid_month and never touches the balance or net worth (the payment itself
+  // is the user's separately-recorded expense).
+  async function toggleDebtPaid(debt: Debt) {
+    if (!user) return;
+    await updateDebt(debt.id, {
+      last_paid_month: isDebtPaidThisMonth(debt) ? null : currentYearMonth(),
+    });
     await reload(user.id);
   }
 
@@ -628,12 +642,15 @@ export default function PortfolioPage() {
 
       {/* Debts */}
       <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
           <h2 style={{ margin: 0 }}>Debts</h2>
           <span className="muted" style={{ fontSize: 14, fontWeight: 600 }}>
             {money(owed.balance, amountsVisible)} remaining
           </span>
         </div>
+        <p className="muted" style={{ margin: '0 0 12px', fontSize: 12 }}>
+          "Mark paid" is a monthly status only — it doesn't change your net worth (record the actual payment as an expense).
+        </p>
         {debts.length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>
             No debts tracked. Click "+ Add Debt" to track a loan, credit card, or installment.
@@ -643,8 +660,10 @@ export default function PortfolioPage() {
             {sortedDebts.map((debt) => {
               const percent = debtPaidPercent(debt);
               const barClass = percent >= 100 ? 'bar bar-ok' : percent >= 50 ? 'bar bar-warn' : 'bar bar-over';
+              const inst = debtInstallments(debt);
+              const paidThisMonth = isDebtPaidThisMonth(debt);
               return (
-                <div key={debt.id} style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 12 }}>
+                <div key={debt.id} data-testid="debt-row" style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
                     <div>
                       <span style={{ fontWeight: 500 }}>{debt.name}</span>
@@ -667,8 +686,21 @@ export default function PortfolioPage() {
                           {debt.due_day !== null && ` due on the ${ordinalDay(debt.due_day)}`}
                         </>
                       )}
+                      {inst && (
+                        <> · {inst.remaining} of {inst.total} month{inst.total === 1 ? '' : 's'} left</>
+                      )}
                     </span>
-                    <div style={{ display: 'flex', gap: 6 }}>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                      {debt.monthly_payment > 0 && (
+                        paidThisMonth ? (
+                          <>
+                            <span className="pill ok" style={{ fontSize: 11 }}>✓ Paid this month</span>
+                            <button className="btn-sm" onClick={() => toggleDebtPaid(debt)}>Undo</button>
+                          </>
+                        ) : (
+                          <button className="btn-sm" onClick={() => toggleDebtPaid(debt)}>Mark paid</button>
+                        )
+                      )}
                       <button className="btn-sm" onClick={() => openEditDebt(debt)}>Edit</button>
                       <button className="danger btn-sm" onClick={() => setPendingDeleteDebt(debt)}>Delete</button>
                     </div>

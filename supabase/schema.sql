@@ -230,11 +230,18 @@ create table if not exists debts (
   monthly_payment numeric(14,2) not null default 0 check (monthly_payment >= 0),
   interest_rate numeric(6,3) check (interest_rate >= 0),
   due_day integer check (due_day between 1 and 31),
+  -- The 'YYYY-MM' the user last marked this debt's monthly payment as paid. A pure
+  -- status flag: it never changes the balance or net worth (the money movement is the
+  -- separately-recorded expense). "Paid this month" = last_paid_month equals the
+  -- current month, so it auto-resets when the month rolls over.
+  last_paid_month text,
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 create index if not exists debts_user_id_idx on debts (user_id);
+-- Migration for existing databases (run once in the Supabase SQL editor):
+--   alter table debts add column if not exists last_paid_month text;
 
 -- ---------- income snapshots (weekly grand-total trend) ----------
 -- One row per user per week, keyed by the Sunday that ends the week. Captures the

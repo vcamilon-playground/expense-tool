@@ -124,6 +124,7 @@ export const E2E_CATEGORY_NAME = 'E2E Test Category';
 export const E2E_INCOME_NAME = 'E2E Alpha Bank';
 export const E2E_INCOME_NAME_2 = 'E2E Beta Bank';
 export const E2E_REMINDER_TITLE = 'E2E Test Reminder';
+export const E2E_DEBT_NAME = 'E2E Test Debt';
 
 export const cleanup = {
   expenses: () => {
@@ -194,6 +195,17 @@ export const cleanup = {
       return Promise.resolve();
     }
     return del('income_snapshots', `user_id=eq.${uid}`);
+  },
+  // Portfolio Total Owed / Net Worth sum across EVERY debt, so debt specs need a
+  // controlled full set — remove all debts for the E2E user (a dedicated test
+  // account) rather than only E2E-tagged rows.
+  debts: () => {
+    const uid = loadE2EUserId();
+    if (!uid) {
+      console.warn('[cleanup] skipped debts — no E2E user id');
+      return Promise.resolve();
+    }
+    return del('debts', `user_id=eq.${uid}`);
   },
 };
 
@@ -437,6 +449,36 @@ export const seed = {
       active: true,
     });
   },
+  // A portfolio debt for the E2E user. `principal`/`balance`/`monthly_payment`
+  // drive the derived installment counts ("N of M months left") and the
+  // Mark-paid button gate (monthly_payment > 0). `last_paid_month` ('YYYY-MM')
+  // pre-marks the debt as paid for that month; pass a prior month to assert it
+  // renders unpaid, or null/undefined to leave it unpaid.
+  debt: (opts: {
+    name: string;
+    principal: number;
+    balance: number;
+    monthly_payment: number;
+    kind?: 'credit_card' | 'loan' | 'personal' | 'installment' | 'other';
+    last_paid_month?: string | null;
+    due_day?: number | null;
+    interest_rate?: number | null;
+  }) => {
+    const uid = loadE2EUserId();
+    return postReturn<{ id: string; balance: number; last_paid_month: string | null }>('debts', {
+      user_id: uid,
+      name: opts.name,
+      kind: opts.kind ?? 'loan',
+      lender: null,
+      principal: opts.principal,
+      balance: opts.balance,
+      monthly_payment: opts.monthly_payment,
+      interest_rate: opts.interest_rate ?? null,
+      due_day: opts.due_day ?? null,
+      last_paid_month: opts.last_paid_month ?? null,
+      active: true,
+    });
+  },
   categoryWithExpense: async () => {
     const uid = loadE2EUserId();
     const cat = await postReturn<{ id: string }>('categories', {
@@ -525,6 +567,20 @@ export const income = {
     if (!uid) return 0;
     const rows = await get<{ balance: number }>('income_sources', `user_id=eq.${uid}&select=balance`);
     return rows.reduce((sum, r) => sum + Number(r.balance), 0);
+  },
+};
+
+// Portfolio debts — read back to assert that "Mark paid" is a pure status flag:
+// it flips last_paid_month but never touches the stored balance.
+export const debts = {
+  forName: async (name: string): Promise<{ balance: number; last_paid_month: string | null }[]> => {
+    const uid = loadE2EUserId();
+    if (!uid) return [];
+    const rows = await get<{ balance: number; last_paid_month: string | null }>(
+      'debts',
+      `user_id=eq.${uid}&name=eq.${encodeURIComponent(name)}&select=balance,last_paid_month`,
+    );
+    return rows.map((r) => ({ balance: Number(r.balance), last_paid_month: r.last_paid_month }));
   },
 };
 

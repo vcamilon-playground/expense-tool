@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { Debt, Investment } from '@expense/shared';
 import {
+  currentYearMonth,
+  debtInstallments,
   debtPaidAmount,
   debtPaidPercent,
   debtTotals,
   investmentGain,
   investmentTotals,
+  isDebtPaidThisMonth,
   netWorth,
   ordinalDay,
   sortDebtsByDueDay,
@@ -173,5 +176,61 @@ describe('ordinalDay', () => {
     expect(ordinalDay(21)).toBe('21st');
     expect(ordinalDay(22)).toBe('22nd');
     expect(ordinalDay(31)).toBe('31st');
+  });
+});
+
+describe('debtInstallments', () => {
+  it('derives total and remaining from principal/balance ÷ monthly payment', () => {
+    // 12,000 over 1,000/mo = 12 installments; 9,000 left = 9 remaining.
+    expect(debtInstallments(debt({ principal: 12000, balance: 9000, monthly_payment: 1000 }))).toEqual({
+      total: 12,
+      remaining: 9,
+      paid: 3,
+    });
+  });
+
+  it('rounds a non-even schedule up (a partial final payment still counts as a month)', () => {
+    // 12,500 needs 13 payments at 1,000; 500 left needs 1.
+    expect(debtInstallments(debt({ principal: 12500, balance: 500, monthly_payment: 1000 }))).toEqual({
+      total: 13,
+      remaining: 1,
+      paid: 12,
+    });
+  });
+
+  it('returns null when there is no monthly payment to derive from', () => {
+    expect(debtInstallments(debt({ monthly_payment: 0 }))).toBeNull();
+  });
+
+  it('reports 0 remaining (fully paid) and clamps remaining to total', () => {
+    expect(debtInstallments(debt({ principal: 5000, balance: 0, monthly_payment: 1000 }))).toEqual({
+      total: 5,
+      remaining: 0,
+      paid: 5,
+    });
+  });
+});
+
+describe('currentYearMonth', () => {
+  it('formats the date as YYYY-MM', () => {
+    expect(currentYearMonth(new Date('2026-08-15T12:00:00'))).toBe('2026-08');
+    expect(currentYearMonth(new Date('2026-01-03T12:00:00'))).toBe('2026-01');
+  });
+});
+
+describe('isDebtPaidThisMonth', () => {
+  const today = new Date('2026-08-15T12:00:00');
+
+  it('is true when last_paid_month equals the current month', () => {
+    expect(isDebtPaidThisMonth(debt({ last_paid_month: '2026-08' }), today)).toBe(true);
+  });
+
+  it('auto-resets: a prior month no longer counts as paid this month', () => {
+    expect(isDebtPaidThisMonth(debt({ last_paid_month: '2026-07' }), today)).toBe(false);
+  });
+
+  it('is false when never marked', () => {
+    expect(isDebtPaidThisMonth(debt({ last_paid_month: null }), today)).toBe(false);
+    expect(isDebtPaidThisMonth(debt({}), today)).toBe(false);
   });
 });

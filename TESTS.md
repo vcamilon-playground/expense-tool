@@ -94,6 +94,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + global eye toggle + per-card eye reveal, Add Source modal fields, cash hides name field, inline validation; the "Transaction History" button navigates to the standalone `/income/history` page (heading, back link, "Show archived" toggle, month-grouped 5-column tables / empty state) |
 | `tests/maya-savings.spec.ts` | Smoke | `/income/maya` page load (reached via the "💜 Maya Savings" Income-header link), four summary cards (Total Saved / Weeks Completed N/51 / Year-End Goal / Remaining), progress bar, "This Friday" current-week card with mark/undo toggle, weekly schedule table (Week/Friday/Transfer/Running Total/Done) driven from a DB-seeded state (empty / full-51), logged-out redirect to /login |
 | `tests/income-trend.spec.ts` | Smoke | Dashboard "Weekly Income Trend — Past 6 Weeks" card: empty state until weeks accrue; with DB-seeded `income_snapshots` the chart plots the grand total of income balances over the last 6 completed weeks (Sunday cutoffs); a dashboard visit best-effort upserts the current week's snapshot |
+| `tests/portfolio.spec.ts` | Smoke | `/portfolio` Debts: derived installment "{remaining} of {total} month(s) left" (incl. 0/singular boundaries) and the net-worth-neutral "Mark paid this month" status — Mark paid → "✓ Paid this month" pill + Undo cycle, no toggle for zero-payment debts, a prior-month `last_paid_month` auto-resets to unpaid, double-click settles on one paid state that persists across reload, and Net Worth / Total Owed / remaining / debt balance stay unchanged. Seeds/cleans real `debts` rows |
 | `tests/notifications.spec.ts` | Smoke | Page load, Add Reminder form (title/repeat/date), repeat cadence options, empty-title validation, form open/close toggle |
 | `tests/site-header.spec.ts` | Smoke | Time-based greeting with user name, personalized today date line (`Today is yyyy/mm/dd, DDD`), theme pill toggles data-theme, notification bell links to /notifications; date line absent on /login |
 | `tests/pwa.spec.ts` | Smoke | Web manifest is public + valid (name/display/icons), apple-icon is a public image, icon.svg + sw.js are public |
@@ -151,7 +152,7 @@ cd apps/e2e && npx playwright show-report
 ### `navigation.spec.ts` — Navigation
 
 **Navigation — desktop sidebar**
-- nav links navigate to correct pages (Home, Income, Expenses, Recurring, Budgets, Reports, Settings)
+- nav links navigate to correct pages (Home, Income, Portfolio, Expenses, Recurring, Budgets, Reports, Settings)
 - active nav link is highlighted on the current page *(expenses and reports)*
 - profile card shows the user name and handle
 - footer is visible on all pages
@@ -252,6 +253,25 @@ cd apps/e2e && npx playwright show-report
 - with no snapshots the card shows its empty state
 - with DB-seeded `income_snapshots` the "Weekly Income Trend — Past 6 Weeks" card charts the grand total of income balances across the last 6 completed weeks (Sunday cutoffs)
 - visiting the dashboard best-effort upserts the current week's snapshot (the in-progress week is captured but not charted)
+
+---
+
+### `portfolio.spec.ts` — Portfolio (Debts)
+
+> First `/portfolio` coverage. Seeds and cleans real `debts` rows (`cleanup.debts()` in `beforeEach`/`afterAll`); the "paid this month" value is derived at run time, never a hardcoded `YYYY-MM`.
+
+**Portfolio — Debts installment months-left**
+- a paying debt shows "6 of 10 months left", a zero-payment debt shows none (and no Mark paid button), and the header net-worth-neutral note is present
+- boundaries render "0 of 5 months left" and the singular "1 of 1 month left"
+
+**Portfolio — Debts mark paid status**
+- Mark paid shows the "✓ Paid this month" pill + Undo, and Undo returns to Mark paid
+- a zero-payment debt exposes no Mark paid or Undo control
+- a debt paid in a prior month renders as unpaid (Mark paid shown, no pill — `last_paid_month` auto-resets on rollover)
+- double-click settles on a single paid state that persists across reload, and Undo + reload returns to Mark paid
+
+**Portfolio — Mark paid net-worth neutrality**
+- Mark paid leaves Net Worth, Total Owed, "… remaining", and the debt balance byte-for-byte unchanged (pure status flag, moves no money)
 
 ---
 

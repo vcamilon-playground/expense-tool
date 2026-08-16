@@ -11,6 +11,7 @@ test.describe('Navigation — desktop sidebar', () => {
     const nav = new NavBar(page);
     const links: Array<[string, string]> = [
       ['Income', '/income'],
+      ['Portfolio', '/portfolio'],
       ['Expenses', '/expenses'],
       ['Recurring', '/recurring'],
       ['Budgets', '/budgets'],

@@ -205,7 +205,11 @@ after each Vercel deploy.
   what you put in and what it is worth now, so gain/loss shows in pesos and
   percent; each debt records the original amount, remaining balance, monthly
   payment, optional interest rate and due day, with a progress bar for how much
-  is paid off. The headline **Net Worth** combines your income balances with
+  is paid off. Debts with a monthly payment also show the **installment months
+  remaining** ("6 of 10 months left") and a **"Mark paid this month"** button
+  that flips a status pill (with Undo) and auto-resets each month — it only
+  tracks that you've paid, moving no money and leaving Net Worth unchanged. The
+  headline **Net Worth** combines your income balances with
   investment value, minus outstanding debt. Values are updated by you — the page
   moves no money and creates no expenses.
 - **Notifications** — a bell in the header lists recurring payments due within

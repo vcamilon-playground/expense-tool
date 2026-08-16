@@ -65,6 +65,36 @@ export function debtPaidAmount(debt: Pick<Debt, 'principal' | 'balance'>): numbe
   return Math.max(0, debt.principal - debt.balance);
 }
 
+// Installment schedule derived from the amounts (no term is stored): total number
+// of monthly payments to clear the original principal, and how many remain to clear
+// the outstanding balance. Returns null when there is no monthly payment to derive
+// a schedule from. `remaining` is clamped to [0, total].
+export type DebtInstallments = { total: number; remaining: number; paid: number };
+
+export function debtInstallments(
+  debt: Pick<Debt, 'principal' | 'balance' | 'monthly_payment'>,
+): DebtInstallments | null {
+  if (debt.monthly_payment <= 0) return null;
+  const total = Math.max(0, Math.ceil(debt.principal / debt.monthly_payment));
+  const remaining = Math.min(total, Math.max(0, Math.ceil(debt.balance / debt.monthly_payment)));
+  return { total, remaining, paid: total - remaining };
+}
+
+/** The current month as 'YYYY-MM' (used to mark/detect a debt paid for this month). */
+export function currentYearMonth(today: Date = new Date()): string {
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+}
+
+// Whether this month's payment is already marked paid. A pure status check — it
+// auto-resets when the month rolls over (last_paid_month no longer equals it) and
+// never affects the balance or net worth.
+export function isDebtPaidThisMonth(
+  debt: Pick<Debt, 'last_paid_month'>,
+  today: Date = new Date(),
+): boolean {
+  return !!debt.last_paid_month && debt.last_paid_month === currentYearMonth(today);
+}
+
 export type DebtTotals = {
   balance: number; // total still owed
   monthlyPayment: number; // total due each month

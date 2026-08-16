@@ -50,7 +50,7 @@ await page.getByRole('button', { name: '+ Add Expense' }).click();
 ```
 
 - `BasePage.ts` provides `page: Page` and `waitForLoad()`. Every page object extends it and calls `this.waitForLoad()` at the end of every `goto()`.
-- Existing page objects: `NavBar`, `LoginPage`, `DashboardPage`, `ExpensesPage`, `RecurringPage`, `ReportsPage`, `BudgetsPage`, `SettingsPage`, `IncomePage`, `MayaSavingsPage`, `NotificationsPage`. Read the relevant file to see existing methods before adding new ones.
+- Existing page objects: `NavBar`, `LoginPage`, `DashboardPage`, `ExpensesPage`, `RecurringPage`, `ReportsPage`, `BudgetsPage`, `SettingsPage`, `IncomePage`, `MayaSavingsPage`, `PortfolioPage`, `NotificationsPage`. Read the relevant file to see existing methods before adding new ones.
 - New feature → create `tests/pages/<Feature>Page.ts` extending `BasePage`; add every locator as a method; import it in the spec(s). If the feature is a modal on an existing page, **add methods to that page object** instead of a new file.
 
 | Rule |
@@ -191,6 +191,7 @@ test.afterAll(async () => { await cleanup.expenses(); });
 | Income sources | `name` starts `E2E` | `cleanup.incomeSources()` · seed via `seed.incomeSource(name, balance)` / `seed.ewalletSource(...)` |
 | Income snapshots | scoped to the E2E `user_id` | `cleanup.incomeSnapshots()` · seed via `seed.incomeSnapshot(week_ending, total)` (read back via `incomeSnapshots.forWeek(...)`; `income.grandTotal()` computes the live total) |
 | Reminders | `title` starts `E2E` | `cleanup.reminders()` · seed via `seed.reminder(title, cadence, remind_date)` |
+| Portfolio debts | scoped to the E2E `user_id` (removes **all** the user's debts) | `cleanup.debts()` · seed via `seed.debt({ name, principal, balance, monthly_payment, last_paid_month? })` (read back via `debts.forName(name)` to assert `balance` / `last_paid_month`) |
 
 - **Never delete rows by ID** — use the tag-based cleanup helpers.
 - Cleanup needs `SUPABASE_URL` and `SUPABASE_ANON_KEY` (export in shell or `apps/e2e/.env`; warns and skips if unset).
