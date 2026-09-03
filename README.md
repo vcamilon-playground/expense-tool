@@ -184,8 +184,10 @@ after each Vercel deploy.
   hand. Each bank/e-wallet shows its brand logo (fetched from a free favicon
   service, with a colored initial badge fallback for offline or unknown names).
   Expenses (and recurring payments) can optionally deduct from a chosen
-  source when recorded. **Add Money** tops up any source's balance, and
-  **Transfer** moves money between any two sources.
+  source when recorded. **Add Money** tops up any source's balance,
+  **Transfer** moves money between any two sources, and **Withdraw** is a
+  one-way shortcut that moves money from a bank/e-wallet straight into Cash
+  on Hand (shown only when both exist).
   Amounts are hidden by default for privacy — reveal everything with the header
   eye, or peek a single card/source with its own inline eye.
   A dedicated **Transaction History** page (the button right of Transfer) logs

@@ -91,7 +91,7 @@ cd apps/e2e && npx playwright show-report
 | `tests/report-export.spec.ts` | Smoke | Export Report card: per-format (CSV/Excel/PDF) downloads of the scoped report, failure banner, scope→filename, zero-expense range, in-progress disabled state, mobile 375px, reload / Back-Forward |
 | `tests/budgets.spec.ts` | Smoke | Page load, form labels, edit/cancel flow, inline validation errors, column sorting |
 | `tests/settings.spec.ts` | Smoke | Session expiry, profile section, global save/cancel, navigation guard, change password, theme colours, categories, past-edit toggle, profile menu |
-| `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + global eye toggle + per-card eye reveal, Add Source modal fields, cash hides name field, inline validation; the "Transaction History" button navigates to the standalone `/income/history` page (heading, back link, "Show archived" toggle, month-grouped 5-column tables / empty state) |
+| `tests/income.spec.ts` | Smoke | Page load, four summary cards, amounts hidden by default + global eye toggle + per-card eye reveal, Add Source modal fields, cash hides name field, inline validation; the "Transaction History" button navigates to the standalone `/income/history` page (heading, back link, "Show archived" toggle, month-grouped 5-column tables / empty state). **No coverage for the "🏧 Withdraw" button/modal** — shipped without the QA loop per explicit user instruction; see the Income section of the Test Catalogue below |
 | `tests/maya-savings.spec.ts` | Smoke | `/income/maya` page load (reached via the "💜 Maya Savings" Income-header link), four summary cards (Total Saved / Weeks Completed N/51 / Year-End Goal / Remaining), progress bar, "This Friday" current-week card with mark/undo toggle, weekly schedule table (Week/Friday/Transfer/Running Total/Done) driven from a DB-seeded state (empty / full-51), logged-out redirect to /login |
 | `tests/income-trend.spec.ts` | Smoke | Dashboard "Weekly Income Trend — Past 6 Weeks" card: empty state until weeks accrue; with DB-seeded `income_snapshots` the chart plots the grand total of income balances over the last 6 completed weeks (Sunday cutoffs); a dashboard visit best-effort upserts the current week's snapshot |
 | `tests/portfolio.spec.ts` | Smoke | `/portfolio` Debts: derived installment "{remaining} of {total} month(s) left" (incl. 0/singular boundaries) and the net-worth-neutral "Mark paid this month" status — Mark paid → "✓ Paid this month" pill + Undo cycle, no toggle for zero-payment debts, a prior-month `last_paid_month` auto-resets to unpaid, double-click settles on one paid state that persists across reload, and Net Worth / Total Owed / remaining / debt balance stay unchanged. Seeds/cleans real `debts` rows |
@@ -232,6 +232,8 @@ cd apps/e2e && npx playwright show-report
 
 **Transaction History**
 - the "Transaction History" button navigates to `/income/history` (heading, back link, "Show archived" toggle, month-grouped 5-column tables or empty state)
+
+> **Known gap — no E2E coverage:** the "🏧 Withdraw" button/modal (shown when a Cash on Hand source and at least one bank/e-wallet source both exist; wraps `transferIncome` with the destination fixed to Cash on Hand) shipped without the QA loop per explicit user instruction. This is a deliberate, tracked gap, not an oversight — add smoke + regression coverage next time this area is touched.
 
 ---
 

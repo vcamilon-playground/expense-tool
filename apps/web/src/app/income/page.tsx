@@ -100,6 +100,14 @@ export default function IncomePage() {
   const [addMoneyError, setAddMoneyError] = useState<string | null>(null);
   const [addingMoney, setAddingMoney] = useState(false);
 
+  // Withdraw modal state — a shortcut transfer that always lands in Cash on Hand;
+  // the user only picks which savings source it comes out of and the amount.
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawFrom, setWithdrawFrom] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
+  const [withdrawing, setWithdrawing] = useState(false);
+
   // Privacy: amounts hidden by default; global preference persisted per device,
   // plus a per-item reveal set so individual cards/sources can be peeked.
   const [amountsVisible, setAmountsVisible] = useState(false);
@@ -295,6 +303,49 @@ export default function IncomePage() {
     }
   }
 
+  function openWithdraw() {
+    setWithdrawFrom('');
+    setWithdrawAmount('');
+    setWithdrawError(null);
+    setWithdrawOpen(true);
+  }
+
+  async function handleWithdraw(e: React.FormEvent) {
+    e.preventDefault();
+    setWithdrawError(null);
+
+    const cashSource = sources.find((s) => s.type === 'cash');
+    if (!cashSource) {
+      setWithdrawError('Add a Cash on Hand source first.');
+      return;
+    }
+    if (!withdrawFrom) {
+      setWithdrawError('Select which savings to withdraw from.');
+      return;
+    }
+    const amount = parseFloat(withdrawAmount);
+    if (!withdrawAmount || !Number.isFinite(amount) || amount <= 0) {
+      setWithdrawError('Enter a valid amount greater than zero.');
+      return;
+    }
+    const fromSource = sources.find((s) => s.id === withdrawFrom);
+    if (fromSource && amount > fromSource.balance) {
+      setWithdrawError(`Amount exceeds the ${sourceLabel(fromSource)} balance (${formatMoney(fromSource.balance)}).`);
+      return;
+    }
+
+    setWithdrawing(true);
+    try {
+      await transferIncome(withdrawFrom, cashSource.id, amount);
+      setWithdrawOpen(false);
+      await reload();
+    } catch (err) {
+      setWithdrawError(errorMessage(err, 'Withdrawal failed'));
+    } finally {
+      setWithdrawing(false);
+    }
+  }
+
   function openAddMoney(source: IncomeSource) {
     setAddMoneyTarget(source);
     setAddMoneyAmount('');
@@ -329,6 +380,7 @@ export default function IncomePage() {
   const bankSources = sources.filter((s) => s.type === 'bank');
   const ewalletSources = sources.filter((s) => s.type === 'ewallet');
   const cashSource = sources.find((s) => s.type === 'cash');
+  const savingsSources = sources.filter((s) => s.type !== 'cash');
 
   const totalBank = bankSources.reduce((sum, s) => sum + s.balance, 0);
   const totalEwallet = ewalletSources.reduce((sum, s) => sum + s.balance, 0);
@@ -398,6 +450,51 @@ export default function IncomePage() {
         </div>
       )}
 
+      {withdrawOpen && (
+        <div className="modal-overlay" onClick={() => setWithdrawOpen(false)}>
+          <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Withdraw to Cash on Hand</h3>
+              <button className="ghost close-btn" onClick={() => setWithdrawOpen(false)} aria-label="Close">✕</button>
+            </div>
+            <form onSubmit={handleWithdraw} noValidate>
+              <label style={{ display: 'block', marginBottom: 12 }}>
+                <div className="muted" style={{ marginBottom: 4 }}>Withdraw from</div>
+                <select value={withdrawFrom} onChange={(e) => { setWithdrawFrom(e.target.value); setWithdrawError(null); }}>
+                  <option value="">— Select savings —</option>
+                  {savingsSources.map((s) => (
+                    <option key={s.id} value={s.id}>{sourceLabel(s)} ({formatMoney(s.balance)})</option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: 'block', marginBottom: 12 }}>
+                <div className="muted" style={{ marginBottom: 4 }}>Amount (₱)</div>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={withdrawAmount}
+                  onChange={(e) => { setWithdrawAmount(e.target.value); setWithdrawError(null); }}
+                />
+              </label>
+              <p className="muted" style={{ marginTop: -4, marginBottom: 12 }}>
+                Goes straight into Cash on Hand{cashSource ? ` (${formatMoney(cashSource.balance)})` : ''}.
+              </p>
+              {withdrawError && <p className="field-error">{withdrawError}</p>}
+              <div className="row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
+                <button type="button" className="ghost" style={{ width: 'auto' }} onClick={() => setWithdrawOpen(false)} disabled={withdrawing}>
+                  Cancel
+                </button>
+                <button type="submit" className="primary" style={{ width: 'auto' }} disabled={withdrawing}>
+                  {withdrawing ? 'Withdrawing…' : 'Withdraw'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="row" style={{ justifyContent: 'space-between', marginBottom: 4 }}>
         <h1 style={{ margin: 0 }}>Income</h1>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -416,6 +513,11 @@ export default function IncomePage() {
           {sources.length >= 2 && (
             <button className="ghost" style={{ width: 'auto' }} onClick={openTransfer}>
               ⇄ Transfer
+            </button>
+          )}
+          {cashSource && savingsSources.length >= 1 && (
+            <button className="ghost" style={{ width: 'auto' }} onClick={openWithdraw}>
+              🏧 Withdraw
             </button>
           )}
           <Link href="/portfolio" className="ghost" style={{ width: 'auto', display: 'inline-flex', alignItems: 'center' }}>
